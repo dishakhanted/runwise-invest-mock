@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { AccountCard } from "@/components/AccountCard";
 import { WealthChart } from "@/components/WealthChart";
@@ -9,23 +10,90 @@ import {
   TrendingUp,
   BarChart3,
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+type ViewMode = "net-worth" | "assets" | "liabilities";
+
 const Dashboard = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
+
+  const cashTotal = 105270.54;
+  const investmentsTotal = 50106.56;
+  const assetsTotal = cashTotal + investmentsTotal;
+  const liabilitiesTotal = 0; // No liabilities in mock data
+  const netWorth = assetsTotal - liabilitiesTotal;
+
+  const viewData = {
+    "net-worth": {
+      label: "Current net worth",
+      amount: netWorth,
+    },
+    assets: {
+      label: "Total assets",
+      amount: assetsTotal,
+    },
+    liabilities: {
+      label: "Total liabilities",
+      amount: liabilitiesTotal,
+    },
+  };
+
+  const modes: ViewMode[] = ["net-worth", "assets", "liabilities"];
+  const currentIndex = modes.indexOf(viewMode);
+
+  const handlePrevious = () => {
+    const newIndex = currentIndex === 0 ? modes.length - 1 : currentIndex - 1;
+    setViewMode(modes[newIndex]);
+  };
+
+  const handleNext = () => {
+    const newIndex = currentIndex === modes.length - 1 ? 0 : currentIndex + 1;
+    setViewMode(modes[newIndex]);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
-        {/* Header */}
+        {/* Header with Toggle */}
         <div className="flex justify-between items-start mb-8">
-          <div>
-            <h1 className="text-5xl font-bold mb-2">$155,377</h1>
-            <p className="text-muted-foreground flex items-center gap-2">
-              Current net worth
-              <span className="inline-block w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-xs">
-                i
-              </span>
-            </p>
+          <div className="flex items-start gap-3">
+            <button
+              onClick={handlePrevious}
+              className="mt-4 p-2 hover:bg-secondary rounded-full transition-colors"
+              aria-label="Previous view"
+            >
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <div>
+              <h1 className="text-5xl font-bold mb-2">
+                {formatCurrency(viewData[viewMode].amount)}
+              </h1>
+              <p className="text-muted-foreground flex items-center gap-2">
+                {viewData[viewMode].label}
+                <span className="inline-block w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-xs">
+                  i
+                </span>
+              </p>
+            </div>
+            <button
+              onClick={handleNext}
+              className="mt-4 p-2 hover:bg-secondary rounded-full transition-colors"
+              aria-label="Next view"
+            >
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </button>
           </div>
           <Button
             variant="ghost"
