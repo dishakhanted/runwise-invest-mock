@@ -2,19 +2,8 @@ import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Plus, Target } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Goal {
   id: string;
@@ -31,7 +20,7 @@ interface Goal {
 }
 
 const Goals = () => {
-  const [goals, setGoals] = useState<Goal[]>([
+  const [goals] = useState<Goal[]>([
     {
       id: "1",
       name: "Emergency Fund",
@@ -60,17 +49,6 @@ const Goals = () => {
       allocation: { savings: 20, stocks: 60, bonds: 20 },
     },
   ]);
-  
-  const [selectedGoalId, setSelectedGoalId] = useState(goals[0]?.id || "");
-
-  const [isAddingGoal, setIsAddingGoal] = useState(false);
-  const [newGoal, setNewGoal] = useState({
-    name: "",
-    targetAmount: "",
-    currentAmount: "",
-    savingAccount: "",
-    investmentAccount: "",
-  });
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -85,41 +63,6 @@ const Goals = () => {
     return (current / target) * 100;
   };
 
-  const addGoal = () => {
-    if (
-      newGoal.name &&
-      newGoal.targetAmount &&
-      newGoal.currentAmount &&
-      newGoal.savingAccount
-    ) {
-      const newGoalData = {
-        id: Date.now().toString(),
-        name: newGoal.name,
-        targetAmount: parseFloat(newGoal.targetAmount),
-        currentAmount: parseFloat(newGoal.currentAmount),
-        savingAccount: newGoal.savingAccount,
-        investmentAccount: newGoal.investmentAccount,
-        allocation: { savings: 50, stocks: 30, bonds: 20 },
-      };
-      setGoals([...goals, newGoalData]);
-      setSelectedGoalId(newGoalData.id);
-      setNewGoal({
-        name: "",
-        targetAmount: "",
-        currentAmount: "",
-        savingAccount: "",
-        investmentAccount: "",
-      });
-      setIsAddingGoal(false);
-    }
-  };
-
-  const deleteGoal = (id: string) => {
-    setGoals(goals.filter((goal) => goal.id !== id));
-  };
-
-  const selectedGoal = goals.find((g) => g.id === selectedGoalId);
-
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
@@ -128,227 +71,156 @@ const Goals = () => {
           <Logo className="h-10 w-10" />
         </div>
 
-        <Tabs value={selectedGoalId} onValueChange={setSelectedGoalId}>
-          <TabsList className="w-full mb-6 overflow-x-auto flex justify-start">
-            {goals.map((goal) => (
-              <TabsTrigger key={goal.id} value={goal.id} className="flex-shrink-0">
-                {goal.name}
-              </TabsTrigger>
-            ))}
-            {!isAddingGoal && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsAddingGoal(true)}
-                className="flex-shrink-0 ml-2"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            )}
-          </TabsList>
-
+        {/* Horizontal Goal Cards */}
+        <div className="flex gap-4 mb-8 overflow-x-auto scrollbar-hide pb-2">
           {goals.map((goal) => (
-            <TabsContent key={goal.id} value={goal.id} className="space-y-6">
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Current Progress</p>
-                    <p className="text-3xl font-bold">{formatCurrency(goal.currentAmount)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      of {formatCurrency(goal.targetAmount)} goal
-                    </p>
-                  </div>
-                  
-                  <Progress
-                    value={getProgress(goal.currentAmount, goal.targetAmount)}
-                    className="h-3"
-                  />
-                  
-                  <p className="text-sm font-medium text-center">
-                    {Math.round(getProgress(goal.currentAmount, goal.targetAmount))}% Complete
-                  </p>
+            <Card
+              key={goal.id}
+              className="min-w-[280px] p-4 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-primary" />
                 </div>
-              </Card>
+              </div>
+              
+              <h3 className="font-semibold text-lg mb-2">{goal.name}</h3>
+              
+              <div className="space-y-1 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Current</span>
+                  <span className="font-medium">{formatCurrency(goal.currentAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Target</span>
+                  <span className="font-medium">{formatCurrency(goal.targetAmount)}</span>
+                </div>
+              </div>
 
-              <Card className="p-6">
-                <h3 className="font-semibold text-lg mb-4">Fund Allocation</h3>
+              <div className="h-2 bg-secondary rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-primary rounded-full transition-all"
+                  style={{ width: `${getProgress(goal.currentAmount, goal.targetAmount)}%` }}
+                />
+              </div>
+              
+              <p className="text-xs text-muted-foreground text-center">
+                {Math.round(getProgress(goal.currentAmount, goal.targetAmount))}% Complete
+              </p>
+
+              {/* Fund Allocation */}
+              <div className="mt-4 pt-4 border-t space-y-2">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Funds Allocated From:</p>
                 
-                {/* Visual allocation bars */}
-                <div className="space-y-3 mb-6">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Savings</span>
-                      <span className="font-medium">{goal.allocation.savings}%</span>
-                    </div>
-                    <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary rounded-full"
-                        style={{ width: `${goal.allocation.savings}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatCurrency((goal.currentAmount * goal.allocation.savings) / 100)} in {goal.savingAccount}
-                    </p>
+                {goal.allocation.savings > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Savings</span>
+                    <span className="font-medium">{goal.allocation.savings}%</span>
                   </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Stocks</span>
-                      <span className="font-medium">{goal.allocation.stocks}%</span>
-                    </div>
-                    <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-accent rounded-full"
-                        style={{ width: `${goal.allocation.stocks}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatCurrency((goal.currentAmount * goal.allocation.stocks) / 100)} in stocks
-                    </p>
+                )}
+                
+                {goal.allocation.stocks > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Stocks</span>
+                    <span className="font-medium">{goal.allocation.stocks}%</span>
                   </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Bonds</span>
-                      <span className="font-medium">{goal.allocation.bonds}%</span>
-                    </div>
-                    <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-muted rounded-full"
-                        style={{ width: `${goal.allocation.bonds}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatCurrency((goal.currentAmount * goal.allocation.bonds) / 100)} in bonds
-                    </p>
+                )}
+                
+                {goal.allocation.bonds > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Bonds</span>
+                    <span className="font-medium">{goal.allocation.bonds}%</span>
                   </div>
-                </div>
-
-                <div className="space-y-2 pt-4 border-t">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Primary Account:</span>
-                    <span className="font-medium">{goal.savingAccount}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Investment Account:</span>
-                    <span className="font-medium">{goal.investmentAccount || "None"}</span>
-                  </div>
-                </div>
-              </Card>
-
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => {
-                  deleteGoal(goal.id);
-                  if (goals.length > 1) {
-                    setSelectedGoalId(goals.find(g => g.id !== goal.id)?.id || "");
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Goal
-              </Button>
-            </TabsContent>
+                )}
+              </div>
+            </Card>
           ))}
-        </Tabs>
-
-        {isAddingGoal && (
-          <Card className="p-4 space-y-4 mt-6">
-            <h3 className="font-semibold text-lg">Add New Goal</h3>
-            <div className="space-y-3">
-              <div>
-                <Label htmlFor="goalName">Goal Name</Label>
-                <Input
-                  id="goalName"
-                  value={newGoal.name}
-                  onChange={(e) =>
-                    setNewGoal({ ...newGoal, name: e.target.value })
-                  }
-                  placeholder="e.g., Vacation Fund"
-                />
+          
+          {/* Add Goal Card */}
+          <Card className="min-w-[280px] p-4 flex-shrink-0 flex items-center justify-center cursor-pointer hover:bg-secondary/50 transition-colors">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-2">
+                <Plus className="w-6 h-6 text-primary" />
               </div>
-              <div>
-                <Label htmlFor="targetAmount">Target Amount</Label>
-                <Input
-                  id="targetAmount"
-                  type="number"
-                  value={newGoal.targetAmount}
-                  onChange={(e) =>
-                    setNewGoal({ ...newGoal, targetAmount: e.target.value })
-                  }
-                  placeholder="10000"
-                />
-              </div>
-              <div>
-                <Label htmlFor="currentAmount">Current Amount</Label>
-                <Input
-                  id="currentAmount"
-                  type="number"
-                  value={newGoal.currentAmount}
-                  onChange={(e) =>
-                    setNewGoal({ ...newGoal, currentAmount: e.target.value })
-                  }
-                  placeholder="5000"
-                />
-              </div>
-              <div>
-                <Label htmlFor="savingAccount">Saving Account</Label>
-                <Select
-                  value={newGoal.savingAccount}
-                  onValueChange={(value) =>
-                    setNewGoal({ ...newGoal, savingAccount: value })
-                  }
-                >
-                  <SelectTrigger id="savingAccount">
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="High Yield Savings">
-                      High Yield Savings
-                    </SelectItem>
-                    <SelectItem value="Savings Account">
-                      Savings Account
-                    </SelectItem>
-                    <SelectItem value="Roth IRA">Roth IRA</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="investmentAccount">
-                  Investment Account (Optional)
-                </Label>
-                <Select
-                  value={newGoal.investmentAccount}
-                  onValueChange={(value) =>
-                    setNewGoal({ ...newGoal, investmentAccount: value })
-                  }
-                >
-                  <SelectTrigger id="investmentAccount">
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="Brokerage">Brokerage</SelectItem>
-                    <SelectItem value="401(k)">401(k)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={addGoal} className="flex-1">
-                Add Goal
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setIsAddingGoal(false)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
+              <p className="text-sm font-medium text-muted-foreground">Add New Goal</p>
             </div>
           </Card>
-        )}
+        </div>
+
+        {/* Progression Chart */}
+        <div className="relative w-full h-48 mb-8">
+          <svg
+            viewBox="0 0 400 150"
+            className="w-full h-full"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="goalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="hsl(var(--chart-gradient-start))" />
+                <stop offset="100%" stopColor="hsl(var(--chart-gradient-end))" />
+              </linearGradient>
+            </defs>
+
+            {/* Curved line showing progression */}
+            <path
+              d="M 20 100 Q 120 80, 200 70 T 380 50"
+              fill="none"
+              stroke="url(#goalGradient)"
+              strokeWidth="3"
+              className="drop-shadow-lg"
+            />
+
+            {/* Goal markers on the line */}
+            {goals.map((goal, index) => {
+              const x = 20 + (index * 180);
+              const y = 100 - (index * 25);
+              const progress = getProgress(goal.currentAmount, goal.targetAmount);
+              
+              return (
+                <g key={goal.id}>
+                  {/* Outer circle */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="16"
+                    fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="2"
+                    opacity="0.3"
+                  />
+                  {/* Inner circle */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="10"
+                    fill="hsl(var(--primary))"
+                  />
+                  {/* Progress indicator */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="6"
+                    fill="hsl(var(--background))"
+                  />
+                  {/* Progress fill */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="6"
+                    fill="hsl(var(--primary))"
+                    style={{ clipPath: `inset(${100 - progress}% 0 0 0)` }}
+                  />
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Labels below chart */}
+          <div className="flex justify-between mt-4 px-2">
+            <span className="text-xs text-muted-foreground">Today</span>
+            <span className="text-xs text-muted-foreground">Future Goals</span>
+          </div>
+        </div>
       </div>
       <BottomNav />
     </div>
