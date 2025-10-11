@@ -1,4 +1,5 @@
 import { BottomNav } from "@/components/BottomNav";
+import { Logo } from "@/components/Logo";
 import { ArrowLeft, Clock, RefreshCw, ArrowDown, ArrowUp, ArrowLeftRight, Building2, Send, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -46,12 +47,15 @@ const Transfer = () => {
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
         {/* Header */}
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="mb-6 p-2 text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
+        <div className="flex justify-between items-start mb-6">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="p-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <Logo className="h-10 w-10" />
+        </div>
 
         <h1 className="text-5xl font-bold mb-8">Transfer money</h1>
 

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { AccountCard } from "@/components/AccountCard";
 import { WealthChart } from "@/components/WealthChart";
+import { Logo } from "@/components/Logo";
+import { GoalsDialog } from "@/components/GoalsDialog";
 import {
   Wallet,
   Umbrella,
@@ -13,6 +15,7 @@ import {
   Home,
   GraduationCap,
   Car,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
