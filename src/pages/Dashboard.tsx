@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
 import { AccountCard } from "@/components/AccountCard";
 import { WealthChart } from "@/components/WealthChart";
 import { Logo } from "@/components/Logo";
-import { GoalsDialog } from "@/components/GoalsDialog";
 import {
   Wallet,
   Umbrella,
@@ -24,7 +24,7 @@ type ViewMode = "net-worth" | "assets" | "liabilities";
 
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
-  const [isGoalsOpen, setIsGoalsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const cashTotal = 105270.54;
   const investmentsTotal = 50106.56;
@@ -72,6 +72,7 @@ const Dashboard = () => {
           <Button
             variant="ghost"
             className="text-primary hover:text-primary/80 hover:bg-transparent"
+            onClick={() => navigate("/goals")}
           >
             <Sparkles className="h-5 w-5 mr-2" />
             Goals
@@ -116,7 +117,38 @@ const Dashboard = () => {
         </div>
 
         {/* Chart - only show for net worth */}
-        {viewMode === "net-worth" && <WealthChart />}
+        {viewMode === "net-worth" && (
+          <WealthChart
+            currentAmount={formatCurrency(getCurrentAmount())}
+            futureAmount="$1.3M net worth at 65"
+            goals={[
+              {
+                id: "1",
+                name: "Emergency Fund",
+                targetAmount: 50000,
+                currentAmount: 30000,
+                targetAge: 35,
+                position: { x: 150, y: 95 },
+              },
+              {
+                id: "2",
+                name: "House Down Payment",
+                targetAmount: 100000,
+                currentAmount: 45000,
+                targetAge: 45,
+                position: { x: 220, y: 75 },
+              },
+              {
+                id: "3",
+                name: "Retirement",
+                targetAmount: 1000000,
+                currentAmount: 237672,
+                targetAge: 65,
+                position: { x: 320, y: 50 },
+              },
+            ]}
+          />
+        )}
 
         {/* Cash Section */}
         {showCashSection && (
@@ -272,7 +304,6 @@ const Dashboard = () => {
         )}
       </div>
 
-      <GoalsDialog isOpen={isGoalsOpen} onClose={() => setIsGoalsOpen(false)} />
       <BottomNav />
     </div>
   );
