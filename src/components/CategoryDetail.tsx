@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 export interface Stock {
@@ -29,6 +30,7 @@ interface CategoryDetailProps {
 
 export const CategoryDetail = ({ category, isOpen, onClose }: CategoryDetailProps) => {
   const [selectedStocks, setSelectedStocks] = useState<Set<string>>(new Set());
+  const [stockAmounts, setStockAmounts] = useState<Record<string, string>>({});
 
   if (!category) return null;
 
@@ -49,9 +51,19 @@ export const CategoryDetail = ({ category, isOpen, onClose }: CategoryDetailProp
       toast.error("Please select at least one stock to invest");
       return;
     }
-    toast.success(`Invested in ${selectedStocks.size} stocks from ${category.name}`);
+    
+    const totalAmount = Array.from(selectedStocks).reduce((sum, stockId) => {
+      const amount = parseFloat(stockAmounts[stockId] || "0");
+      return sum + amount;
+    }, 0);
+    
+    toast.success(`Invested $${totalAmount.toFixed(2)} in ${selectedStocks.size} stocks!`, {
+      description: `Successfully added stocks from ${category.name} to your portfolio.`,
+    });
+    
     onClose();
     setSelectedStocks(new Set());
+    setStockAmounts({});
   };
 
   const handleSelectAll = () => {
@@ -90,25 +102,43 @@ export const CategoryDetail = ({ category, isOpen, onClose }: CategoryDetailProp
             {category.stocks.map((stock) => (
               <div
                 key={stock.id}
-                className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary/50 transition-colors"
+                className="p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
               >
-                <Checkbox
-                  id={stock.id}
-                  checked={selectedStocks.has(stock.id)}
-                  onCheckedChange={() => toggleStock(stock.id)}
-                />
-                <div
-                  className={`w-12 h-12 rounded-full ${stock.color} flex items-center justify-center text-xl shrink-0`}
-                >
-                  {stock.emoji}
+                <div className="flex items-center gap-4">
+                  <Checkbox
+                    id={stock.id}
+                    checked={selectedStocks.has(stock.id)}
+                    onCheckedChange={() => toggleStock(stock.id)}
+                  />
+                  <div
+                    className={`w-12 h-12 rounded-full ${stock.color} flex items-center justify-center text-xl shrink-0`}
+                  >
+                    {stock.emoji}
+                  </div>
+                  <label
+                    htmlFor={stock.id}
+                    className="flex-1 cursor-pointer space-y-1"
+                  >
+                    <p className="font-medium">{stock.name}</p>
+                    <p className="text-sm text-muted-foreground">{stock.symbol}</p>
+                  </label>
                 </div>
-                <label
-                  htmlFor={stock.id}
-                  className="flex-1 cursor-pointer space-y-1"
-                >
-                  <p className="font-medium">{stock.name}</p>
-                  <p className="text-sm text-muted-foreground">{stock.symbol}</p>
-                </label>
+                {selectedStocks.has(stock.id) && (
+                  <div className="mt-3 ml-16">
+                    <Input
+                      type="number"
+                      placeholder="Amount ($)"
+                      value={stockAmounts[stock.id] || ""}
+                      onChange={(e) => setStockAmounts(prev => ({
+                        ...prev,
+                        [stock.id]: e.target.value
+                      }))}
+                      className="h-10"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -32,24 +32,26 @@ const Explore = () => {
           />
         </div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => handleCategoryClick(category)}
-              className="flex flex-col items-center gap-2 group"
-            >
-              <div
-                className={`w-16 h-16 rounded-full ${category.color} flex items-center justify-center text-2xl transition-transform group-hover:scale-110`}
+        {/* Categories Horizontal Scroll */}
+        <div className="mb-8 -mx-6">
+          <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryClick(category)}
+                className="flex flex-col items-center gap-2 group flex-shrink-0"
               >
-                {category.emoji}
-              </div>
-              <span className="text-xs text-center text-muted-foreground line-clamp-2">
-                {category.name}
-              </span>
-            </button>
-          ))}
+                <div
+                  className={`w-16 h-16 rounded-full ${category.color} flex items-center justify-center text-2xl transition-transform group-hover:scale-110`}
+                >
+                  {category.emoji}
+                </div>
+                <span className="text-xs text-center text-muted-foreground line-clamp-2 w-20">
+                  {category.name}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <CategoryDetail

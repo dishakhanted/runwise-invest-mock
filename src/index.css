@@ -72,4 +72,13 @@ All colors MUST be HSL.
   .text-gradient {
     @apply bg-gradient-to-r from-[hsl(var(--chart-gradient-start))] to-[hsl(var(--chart-gradient-end))] bg-clip-text text-transparent;
   }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
