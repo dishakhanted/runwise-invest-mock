@@ -2,8 +2,9 @@ import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { Plus, Target } from "lucide-react";
+import { Plus, Target, Wallet, TrendingUp, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface Goal {
   id: string;
@@ -50,6 +51,8 @@ const Goals = () => {
     },
   ]);
 
+  const [selectedGoalId, setSelectedGoalId] = useState(goals[0]?.id || "");
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -63,164 +66,140 @@ const Goals = () => {
     return (current / target) * 100;
   };
 
+  const selectedGoal = goals.find((g) => g.id === selectedGoalId);
+  const totalGoalAmount = selectedGoal?.currentAmount || 0;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-5xl font-bold">Goals</h1>
+          <div>
+            <h1 className="text-5xl font-bold mb-2">
+              {selectedGoal ? formatCurrency(selectedGoal.currentAmount) : "$0"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {selectedGoal ? `${selectedGoal.name} Progress` : "Select a goal"}
+            </p>
+          </div>
           <Logo className="h-10 w-10" />
         </div>
 
-        {/* Horizontal Goal Cards */}
-        <div className="flex gap-4 mb-8 overflow-x-auto scrollbar-hide pb-2">
+        {/* Goal Toggle Buttons */}
+        <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-2">
           {goals.map((goal) => (
-            <Card
+            <Button
               key={goal.id}
-              className="min-w-[280px] p-4 flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow"
+              variant={selectedGoalId === goal.id ? "default" : "secondary"}
+              className={cn(
+                "flex-shrink-0 rounded-full",
+                selectedGoalId === goal.id && "shadow-lg"
+              )}
+              onClick={() => setSelectedGoalId(goal.id)}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-              
-              <h3 className="font-semibold text-lg mb-2">{goal.name}</h3>
-              
-              <div className="space-y-1 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Current</span>
-                  <span className="font-medium">{formatCurrency(goal.currentAmount)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Target</span>
-                  <span className="font-medium">{formatCurrency(goal.targetAmount)}</span>
-                </div>
-              </div>
+              {goal.name}
+            </Button>
+          ))}
+          <Button
+            variant="secondary"
+            size="icon"
+            className="flex-shrink-0 rounded-full"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
 
-              <div className="h-2 bg-secondary rounded-full overflow-hidden mb-2">
+        {/* Selected Goal Details */}
+        {selectedGoal && (
+          <>
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-2xl font-semibold">{selectedGoal.name}</h2>
+                <span className="text-lg font-medium">
+                  {formatCurrency(totalGoalAmount)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm text-muted-foreground mb-4">
+                <span>Target: {formatCurrency(selectedGoal.targetAmount)}</span>
+                <span>{Math.round(getProgress(selectedGoal.currentAmount, selectedGoal.targetAmount))}% Complete</span>
+              </div>
+              <div className="h-3 bg-secondary rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary rounded-full transition-all"
-                  style={{ width: `${getProgress(goal.currentAmount, goal.targetAmount)}%` }}
+                  style={{ width: `${getProgress(selectedGoal.currentAmount, selectedGoal.targetAmount)}%` }}
                 />
               </div>
-              
-              <p className="text-xs text-muted-foreground text-center">
-                {Math.round(getProgress(goal.currentAmount, goal.targetAmount))}% Complete
-              </p>
-
-              {/* Fund Allocation */}
-              <div className="mt-4 pt-4 border-t space-y-2">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Funds Allocated From:</p>
-                
-                {goal.allocation.savings > 0 && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Savings</span>
-                    <span className="font-medium">{goal.allocation.savings}%</span>
-                  </div>
-                )}
-                
-                {goal.allocation.stocks > 0 && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Stocks</span>
-                    <span className="font-medium">{goal.allocation.stocks}%</span>
-                  </div>
-                )}
-                
-                {goal.allocation.bonds > 0 && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Bonds</span>
-                    <span className="font-medium">{goal.allocation.bonds}%</span>
-                  </div>
-                )}
-              </div>
-            </Card>
-          ))}
-          
-          {/* Add Goal Card */}
-          <Card className="min-w-[280px] p-4 flex-shrink-0 flex items-center justify-center cursor-pointer hover:bg-secondary/50 transition-colors">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-2">
-                <Plus className="w-6 h-6 text-primary" />
-              </div>
-              <p className="text-sm font-medium text-muted-foreground">Add New Goal</p>
             </div>
-          </Card>
-        </div>
 
-        {/* Progression Chart */}
-        <div className="relative w-full h-48 mb-8">
-          <svg
-            viewBox="0 0 400 150"
-            className="w-full h-full"
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="goalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="hsl(var(--chart-gradient-start))" />
-                <stop offset="100%" stopColor="hsl(var(--chart-gradient-end))" />
-              </linearGradient>
-            </defs>
+            {/* Fund Allocation Cards */}
+            <div className="space-y-3">
+              {selectedGoal.allocation.savings > 0 && (
+                <Card className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[hsl(var(--icon-mint))]/20 flex items-center justify-center flex-shrink-0">
+                      <Wallet className="w-6 h-6 text-[hsl(var(--icon-mint))]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <div>
+                          <p className="font-semibold">Savings Account</p>
+                          <p className="text-sm text-muted-foreground">{selectedGoal.savingAccount}</p>
+                        </div>
+                        <span className="font-semibold text-right">
+                          {formatCurrency((totalGoalAmount * selectedGoal.allocation.savings) / 100)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{selectedGoal.allocation.savings}% allocation</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
 
-            {/* Curved line showing progression */}
-            <path
-              d="M 20 100 Q 120 80, 200 70 T 380 50"
-              fill="none"
-              stroke="url(#goalGradient)"
-              strokeWidth="3"
-              className="drop-shadow-lg"
-            />
+              {selectedGoal.allocation.stocks > 0 && (
+                <Card className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[hsl(var(--icon-blue))]/20 flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="w-6 h-6 text-[hsl(var(--icon-blue))]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <div>
+                          <p className="font-semibold">Stock Investments</p>
+                          <p className="text-sm text-muted-foreground">{selectedGoal.investmentAccount}</p>
+                        </div>
+                        <span className="font-semibold text-right">
+                          {formatCurrency((totalGoalAmount * selectedGoal.allocation.stocks) / 100)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{selectedGoal.allocation.stocks}% allocation</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
 
-            {/* Goal markers on the line */}
-            {goals.map((goal, index) => {
-              const x = 20 + (index * 180);
-              const y = 100 - (index * 25);
-              const progress = getProgress(goal.currentAmount, goal.targetAmount);
-              
-              return (
-                <g key={goal.id}>
-                  {/* Outer circle */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r="16"
-                    fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="2"
-                    opacity="0.3"
-                  />
-                  {/* Inner circle */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r="10"
-                    fill="hsl(var(--primary))"
-                  />
-                  {/* Progress indicator */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r="6"
-                    fill="hsl(var(--background))"
-                  />
-                  {/* Progress fill */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r="6"
-                    fill="hsl(var(--primary))"
-                    style={{ clipPath: `inset(${100 - progress}% 0 0 0)` }}
-                  />
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* Labels below chart */}
-          <div className="flex justify-between mt-4 px-2">
-            <span className="text-xs text-muted-foreground">Today</span>
-            <span className="text-xs text-muted-foreground">Future Goals</span>
-          </div>
-        </div>
+              {selectedGoal.allocation.bonds > 0 && (
+                <Card className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[hsl(var(--icon-cyan))]/20 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-6 h-6 text-[hsl(var(--icon-cyan))]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <div>
+                          <p className="font-semibold">Bonds</p>
+                          <p className="text-sm text-muted-foreground">Fixed Income</p>
+                        </div>
+                        <span className="font-semibold text-right">
+                          {formatCurrency((totalGoalAmount * selectedGoal.allocation.bonds) / 100)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{selectedGoal.allocation.bonds}% allocation</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </>
+        )}
       </div>
       <BottomNav />
     </div>
