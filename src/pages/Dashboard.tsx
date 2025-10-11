@@ -21,6 +21,7 @@ type ViewMode = "net-worth" | "assets" | "liabilities";
 
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
+  const [isGoalsOpen, setIsGoalsOpen] = useState(false);
 
   const cashTotal = 105270.54;
   const investmentsTotal = 50106.56;
@@ -268,6 +269,7 @@ const Dashboard = () => {
         )}
       </div>
 
+      <GoalsDialog isOpen={isGoalsOpen} onClose={() => setIsGoalsOpen(false)} />
       <BottomNav />
     </div>
   );

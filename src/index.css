@@ -8,48 +8,48 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Honey Pot Investment Tracker Design System */
-    --background: 250 35% 10%;
-    --foreground: 240 20% 95%;
+    /* Runwisr Investment Tracker Design System - Blue Theme */
+    --background: 215 35% 10%;
+    --foreground: 210 20% 95%;
 
-    --card: 250 30% 14%;
-    --card-foreground: 240 20% 95%;
+    --card: 215 30% 14%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 250 30% 14%;
-    --popover-foreground: 240 20% 95%;
+    --popover: 215 30% 14%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 265 80% 65%;
-    --primary-foreground: 240 20% 95%;
+    --primary: 210 90% 55%;
+    --primary-foreground: 210 20% 95%;
 
-    --secondary: 250 25% 20%;
-    --secondary-foreground: 240 20% 95%;
+    --secondary: 215 25% 20%;
+    --secondary-foreground: 210 20% 95%;
 
-    --muted: 250 20% 25%;
-    --muted-foreground: 240 10% 60%;
+    --muted: 215 20% 25%;
+    --muted-foreground: 210 10% 60%;
 
-    --accent: 265 70% 60%;
-    --accent-foreground: 240 20% 95%;
+    --accent: 210 80% 60%;
+    --accent-foreground: 210 20% 95%;
 
     --success: 160 65% 55%;
-    --success-foreground: 240 20% 95%;
+    --success-foreground: 210 20% 95%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 240 20% 95%;
+    --destructive-foreground: 210 20% 95%;
 
-    --border: 250 25% 22%;
-    --input: 250 25% 22%;
-    --ring: 265 80% 65%;
+    --border: 215 25% 22%;
+    --input: 215 25% 22%;
+    --ring: 210 90% 55%;
 
     --radius: 1rem;
 
     /* Chart gradients */
-    --chart-gradient-start: 265 80% 65%;
+    --chart-gradient-start: 210 90% 55%;
     --chart-gradient-end: 190 80% 55%;
     
     /* Icon colors */
     --icon-mint: 160 65% 55%;
-    --icon-purple: 265 80% 65%;
     --icon-blue: 210 80% 60%;
+    --icon-cyan: 190 80% 55%;
     --icon-orange: 25 90% 60%;
   }
 }

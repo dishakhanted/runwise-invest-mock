@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import logo from "@/assets/runwisr-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -27,9 +28,9 @@ const Login = () => {
 
       {/* Content */}
       <div className="flex-1 flex flex-col px-6 max-w-lg mx-auto w-full">
-        {/* Illustration placeholder - using a gradient box */}
-        <div className="w-full h-64 mb-8 rounded-3xl bg-gradient-to-br from-success/30 to-primary/30 flex items-center justify-center overflow-hidden">
-          <div className="text-6xl">🏙️</div>
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <img src={logo} alt="Runwisr" className="h-20 w-20" />
         </div>
 
         {/* Form */}
