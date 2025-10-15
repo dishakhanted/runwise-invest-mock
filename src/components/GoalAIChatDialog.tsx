@@ -17,6 +17,7 @@ interface Recommendation {
   description: string;
   icon: any;
   iconColor: string;
+  isActionable: boolean;
 }
 
 interface Goal {
@@ -40,6 +41,7 @@ interface GoalAIChatDialogProps {
 }
 
 export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProps) => {
+  const [deniedRecommendations, setDeniedRecommendations] = useState<Set<string>>(new Set());
   
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -61,6 +63,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           description: `Adding just $500/month could help you reach your ${formatCurrency(50000)} emergency fund goal 8 months faster.`,
           icon: TrendingUp,
           iconColor: "bg-primary/10 text-primary border-l-primary",
+          isActionable: true,
         },
         {
           id: "rec2",
@@ -68,6 +71,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           description: `Current top rates offer 4.5% APY vs your current 3.75% - that's an extra ${formatCurrency(150)}/year.`,
           icon: Wallet,
           iconColor: "bg-[hsl(var(--icon-mint))]/10 text-[hsl(var(--icon-mint))] border-l-[hsl(var(--icon-mint))]",
+          isActionable: true,
         },
       ];
     } else if (goal.id === "2") {
@@ -78,6 +82,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           description: "Your current 50% stocks allocation is good, but consider diversifying with index funds for stable growth.",
           icon: TrendingUp,
           iconColor: "bg-primary/10 text-primary border-l-primary",
+          isActionable: true,
         },
         {
           id: "rec4",
@@ -85,6 +90,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           description: "Set up automatic investing during market corrections to maximize your down payment growth potential.",
           icon: Building2,
           iconColor: "bg-[hsl(var(--icon-blue))]/10 text-[hsl(var(--icon-blue))] border-l-[hsl(var(--icon-blue))]",
+          isActionable: true,
         },
         {
           id: "rec5",
@@ -92,6 +98,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           description: `Cutting just $200/month from dining out could add ${formatCurrency(2400)}/year to your down payment fund.`,
           icon: Wallet,
           iconColor: "bg-[hsl(var(--icon-mint))]/10 text-[hsl(var(--icon-mint))] border-l-[hsl(var(--icon-mint))]",
+          isActionable: false,
         },
       ];
     } else if (goal.id === "3") {
@@ -102,6 +109,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           description: `At your current pace, you'll exceed your ${formatCurrency(1000000)} retirement goal by age 65. Great work!`,
           icon: TrendingUp,
           iconColor: "bg-primary/10 text-primary border-l-primary",
+          isActionable: false,
         },
         {
           id: "rec7",
@@ -109,6 +117,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           description: "As you approach retirement, gradually shifting to 30% bonds can help protect your gains.",
           icon: Building2,
           iconColor: "bg-[hsl(var(--icon-blue))]/10 text-[hsl(var(--icon-blue))] border-l-[hsl(var(--icon-blue))]",
+          isActionable: true,
         },
         {
           id: "rec8",
@@ -116,6 +125,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           description: "Make sure you're contributing enough to your 401(k) to get the full company match - it's free money!",
           icon: Target,
           iconColor: "bg-[hsl(var(--icon-cyan))]/10 text-[hsl(var(--icon-cyan))] border-l-[hsl(var(--icon-cyan))]",
+          isActionable: true,
         },
       ];
     }
@@ -160,23 +170,21 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           content: getInitialMessage(),
         },
       ]);
+      setDeniedRecommendations(new Set());
     }
   }, [isOpen, goal]);
 
   const handleApprove = (rec: Recommendation) => {
     const approveMessage: Message = {
       role: "assistant",
-      content: `Perfect! I've approved "${rec.title}". ${rec.description} This change will be implemented immediately and you'll see the impact on your ${goal?.name} goal in your next portfolio update.`,
+      content: `Perfect! I've executed "${rec.title}". ${rec.description} This change has been implemented and you'll see the impact on your ${goal?.name} goal in your next portfolio update.`,
     };
     setMessages((prev) => [...prev, approveMessage]);
+    setDeniedRecommendations((prev) => new Set([...prev, rec.id]));
   };
 
   const handleDeny = (rec: Recommendation) => {
-    const denyMessage: Message = {
-      role: "assistant",
-      content: `No problem! I've noted that you're not interested in "${rec.title}" at this time. Would you like to discuss alternative strategies for your ${goal?.name} goal, or is there anything else I can help you with?`,
-    };
-    setMessages((prev) => [...prev, denyMessage]);
+    setDeniedRecommendations((prev) => new Set([...prev, rec.id]));
   };
 
   const handleSend = () => {
@@ -210,7 +218,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     }
   };
 
-  const recommendations = getRecommendations();
+  const recommendations = getRecommendations().filter(rec => !deniedRecommendations.has(rec.id));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -245,24 +253,26 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                             <h4 className="font-semibold text-sm mb-1">{rec.title}</h4>
                             <p className="text-xs text-muted-foreground mb-2">{rec.description}</p>
                             
-                            <div className="flex gap-2 mt-3">
-                              <Button
-                                size="sm"
-                                onClick={() => handleApprove(rec)}
-                                className="h-8 text-xs"
-                              >
-                                <Check className="h-3 w-3 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeny(rec)}
-                                className="h-8 text-xs"
-                              >
-                                Deny
-                              </Button>
-                            </div>
+                            {rec.isActionable && (
+                              <div className="flex gap-2 mt-3">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApprove(rec)}
+                                  className="h-8 text-xs"
+                                >
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeny(rec)}
+                                  className="h-8 text-xs"
+                                >
+                                  Deny
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </Card>
