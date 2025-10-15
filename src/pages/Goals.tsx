@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
 import { GoalAIChatDialog } from "@/components/GoalAIChatDialog";
+import { NewGoalDialog } from "@/components/NewGoalDialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,6 +55,7 @@ const Goals = () => {
 
   const [selectedGoalId, setSelectedGoalId] = useState(goals[0]?.id || "");
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isNewGoalOpen, setIsNewGoalOpen] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -105,6 +107,7 @@ const Goals = () => {
             variant="secondary"
             size="icon"
             className="flex-shrink-0 rounded-full"
+            onClick={() => setIsNewGoalOpen(true)}
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -230,6 +233,10 @@ const Goals = () => {
         isOpen={isChatOpen} 
         onClose={() => setIsChatOpen(false)}
         goal={selectedGoal || null}
+      />
+      <NewGoalDialog 
+        isOpen={isNewGoalOpen}
+        onClose={() => setIsNewGoalOpen(false)}
       />
     </div>
   );

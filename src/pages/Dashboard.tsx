@@ -5,6 +5,7 @@ import { AccountCard } from "@/components/AccountCard";
 import { WealthChart } from "@/components/WealthChart";
 import { Logo } from "@/components/Logo";
 import { AIChatDialog } from "@/components/AIChatDialog";
+import { LinkAccountDialog } from "@/components/LinkAccountDialog";
 import {
   Wallet,
   Umbrella,
@@ -18,6 +19,7 @@ import {
   Car,
   Target,
   MessageSquare,
+  Link,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +30,7 @@ type ViewMode = "net-worth" | "assets" | "liabilities";
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isLinkAccountOpen, setIsLinkAccountOpen] = useState(false);
   const navigate = useNavigate();
 
   const cashTotal = 105741.75;
@@ -331,6 +334,20 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Link Account Button */}
+        <div className="mt-8">
+          <Button
+            variant="outline"
+            className="w-full h-16 justify-start gap-4 text-base font-semibold"
+            onClick={() => setIsLinkAccountOpen(true)}
+          >
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <Link className="h-6 w-6 text-primary" />
+            </div>
+            Link Account
+          </Button>
+        </div>
       </div>
 
       <BottomNav />
@@ -344,6 +361,10 @@ const Dashboard = () => {
         cashTotal={cashTotal}
         investmentsTotal={investmentsTotal + fidelityTotal + robinhoodTotal}
         homeLoan={homeLoan}
+      />
+      <LinkAccountDialog 
+        isOpen={isLinkAccountOpen}
+        onClose={() => setIsLinkAccountOpen(false)}
       />
     </div>
   );
