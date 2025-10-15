@@ -20,17 +20,17 @@ const transferActions = [
   {
     icon: ArrowDown,
     title: "Deposit",
-    subtitle: "Into Wealthfront",
+    subtitle: "Into Runwise",
   },
   {
     icon: ArrowUp,
     title: "Withdraw",
-    subtitle: "From Wealthfront",
+    subtitle: "From Runwise",
   },
   {
     icon: ArrowLeftRight,
     title: "Transfer",
-    subtitle: "Between Wealthfront accounts · Cash, categories, and investment accounts",
+    subtitle: "Between Runwise accounts · Cash, categories, and investment accounts",
   },
 ];
 

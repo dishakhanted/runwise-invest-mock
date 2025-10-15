@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { CategoryDetail, Category } from "@/components/CategoryDetail";
 import { categories } from "@/data/categories";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Explore = () => {
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(categories[0]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleCategoryClick = (category: Category) => {
@@ -33,13 +34,15 @@ const Explore = () => {
         </div>
 
         {/* Categories Horizontal Scroll */}
-        <div className="mb-8 -mx-6">
+        <div className="mb-6 -mx-6">
           <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
             {categories.map((category) => (
               <button
                 key={category.id}
-                onClick={() => handleCategoryClick(category)}
-                className="flex flex-col items-center gap-2 group flex-shrink-0"
+                onClick={() => setSelectedCategory(category)}
+                className={`flex flex-col items-center gap-2 group flex-shrink-0 ${
+                  selectedCategory?.id === category.id ? 'ring-2 ring-primary rounded-full' : ''
+                }`}
               >
                 <div
                   className={`w-16 h-16 rounded-full ${category.color} flex items-center justify-center text-2xl transition-transform group-hover:scale-110`}
@@ -53,6 +56,42 @@ const Explore = () => {
             ))}
           </div>
         </div>
+
+        {/* Selected Category Content */}
+        {selectedCategory && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-2">{selectedCategory.name}</h2>
+            <p className="text-sm text-muted-foreground mb-6">{selectedCategory.description}</p>
+            
+            {/* Suggestion Cards */}
+            <div className="grid gap-4">
+              {selectedCategory.stocks.slice(0, 3).map((stock) => (
+                <Card key={stock.id} className="border-border/50">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full ${stock.color} flex items-center justify-center text-xl`}>
+                        {stock.emoji}
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-base">{stock.name}</CardTitle>
+                        <CardDescription className="text-xs">{stock.symbol}</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+              
+              {selectedCategory.stocks.length > 3 && (
+                <button 
+                  onClick={() => handleCategoryClick(selectedCategory)}
+                  className="text-sm text-primary font-medium"
+                >
+                  + {selectedCategory.stocks.length - 3} MORE
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <CategoryDetail
           category={selectedCategory}

@@ -29,7 +29,7 @@ const Profile = () => {
       title: "RESOURCES",
       items: [
         { icon: BookOpen, label: "Blog", action: () => {} },
-        { icon: DollarSign, label: "Wealthfront fees", action: () => {} },
+        { icon: DollarSign, label: "Runwise fees", action: () => {} },
       ],
     },
     {
