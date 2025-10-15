@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,15 +13,62 @@ interface Message {
 interface AIChatDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  viewMode: "net-worth" | "assets" | "liabilities";
+  netWorth: number;
+  assetsTotal: number;
+  liabilitiesTotal: number;
+  cashTotal: number;
+  investmentsTotal: number;
+  homeLoan: number;
 }
 
-export const AIChatDialog = ({ isOpen, onClose }: AIChatDialogProps) => {
+export const AIChatDialog = ({ 
+  isOpen, 
+  onClose, 
+  viewMode, 
+  netWorth, 
+  assetsTotal, 
+  liabilitiesTotal,
+  cashTotal,
+  investmentsTotal,
+  homeLoan
+}: AIChatDialogProps) => {
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const getInitialMessage = () => {
+    if (viewMode === "net-worth") {
+      return `Hi! I'm your financial assistant. Your current net worth is ${formatCurrency(netWorth)}. You have ${formatCurrency(assetsTotal)} in assets and ${formatCurrency(liabilitiesTotal)} in liabilities. You're making great progress toward your retirement goal! How can I help you optimize your financial strategy today?`;
+    } else if (viewMode === "assets") {
+      return `Hi! I'm your financial assistant. Your total assets are ${formatCurrency(assetsTotal)}, with ${formatCurrency(cashTotal)} in cash and ${formatCurrency(investmentsTotal)} in investments. I can help you optimize your portfolio allocation, find better investment opportunities, or discuss your savings strategy. What would you like to explore?`;
+    } else {
+      return `Hi! I'm your financial assistant. Your total liabilities are ${formatCurrency(liabilitiesTotal)}, including your home loan of ${formatCurrency(homeLoan)}. I can help you create a debt payoff strategy, explore refinancing options, or prioritize which debts to tackle first. How can I assist you today?`;
+    }
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm your financial assistant. How can I help you today?",
+      content: getInitialMessage(),
     },
   ]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMessages([
+        {
+          role: "assistant",
+          content: getInitialMessage(),
+        },
+      ]);
+    }
+  }, [isOpen, viewMode]);
   const [input, setInput] = useState("");
 
   const handleSend = () => {
