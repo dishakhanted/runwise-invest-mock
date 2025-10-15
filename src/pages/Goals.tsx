@@ -201,6 +201,129 @@ const Goals = () => {
               )}
             </div>
 
+            {/* Recommendations Section */}
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-4">Recommendations for you</h3>
+              <div className="space-y-3">
+                {selectedGoal.id === "1" && (
+                  <>
+                    <Card className="p-4 border-l-4 border-l-primary">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <TrendingUp className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">Increase your monthly contribution</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Adding just $500/month could help you reach your {formatCurrency(50000)} emergency fund goal 8 months faster.
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 border-l-4 border-l-[hsl(var(--icon-mint))]">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[hsl(var(--icon-mint))]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <Wallet className="h-4 w-4 text-[hsl(var(--icon-mint))]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">Consider a high-yield savings account</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Current top rates offer 4.5% APY vs your current 3.75% - that's an extra {formatCurrency(150)}/year.
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </>
+                )}
+                {selectedGoal.id === "2" && (
+                  <>
+                    <Card className="p-4 border-l-4 border-l-primary">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <TrendingUp className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">Optimize your stock allocation</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Your current 50% stocks allocation is good, but consider diversifying with index funds for stable growth.
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 border-l-4 border-l-[hsl(var(--icon-blue))]">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[hsl(var(--icon-blue))]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <Building2 className="h-4 w-4 text-[hsl(var(--icon-blue))]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">Take advantage of market dips</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Set up automatic investing during market corrections to maximize your down payment growth potential.
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 border-l-4 border-l-[hsl(var(--icon-mint))]">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[hsl(var(--icon-mint))]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <Wallet className="h-4 w-4 text-[hsl(var(--icon-mint))]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">Reduce spending on non-essentials</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Cutting just $200/month from dining out could add {formatCurrency(2400)}/year to your down payment fund.
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </>
+                )}
+                {selectedGoal.id === "3" && (
+                  <>
+                    <Card className="p-4 border-l-4 border-l-primary">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <TrendingUp className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">You're on track!</h4>
+                          <p className="text-sm text-muted-foreground">
+                            At your current pace, you'll exceed your {formatCurrency(1000000)} retirement goal by age 65. Great work!
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 border-l-4 border-l-[hsl(var(--icon-blue))]">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[hsl(var(--icon-blue))]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <Building2 className="h-4 w-4 text-[hsl(var(--icon-blue))]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">Consider increasing bond allocation</h4>
+                          <p className="text-sm text-muted-foreground">
+                            As you approach retirement, gradually shifting to 30% bonds can help protect your gains.
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 border-l-4 border-l-[hsl(var(--icon-cyan))]">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[hsl(var(--icon-cyan))]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <Target className="h-4 w-4 text-[hsl(var(--icon-cyan))]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">Maximize employer match</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Make sure you're contributing enough to your 401(k) to get the full company match - it's free money!
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </>
+                )}
+              </div>
+            </div>
+
             {/* AI Summary Box for Goal */}
             <Card 
               className="mt-6 cursor-pointer hover:shadow-lg transition-shadow border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
