@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { AccountCard } from "@/components/AccountCard";
 import { WealthChart } from "@/components/WealthChart";
 import { Logo } from "@/components/Logo";
+import { AIChatDialog } from "@/components/AIChatDialog";
 import {
   Wallet,
   Umbrella,
@@ -16,14 +17,17 @@ import {
   GraduationCap,
   Car,
   Target,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "net-worth" | "assets" | "liabilities";
 
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
 
   const cashTotal = 105270.54;
@@ -118,36 +122,59 @@ const Dashboard = () => {
 
         {/* Chart - only show for net worth */}
         {viewMode === "net-worth" && (
-          <WealthChart
-            currentAmount={formatCurrency(getCurrentAmount())}
-            futureAmount="$1.3M net worth at 65"
-            goals={[
-              {
-                id: "1",
-                name: "Emergency Fund",
-                targetAmount: 50000,
-                currentAmount: 30000,
-                targetAge: 35,
-                position: { x: 150, y: 95 },
-              },
-              {
-                id: "2",
-                name: "House Down Payment",
-                targetAmount: 100000,
-                currentAmount: 45000,
-                targetAge: 45,
-                position: { x: 220, y: 75 },
-              },
-              {
-                id: "3",
-                name: "Retirement",
-                targetAmount: 1000000,
-                currentAmount: 237672,
-                targetAge: 65,
-                position: { x: 320, y: 50 },
-              },
-            ]}
-          />
+          <>
+            <WealthChart
+              currentAmount={formatCurrency(getCurrentAmount())}
+              futureAmount="$1.3M net worth at 65"
+              goals={[
+                {
+                  id: "1",
+                  name: "Emergency Fund",
+                  targetAmount: 50000,
+                  currentAmount: 30000,
+                  targetAge: 35,
+                  position: { x: 150, y: 95 },
+                },
+                {
+                  id: "2",
+                  name: "House Down Payment",
+                  targetAmount: 100000,
+                  currentAmount: 45000,
+                  targetAge: 45,
+                  position: { x: 220, y: 75 },
+                },
+                {
+                  id: "3",
+                  name: "Retirement",
+                  targetAmount: 1000000,
+                  currentAmount: 237672,
+                  targetAge: 65,
+                  position: { x: 320, y: 50 },
+                },
+              ]}
+            />
+            
+            {/* AI Summary Box */}
+            <Card 
+              className="mt-6 cursor-pointer hover:shadow-lg transition-shadow border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
+              onClick={() => setIsChatOpen(true)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold mb-1">Financial Summary</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Your net worth is {formatCurrency(netWorth)} with assets totaling {formatCurrency(assetsTotal)}. 
+                      You're on track to reach your retirement goal. Click to chat with your AI assistant for personalized insights.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {/* Cash Section */}
@@ -305,6 +332,7 @@ const Dashboard = () => {
       </div>
 
       <BottomNav />
+      <AIChatDialog isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };
