@@ -3,11 +3,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Send, Bot, User, TrendingUp, Wallet, Building2, Target, Check } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+interface Recommendation {
+  id: string;
+  title: string;
+  description: string;
+  icon: any;
+  iconColor: string;
 }
 
 interface Goal {
@@ -31,6 +40,8 @@ interface GoalAIChatDialogProps {
 }
 
 export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProps) => {
+  const [selectedRecommendation, setSelectedRecommendation] = useState<string | null>(null);
+  
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -38,6 +49,78 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const getRecommendations = (): Recommendation[] => {
+    if (!goal) return [];
+    
+    if (goal.id === "1") {
+      return [
+        {
+          id: "rec1",
+          title: "Increase your monthly contribution",
+          description: `Adding just $500/month could help you reach your ${formatCurrency(50000)} emergency fund goal 8 months faster.`,
+          icon: TrendingUp,
+          iconColor: "bg-primary/10 text-primary border-l-primary",
+        },
+        {
+          id: "rec2",
+          title: "Consider a high-yield savings account",
+          description: `Current top rates offer 4.5% APY vs your current 3.75% - that's an extra ${formatCurrency(150)}/year.`,
+          icon: Wallet,
+          iconColor: "bg-[hsl(var(--icon-mint))]/10 text-[hsl(var(--icon-mint))] border-l-[hsl(var(--icon-mint))]",
+        },
+      ];
+    } else if (goal.id === "2") {
+      return [
+        {
+          id: "rec3",
+          title: "Optimize your stock allocation",
+          description: "Your current 50% stocks allocation is good, but consider diversifying with index funds for stable growth.",
+          icon: TrendingUp,
+          iconColor: "bg-primary/10 text-primary border-l-primary",
+        },
+        {
+          id: "rec4",
+          title: "Take advantage of market dips",
+          description: "Set up automatic investing during market corrections to maximize your down payment growth potential.",
+          icon: Building2,
+          iconColor: "bg-[hsl(var(--icon-blue))]/10 text-[hsl(var(--icon-blue))] border-l-[hsl(var(--icon-blue))]",
+        },
+        {
+          id: "rec5",
+          title: "Reduce spending on non-essentials",
+          description: `Cutting just $200/month from dining out could add ${formatCurrency(2400)}/year to your down payment fund.`,
+          icon: Wallet,
+          iconColor: "bg-[hsl(var(--icon-mint))]/10 text-[hsl(var(--icon-mint))] border-l-[hsl(var(--icon-mint))]",
+        },
+      ];
+    } else if (goal.id === "3") {
+      return [
+        {
+          id: "rec6",
+          title: "You're on track!",
+          description: `At your current pace, you'll exceed your ${formatCurrency(1000000)} retirement goal by age 65. Great work!`,
+          icon: TrendingUp,
+          iconColor: "bg-primary/10 text-primary border-l-primary",
+        },
+        {
+          id: "rec7",
+          title: "Consider increasing bond allocation",
+          description: "As you approach retirement, gradually shifting to 30% bonds can help protect your gains.",
+          icon: Building2,
+          iconColor: "bg-[hsl(var(--icon-blue))]/10 text-[hsl(var(--icon-blue))] border-l-[hsl(var(--icon-blue))]",
+        },
+        {
+          id: "rec8",
+          title: "Maximize employer match",
+          description: "Make sure you're contributing enough to your 401(k) to get the full company match - it's free money!",
+          icon: Target,
+          iconColor: "bg-[hsl(var(--icon-cyan))]/10 text-[hsl(var(--icon-cyan))] border-l-[hsl(var(--icon-cyan))]",
+        },
+      ];
+    }
+    return [];
   };
 
   const getInitialMessage = () => {
@@ -78,8 +161,40 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           content: getInitialMessage(),
         },
       ]);
+      setSelectedRecommendation(null);
     }
   }, [isOpen, goal]);
+
+  const handleRecommendationClick = (recId: string) => {
+    setSelectedRecommendation(recId);
+  };
+
+  const handleExecute = (rec: Recommendation) => {
+    const executeMessage: Message = {
+      role: "assistant",
+      content: `Great! I'll help you execute "${rec.title}". This recommendation suggests: ${rec.description} I'm setting this up for you now. You should see the changes reflected in your account shortly.`,
+    };
+    setMessages((prev) => [...prev, executeMessage]);
+    setSelectedRecommendation(null);
+  };
+
+  const handleChatAbout = (rec: Recommendation) => {
+    const userMessage: Message = {
+      role: "user",
+      content: `Tell me more about: ${rec.title}`,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    
+    setTimeout(() => {
+      const chatResponse: Message = {
+        role: "assistant",
+        content: `Let me explain more about "${rec.title}". ${rec.description} Would you like me to provide specific steps to implement this recommendation, or do you have questions about how this will impact your ${goal?.name} goal?`,
+      };
+      setMessages((prev) => [...prev, chatResponse]);
+    }, 1000);
+    
+    setSelectedRecommendation(null);
+  };
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -112,6 +227,8 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     }
   };
 
+  const recommendations = getRecommendations();
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl h-[600px] flex flex-col">
@@ -124,6 +241,66 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
 
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-4">
+            {/* Recommendations Section */}
+            {recommendations.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Recommendations for you</h3>
+                <div className="space-y-2">
+                  {recommendations.map((rec) => {
+                    const Icon = rec.icon;
+                    const isSelected = selectedRecommendation === rec.id;
+                    
+                    return (
+                      <Card
+                        key={rec.id}
+                        className={`p-3 border-l-4 cursor-pointer hover:shadow-md transition-all ${rec.iconColor.split(' ').pop()}`}
+                        onClick={() => handleRecommendationClick(rec.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${rec.iconColor.split(' ').slice(0, -1).join(' ')}`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm mb-1">{rec.title}</h4>
+                            <p className="text-xs text-muted-foreground mb-2">{rec.description}</p>
+                            
+                            {isSelected && (
+                              <div className="flex gap-2 mt-3">
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExecute(rec);
+                                  }}
+                                  className="h-8 text-xs"
+                                >
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Execute
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleChatAbout(rec);
+                                  }}
+                                  className="h-8 text-xs"
+                                >
+                                  <Bot className="h-3 w-3 mr-1" />
+                                  Chat with AI
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Chat Messages */}
             {messages.map((message, index) => (
               <div
                 key={index}
