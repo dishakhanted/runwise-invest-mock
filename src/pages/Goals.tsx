@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
+import { GoalAIChatDialog } from "@/components/GoalAIChatDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Target, Wallet, TrendingUp, Building2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface Goal {
@@ -52,6 +53,7 @@ const Goals = () => {
   ]);
 
   const [selectedGoalId, setSelectedGoalId] = useState(goals[0]?.id || "");
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -198,10 +200,37 @@ const Goals = () => {
                 </Card>
               )}
             </div>
+
+            {/* AI Summary Box for Goal */}
+            <Card 
+              className="mt-6 cursor-pointer hover:shadow-lg transition-shadow border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
+              onClick={() => setIsChatOpen(true)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold mb-1">Goal Summary & Insights</h3>
+                    <p className="text-sm text-muted-foreground">
+                      You're {Math.round(getProgress(selectedGoal.currentAmount, selectedGoal.targetAmount))}% of the way to your {selectedGoal.name} goal. 
+                      You need {formatCurrency(selectedGoal.targetAmount - selectedGoal.currentAmount)} more to reach your target. 
+                      Click to chat with your AI assistant for personalized strategies to reach this goal faster.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </>
         )}
       </div>
       <BottomNav />
+      <GoalAIChatDialog 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)}
+        goal={selectedGoal || null}
+      />
     </div>
   );
 };
