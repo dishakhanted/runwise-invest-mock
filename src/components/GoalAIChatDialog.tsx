@@ -187,6 +187,32 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     setDeniedRecommendations((prev) => new Set([...prev, rec.id]));
   };
 
+  const handleKnowMore = (rec: Recommendation) => {
+    let detailedExplanation = "";
+    
+    if (rec.id === "rec1") {
+      detailedExplanation = `Increasing your monthly contribution by $500 is a powerful strategy for several reasons:\n\n1. **Time Value**: The earlier you reach your emergency fund goal, the sooner you can redirect funds to other wealth-building goals.\n\n2. **Security**: A fully-funded emergency fund protects your other investments from being liquidated during unexpected expenses.\n\n3. **Portfolio Impact**: Once your emergency fund is complete, that $500/month can be allocated to higher-return investments, potentially adding $200,000+ to your retirement portfolio over time.\n\n4. **Peace of Mind**: Financial security reduces stress and allows for better long-term decision making across your entire portfolio.`;
+    } else if (rec.id === "rec2") {
+      detailedExplanation = `Switching to a high-yield savings account is a low-risk, high-impact move:\n\n1. **Additional Returns**: The 0.75% APY difference translates to $${(50000 * 0.0075).toFixed(0)} annually at your target amount - that's compound growth without additional risk.\n\n2. **Liquidity**: High-yield savings accounts maintain the same liquidity as traditional accounts, crucial for emergency funds.\n\n3. **Portfolio Efficiency**: Every dollar earning optimal returns improves your overall portfolio performance.\n\n4. **Inflation Protection**: Higher yields help preserve purchasing power over time, protecting your emergency fund's real value.`;
+    } else if (rec.id === "rec3") {
+      detailedExplanation = `Optimizing your stock allocation with index funds offers significant advantages:\n\n1. **Diversification**: Index funds spread risk across hundreds of companies, reducing individual stock volatility.\n\n2. **Lower Costs**: Passive index funds typically have expense ratios 90% lower than active funds, meaning more returns stay in your portfolio.\n\n3. **Proven Performance**: Over 15-year periods, index funds outperform 90% of actively managed funds.\n\n4. **Time Efficiency**: As you approach your down payment goal, stable growth becomes more important than maximum returns.`;
+    } else if (rec.id === "rec4") {
+      detailedExplanation = `Automatic investing during market corrections is a proven wealth-building strategy:\n\n1. **Buy Low**: Market dips offer discounted entry points that can significantly boost long-term returns.\n\n2. **Emotion-Free**: Automated investing removes fear-based decisions that cause many investors to miss opportunities.\n\n3. **Dollar-Cost Averaging**: Regular investments during volatility smooth out your cost basis and reduce timing risk.\n\n4. **Portfolio Growth**: Historical data shows that buying during 10%+ corrections has generated 20-30% higher returns over 3-5 year periods.`;
+    } else if (rec.id === "rec7") {
+      detailedExplanation = `Increasing bond allocation as you approach retirement is a fundamental strategy:\n\n1. **Capital Preservation**: Bonds protect your accumulated wealth from stock market volatility when you have less time to recover from downturns.\n\n2. **Income Generation**: Bonds provide steady income through interest payments, which becomes valuable in retirement.\n\n3. **Portfolio Stability**: A 30% bond allocation can reduce portfolio volatility by 40% while maintaining strong growth potential.\n\n4. **Sequence of Returns Risk**: The 5 years before and after retirement are critical - bonds protect against negative returns during this vulnerable period.\n\n5. **Historical Performance**: The traditional 60/40 stocks/bonds allocation has delivered strong risk-adjusted returns for retirees over decades.`;
+    } else if (rec.id === "rec8") {
+      detailedExplanation = `Maximizing employer 401(k) match is the highest-return investment available:\n\n1. **Instant 100% Return**: Employer match is literally free money - a guaranteed return you can't get anywhere else.\n\n2. **Tax Benefits**: Contributions reduce your taxable income now, and grow tax-deferred until retirement.\n\n3. **Compound Growth**: A $3,000 annual match growing at 7% becomes $300,000 over 30 years.\n\n4. **Portfolio Foundation**: This guaranteed return improves your entire portfolio's risk-adjusted performance.\n\n5. **Retirement Security**: Missing employer match means leaving potentially $100,000-$500,000 on the table over a career.`;
+    } else {
+      detailedExplanation = `This recommendation is designed to optimize your financial position by improving returns, reducing risk, or accelerating goal achievement. The impact extends beyond this single goal to strengthen your overall financial portfolio through better allocation, risk management, and strategic timing.`;
+    }
+    
+    const knowMoreMessage: Message = {
+      role: "assistant",
+      content: detailedExplanation,
+    };
+    setMessages((prev) => [...prev, knowMoreMessage]);
+  };
+
   const handleSend = () => {
     if (!input.trim()) return;
 
@@ -270,6 +296,15 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                                   className="h-8 text-xs"
                                 >
                                   Deny
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={() => handleKnowMore(rec)}
+                                  className="h-8 text-xs"
+                                >
+                                  <Bot className="h-3 w-3 mr-1" />
+                                  Know More
                                 </Button>
                               </div>
                             )}
