@@ -30,8 +30,8 @@ const Dashboard = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
 
-  const cashTotal = 105270.54;
-  const investmentsTotal = 50106.56;
+  const cashTotal = 105741.75;
+  const investmentsTotal = 0;
   const fidelityTotal = 33068.62;
   const robinhoodTotal = 8500.0;
   const assetsTotal = cashTotal + investmentsTotal + fidelityTotal + robinhoodTotal;
@@ -192,25 +192,36 @@ const Dashboard = () => {
 
             <div className="divide-y divide-border">
               <AccountCard
-                icon={Wallet}
-                iconColor="bg-card border-2 border-foreground/10"
-                title="Individual Cash Account"
-                subtitle="Individual · 3.75% APY"
-                amount="$7,882.95"
+                icon={Building2}
+                iconColor="bg-icon-blue"
+                title="Checking Account"
+                subtitle="Santander"
+                amount="$25,000.00"
+                timeInfo="2 hours ago"
               />
               <AccountCard
-                icon={Umbrella}
+                icon={Building2}
+                iconColor="bg-icon-blue"
+                title="Savings Account"
+                subtitle="Santander"
+                amount="$40,000.00"
+                timeInfo="2 hours ago"
+              />
+              <AccountCard
+                icon={Building2}
                 iconColor="bg-icon-purple"
-                title="Emergency fund"
-                subtitle="Individual · 3.75% APY"
-                amount="$81,600.00"
+                title="Checking Account"
+                subtitle="Bank of America"
+                amount="$20,000.00"
+                timeInfo="1 hour ago"
               />
               <AccountCard
-                icon={Banknote}
-                iconColor="bg-card border-2 border-foreground/10"
-                title="Savings"
-                subtitle="Individual · 3.75% APY"
-                amount="$14,367.00"
+                icon={Building2}
+                iconColor="bg-icon-purple"
+                title="Savings Account"
+                subtitle="Bank of America"
+                amount="$20,000.00"
+                timeInfo="1 hour ago"
               />
               <AccountCard
                 icon={Building2}
@@ -243,20 +254,6 @@ const Dashboard = () => {
             </div>
 
             <div className="divide-y divide-border">
-              <AccountCard
-                icon={TrendingUp}
-                iconColor="bg-card border-2 border-foreground/10"
-                title="Individual Automated Investing Account"
-                subtitle="Individual"
-                amount="$12,823.82"
-              />
-              <AccountCard
-                icon={BarChart3}
-                iconColor="bg-card border-2 border-foreground/10"
-                title="Your first stock portfolio"
-                subtitle="Individual"
-                amount="$4,214.12"
-              />
               <AccountCard
                 icon={Sparkles}
                 iconColor="bg-success"
