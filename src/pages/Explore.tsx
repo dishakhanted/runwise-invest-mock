@@ -93,6 +93,33 @@ const Explore = () => {
           </div>
         )}
 
+        {/* Investment Suggestions Grid */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4">Suggestions for you</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {categories.slice(1, 5).map((category) => {
+              const randomStock = category.stocks[Math.floor(Math.random() * category.stocks.length)];
+              return (
+                <Card 
+                  key={category.id} 
+                  className="cursor-pointer hover:shadow-lg transition-shadow border-border/50"
+                  onClick={() => handleCategoryClick(category)}
+                >
+                  <CardContent className="p-4">
+                    <div className={`w-12 h-12 rounded-full ${randomStock.color} flex items-center justify-center text-2xl mb-3`}>
+                      {randomStock.emoji}
+                    </div>
+                    <CardTitle className="text-sm mb-1">{category.name}</CardTitle>
+                    <CardDescription className="text-xs line-clamp-2">
+                      {category.description.substring(0, 60)}...
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
         <CategoryDetail
           category={selectedCategory}
           isOpen={isDialogOpen}
