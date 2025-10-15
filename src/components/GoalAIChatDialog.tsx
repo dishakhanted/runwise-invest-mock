@@ -40,7 +40,6 @@ interface GoalAIChatDialogProps {
 }
 
 export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProps) => {
-  const [selectedRecommendation, setSelectedRecommendation] = useState<string | null>(null);
   
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -161,39 +160,23 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           content: getInitialMessage(),
         },
       ]);
-      setSelectedRecommendation(null);
     }
   }, [isOpen, goal]);
 
-  const handleRecommendationClick = (recId: string) => {
-    setSelectedRecommendation(recId);
-  };
-
-  const handleExecute = (rec: Recommendation) => {
-    const executeMessage: Message = {
+  const handleApprove = (rec: Recommendation) => {
+    const approveMessage: Message = {
       role: "assistant",
-      content: `Great! I'll help you execute "${rec.title}". This recommendation suggests: ${rec.description} I'm setting this up for you now. You should see the changes reflected in your account shortly.`,
+      content: `Perfect! I've approved "${rec.title}". ${rec.description} This change will be implemented immediately and you'll see the impact on your ${goal?.name} goal in your next portfolio update.`,
     };
-    setMessages((prev) => [...prev, executeMessage]);
-    setSelectedRecommendation(null);
+    setMessages((prev) => [...prev, approveMessage]);
   };
 
-  const handleChatAbout = (rec: Recommendation) => {
-    const userMessage: Message = {
-      role: "user",
-      content: `Tell me more about: ${rec.title}`,
+  const handleDeny = (rec: Recommendation) => {
+    const denyMessage: Message = {
+      role: "assistant",
+      content: `No problem! I've noted that you're not interested in "${rec.title}" at this time. Would you like to discuss alternative strategies for your ${goal?.name} goal, or is there anything else I can help you with?`,
     };
-    setMessages((prev) => [...prev, userMessage]);
-    
-    setTimeout(() => {
-      const chatResponse: Message = {
-        role: "assistant",
-        content: `Let me explain more about "${rec.title}". ${rec.description} Would you like me to provide specific steps to implement this recommendation, or do you have questions about how this will impact your ${goal?.name} goal?`,
-      };
-      setMessages((prev) => [...prev, chatResponse]);
-    }, 1000);
-    
-    setSelectedRecommendation(null);
+    setMessages((prev) => [...prev, denyMessage]);
   };
 
   const handleSend = () => {
@@ -248,13 +231,11 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                 <div className="space-y-2">
                   {recommendations.map((rec) => {
                     const Icon = rec.icon;
-                    const isSelected = selectedRecommendation === rec.id;
                     
                     return (
                       <Card
                         key={rec.id}
-                        className={`p-3 border-l-4 cursor-pointer hover:shadow-md transition-all ${rec.iconColor.split(' ').pop()}`}
-                        onClick={() => handleRecommendationClick(rec.id)}
+                        className={`p-3 border-l-4 ${rec.iconColor.split(' ').pop()}`}
                       >
                         <div className="flex items-start gap-3">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${rec.iconColor.split(' ').slice(0, -1).join(' ')}`}>
@@ -264,33 +245,24 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                             <h4 className="font-semibold text-sm mb-1">{rec.title}</h4>
                             <p className="text-xs text-muted-foreground mb-2">{rec.description}</p>
                             
-                            {isSelected && (
-                              <div className="flex gap-2 mt-3">
-                                <Button
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleExecute(rec);
-                                  }}
-                                  className="h-8 text-xs"
-                                >
-                                  <Check className="h-3 w-3 mr-1" />
-                                  Execute
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleChatAbout(rec);
-                                  }}
-                                  className="h-8 text-xs"
-                                >
-                                  <Bot className="h-3 w-3 mr-1" />
-                                  Chat with AI
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex gap-2 mt-3">
+                              <Button
+                                size="sm"
+                                onClick={() => handleApprove(rec)}
+                                className="h-8 text-xs"
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeny(rec)}
+                                className="h-8 text-xs"
+                              >
+                                Deny
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </Card>
