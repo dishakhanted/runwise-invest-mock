@@ -2,9 +2,11 @@ import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { ChevronRight, Landmark, TrendingUp, Bell, HelpCircle, List, FolderOpen, LogOut, User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Settings = () => {
+  const navigate = useNavigate();
+  
   const settingsItems = [
     {
       icon: User,
@@ -55,6 +57,7 @@ const Settings = () => {
       icon: FolderOpen,
       title: "Documents",
       description: "Download or upload statements, tax documents, agreements",
+      path: "/documents",
     },
   ];
 
@@ -159,6 +162,7 @@ const Settings = () => {
             <Button
               variant="ghost"
               className="w-full flex items-center justify-start gap-4 h-auto py-4 px-0 hover:opacity-80"
+              onClick={() => navigate('/login')}
             >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <LogOut className="h-5 w-5 text-primary" />
