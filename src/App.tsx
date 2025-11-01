@@ -11,6 +11,7 @@ import Explore from "./pages/Explore";
 import Transfer from "./pages/Transfer";
 import Goals from "./pages/Goals";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/transfer" element={<Transfer />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
