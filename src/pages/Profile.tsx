@@ -1,205 +1,116 @@
 import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
-import { ChevronRight, Lock, Info } from "lucide-react";
+import { ChevronRight, Landmark, TrendingUp, Bell, HelpCircle, List, FolderOpen, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Profile = () => {
-  const profileData = {
-    personalInfo: [
-      {
-        label: "Name",
-        value: "Disha Padamraj Khanted",
-        action: "Request to update",
-        actionType: "button",
-      },
-      {
-        label: "Preferred name",
-        value: "Disha",
-        hasArrow: true,
-      },
-      {
-        label: "Marital status",
-        value: "Single",
-        hasArrow: true,
-      },
-      {
-        label: "Country of citizenship",
-        value: "India",
-        locked: true,
-      },
-      {
-        label: "Liquid net worth",
-        value: "$70,000",
-        hasArrow: true,
-      },
-    ],
-    taxInfo: [
-      {
-        label: "Pretax annual income",
-        value: "$94,000",
-        hasArrow: true,
-      },
-      {
-        label: "Tax filing state",
-        value: "Illinois",
-        hasInfo: true,
-      },
-      {
-        label: "Tax filing status",
-        value: "Single",
-        hasArrow: true,
-      },
-    ],
-    contactInfo: [
-      {
-        label: "Residential address",
-        value: "151 N Michigan Ave Apt 1114, Chicago, IL 60601-7538",
-        hasArrow: true,
-      },
-    ],
-    employmentInfo: [
-      {
-        label: "Employment type",
-        value: "Employed",
-        hasArrow: true,
-      },
-      {
-        label: "Current employer",
-        value: "Columbia university",
-        hasArrow: true,
-      },
-      {
-        label: "Job title",
-        value: "Research",
-        hasArrow: true,
-      },
-    ],
-  };
+  const settingsItems = [
+    {
+      icon: Landmark,
+      title: "Accounts",
+      description: "View account details, link transfer accounts, set beneficiaries, and more.",
+    },
+    {
+      icon: TrendingUp,
+      title: "Investing",
+      description: "Manage stock restrictions and securities lending across accounts.",
+    },
+    {
+      icon: Bell,
+      title: "Notifications",
+      description: "Manage push and email preferences.",
+    },
+  ];
+
+  const infoItems = [
+    {
+      icon: HelpCircle,
+      title: "Support",
+      description: "Contact us, help center, ATM locator",
+    },
+    {
+      icon: List,
+      title: "Activity log",
+      description: "See what's happening in your accounts.",
+    },
+    {
+      icon: FolderOpen,
+      title: "Documents",
+      description: "Download or upload statements, tax documents, agreements",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
-        <h1 className="text-2xl font-semibold text-center mb-8">Profile</h1>
-
-        <Tabs defaultValue="personal" className="w-full">
-          <TabsList className="w-full grid grid-cols-4 mb-6">
-            <TabsTrigger value="personal">Personal</TabsTrigger>
-            <TabsTrigger value="tax">Tax</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="employment">Employment</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="personal" className="space-y-8">
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground mb-4 tracking-wider">
-                PERSONAL INFO
-              </h3>
-              <div className="space-y-6">
-                {profileData.personalInfo.map((item, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="text-lg font-medium mb-1">{item.label}</div>
-                        <div className="text-muted-foreground">{item.value}</div>
-                      </div>
-                      {item.actionType === "button" && (
-                        <Button
-                          variant="ghost"
-                          className="text-primary hover:text-primary/80 px-2"
-                        >
-                          {item.action}
-                        </Button>
-                      )}
-                      {item.hasArrow && (
-                        <ChevronRight className="h-5 w-5 text-primary mt-1" />
-                      )}
-                      {item.locked && (
-                        <Lock className="h-5 w-5 text-primary mt-1" />
-                      )}
-                    </div>
+        <div className="space-y-8">
+          {/* SETTINGS Section */}
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground mb-6 tracking-wider">
+              SETTINGS
+            </h3>
+            <div className="space-y-6">
+              {settingsItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                    <item.icon className="h-5 w-5 text-primary" />
                   </div>
-                ))}
-              </div>
-            </div>
-            <DisclosureFooter />
-          </TabsContent>
-
-          <TabsContent value="tax" className="space-y-8">
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground mb-4 tracking-wider">
-                TAX INFO
-              </h3>
-              <div className="space-y-6">
-                {profileData.taxInfo.map((item, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="text-lg font-medium mb-1">{item.label}</div>
-                        <div className="text-muted-foreground">{item.value}</div>
-                      </div>
-                      {item.hasArrow && (
-                        <ChevronRight className="h-5 w-5 text-primary mt-1" />
-                      )}
-                      {item.hasInfo && (
-                        <Info className="h-5 w-5 text-primary mt-1" />
-                      )}
-                    </div>
+                  <div className="flex-1">
+                    <h4 className="text-lg font-semibold mb-1">{item.title}</h4>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {item.description}
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground mt-2 flex-shrink-0" />
+                </div>
+              ))}
             </div>
-            <DisclosureFooter />
-          </TabsContent>
+          </div>
 
-          <TabsContent value="contact" className="space-y-8">
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground mb-4 tracking-wider">
-                CONTACT INFO
-              </h3>
-              <div className="space-y-6">
-                {profileData.contactInfo.map((item, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="text-lg font-medium mb-1">{item.label}</div>
-                        <div className="text-muted-foreground">{item.value}</div>
-                      </div>
-                      {item.hasArrow && (
-                        <ChevronRight className="h-5 w-5 text-primary mt-1" />
-                      )}
-                    </div>
+          {/* INFO Section */}
+          <div className="pt-4">
+            <h3 className="text-xs font-semibold text-muted-foreground mb-6 tracking-wider">
+              INFO
+            </h3>
+            <div className="space-y-6">
+              {infoItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                    <item.icon className="h-5 w-5 text-primary" />
                   </div>
-                ))}
-              </div>
+                  <div className="flex-1">
+                    <h4 className="text-lg font-semibold mb-1">{item.title}</h4>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground mt-2 flex-shrink-0" />
+                </div>
+              ))}
             </div>
-            <DisclosureFooter />
-          </TabsContent>
+          </div>
 
-          <TabsContent value="employment" className="space-y-8">
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground mb-4 tracking-wider">
-                EMPLOYMENT INFO
-              </h3>
-              <div className="space-y-6">
-                {profileData.employmentInfo.map((item, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="text-lg font-medium mb-1">{item.label}</div>
-                        <div className="text-muted-foreground">{item.value}</div>
-                      </div>
-                      {item.hasArrow && (
-                        <ChevronRight className="h-5 w-5 text-primary mt-1" />
-                      )}
-                    </div>
-                  </div>
-                ))}
+          {/* Sign out */}
+          <div className="pt-4">
+            <Button
+              variant="ghost"
+              className="w-full flex items-center justify-start gap-4 h-auto py-4 px-0 hover:opacity-80"
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <LogOut className="h-5 w-5 text-primary" />
               </div>
-            </div>
-            <DisclosureFooter />
-          </TabsContent>
-        </Tabs>
+              <span className="text-lg font-semibold">Sign out</span>
+            </Button>
+          </div>
+
+          <DisclosureFooter />
+        </div>
       </div>
       <BottomNav />
     </div>

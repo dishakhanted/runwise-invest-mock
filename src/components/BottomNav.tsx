@@ -7,7 +7,7 @@ const navItems = [
   { icon: Search, label: "Explore", path: "/explore" },
   { icon: MessageCircle, label: "Chat", path: "/chat" },
   { icon: Target, label: "Goals", path: "/goals" },
-  { icon: User, label: "Profile", path: "/profile" },
+  { icon: User, label: "Settings", path: "/profile" },
 ];
 
 export const BottomNav = () => {
