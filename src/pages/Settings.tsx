@@ -28,6 +28,7 @@ const Settings = () => {
       icon: TrendingUp,
       title: "Investing",
       description: "Manage stock restrictions and securities lending across accounts.",
+      path: "/investing",
     },
     {
       icon: Bell,
