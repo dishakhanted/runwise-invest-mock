@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
 import { AccountCard } from "@/components/AccountCard";
 import { WealthChart } from "@/components/WealthChart";
@@ -13,7 +12,6 @@ import {
   Building2,
   TrendingUp,
   BarChart3,
-  Sparkles,
   Home,
   GraduationCap,
   Car,
@@ -31,7 +29,6 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLinkAccountOpen, setIsLinkAccountOpen] = useState(false);
-  const navigate = useNavigate();
 
   const cashTotal = 105741.75;
   const investmentsTotal = 0;
@@ -76,14 +73,6 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <h1 className="text-5xl font-bold">{formatCurrency(getCurrentAmount())}</h1>
-          <Button
-            variant="ghost"
-            className="text-primary hover:text-primary/80 hover:bg-transparent"
-            onClick={() => navigate("/goals")}
-          >
-            <Sparkles className="h-5 w-5 mr-2" />
-            Goals
-          </Button>
         </div>
 
         {/* Toggle Buttons */}
@@ -258,7 +247,7 @@ const Dashboard = () => {
 
             <div className="divide-y divide-border">
               <AccountCard
-                icon={Sparkles}
+                icon={TrendingUp}
                 iconColor="bg-success"
                 title="Personal Investment - 6206"
                 subtitle="Fidelity Investments"
@@ -266,7 +255,7 @@ const Dashboard = () => {
                 timeInfo="16 hours ago"
               />
               <AccountCard
-                icon={Sparkles}
+                icon={TrendingUp}
                 iconColor="bg-success"
                 title="Roth IRA (after-tax) - 3355"
                 subtitle="Fidelity Investments"
