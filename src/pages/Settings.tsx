@@ -16,6 +16,7 @@ const Settings = () => {
       icon: Lock,
       title: "Security",
       description: "Set password, email, PIN, biometrics, two-factor authentication, trusted contact, and more.",
+      path: "/security",
     },
     {
       icon: Landmark,
