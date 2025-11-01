@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { BottomNav } from "@/components/BottomNav";
+import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { Bot, Send, User, Plus } from "lucide-react";
 
 interface Message {
@@ -229,6 +230,8 @@ const Chat = () => {
             </div>
           </div>
         </div>
+
+        <DisclosureFooter />
       </div>
 
       <BottomNav />

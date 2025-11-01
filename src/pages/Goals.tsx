@@ -228,6 +228,8 @@ const Goals = () => {
             </Card>
           </>
         )}
+
+        <DisclosureFooter />
       </div>
       <BottomNav />
       <GoalAIChatDialog 
@@ -239,7 +241,6 @@ const Goals = () => {
         isOpen={isNewGoalOpen}
         onClose={() => setIsNewGoalOpen(false)}
       />
-      <DisclosureFooter />
     </div>
   );
 };

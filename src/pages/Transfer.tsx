@@ -127,10 +127,11 @@ const Transfer = () => {
         <Button className="w-full h-14 bg-secondary hover:bg-secondary/80 text-foreground rounded-2xl text-lg">
           Open a new account
         </Button>
+
+        <DisclosureFooter />
       </div>
 
       <BottomNav />
-      <DisclosureFooter />
     </div>
   );
 };

@@ -159,10 +159,11 @@ const Explore = () => {
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
         />
+
+        <DisclosureFooter />
       </div>
 
       <BottomNav />
-      <DisclosureFooter />
     </div>
   );
 };

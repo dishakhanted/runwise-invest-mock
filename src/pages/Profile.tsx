@@ -90,10 +90,11 @@ const Profile = () => {
             <LogOut className="h-5 w-5 mr-3" />
             <span className="text-base">Sign out</span>
           </Button>
+
+          <DisclosureFooter />
         </div>
       </div>
       <BottomNav />
-      <DisclosureFooter />
     </div>
   );
 };
