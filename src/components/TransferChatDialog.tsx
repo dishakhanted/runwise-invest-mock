@@ -49,12 +49,12 @@ export const TransferChatDialog = ({ isOpen, onClose }: TransferChatDialogProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col p-0">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] max-h-[85vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>Transfer Assistant</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col flex-1 min-h-0 px-6 pb-6">
-          <ScrollArea className="flex-1 min-h-0 pr-4">
+        <div className="flex flex-col flex-1 min-h-0 px-6">
+          <ScrollArea className="flex-1 min-h-0 pr-4 pb-6">
             <div className="space-y-4 pb-4">
               {messages.map((message, index) => (
                 <div
@@ -76,7 +76,7 @@ export const TransferChatDialog = ({ isOpen, onClose }: TransferChatDialogProps)
               ))}
             </div>
           </ScrollArea>
-          <div className="flex gap-2 mt-4 flex-shrink-0">
+          <div className="flex gap-2 mt-4 pb-6 flex-shrink-0">
             <Input
               placeholder="Type your message..."
               value={input}
