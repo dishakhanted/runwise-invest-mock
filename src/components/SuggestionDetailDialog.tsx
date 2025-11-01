@@ -90,48 +90,48 @@ export const SuggestionDetailDialog = ({ suggestion, isOpen, onClose }: Suggesti
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-full ${suggestion.color} flex items-center justify-center text-2xl`}>
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${suggestion.color} flex items-center justify-center text-xl sm:text-2xl flex-shrink-0`}>
               {suggestion.emoji}
             </div>
-            <div>
-              <DialogTitle>{suggestion.title}</DialogTitle>
-              <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-base sm:text-lg truncate">{suggestion.title}</DialogTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{suggestion.description}</p>
             </div>
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 min-h-0 px-6">
+          <div className="space-y-3 py-4">
             {messages.map((message, index) => (
-              <Card key={index} className={message.role === "user" ? "ml-8 bg-primary text-primary-foreground" : "mr-8"}>
-                <CardContent className="p-3">
-                  <p className="text-sm">{message.content}</p>
+              <Card key={index} className={message.role === "user" ? "ml-4 sm:ml-8 bg-primary text-primary-foreground" : "mr-4 sm:mr-8"}>
+                <CardContent className="p-2.5 sm:p-3">
+                  <p className="text-xs sm:text-sm">{message.content}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 pt-4 border-t">
-          <Button onClick={handleExecute} className="flex-1" size="lg">
+        <div className="flex gap-2 px-6 py-3 border-t flex-shrink-0">
+          <Button onClick={handleExecute} className="flex-1" size="default">
             <CheckCircle className="w-4 h-4 mr-2" />
             Execute
           </Button>
-          <Button onClick={onClose} variant="outline" size="lg">
+          <Button onClick={onClose} variant="outline" size="icon">
             <X className="w-4 h-4" />
           </Button>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 px-6 pb-6 flex-shrink-0">
           <Input
-            placeholder="Ask me anything about this suggestion..."
+            placeholder="Ask me anything..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex-1"
+            className="flex-1 text-sm"
           />
           <Button onClick={handleSend} size="icon">
             <Send className="w-4 h-4" />

@@ -21,17 +21,17 @@ export const DisclosureFooter = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 z-40">
+    <div className="fixed bottom-24 left-4 z-40 max-w-[calc(100vw-2rem)]">
       <Button
         variant="secondary"
         size="sm"
-        className="shadow-lg"
+        className="shadow-lg text-xs"
         onClick={() => {
           // Navigate to disclosure
           window.location.href = "/profile#disclosure";
         }}
       >
-        <FileText className="h-4 w-4 mr-2" />
+        <FileText className="h-3 w-3 mr-1.5" />
         Disclosure
       </Button>
     </div>
