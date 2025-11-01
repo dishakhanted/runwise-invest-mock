@@ -163,8 +163,8 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-lg mx-auto h-screen flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="max-w-lg mx-auto w-full flex flex-col h-screen">
         {/* Header */}
         <div className="px-6 py-6 border-b border-border flex items-center justify-between">
           <h1 className="text-2xl font-bold">AI Assistant</h1>
@@ -178,90 +178,56 @@ const Chat = () => {
           </Button>
         </div>
 
-        <div className="flex-1 flex overflow-hidden">
-          {/* Conversations List */}
-          <div className="w-full md:w-1/3 border-r border-border">
-            <ScrollArea className="h-full">
-              <div className="p-2">
-                {conversations.map(conv => (
-                  <Card
-                    key={conv.id}
-                    className={`p-4 mb-2 cursor-pointer transition-colors hover:bg-secondary ${
-                      selectedConversationId === conv.id ? "bg-secondary" : ""
-                    }`}
-                    onClick={() => setSelectedConversationId(conv.id)}
-                  >
-                    <h3 className="font-semibold text-sm mb-1">{conv.title}</h3>
-                    <p className="text-xs text-muted-foreground truncate mb-1">
-                      {conv.lastMessage}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatTimestamp(conv.timestamp)}
-                    </p>
-                  </Card>
-                ))}
+        {/* Messages Area */}
+        <ScrollArea className="flex-1 px-6 py-6">
+          <div className="space-y-4 pb-32">
+            {selectedConversation?.messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex gap-3 ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                {message.role === "assistant" && (
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
+                <div
+                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  }`}
+                >
+                  <p className="text-sm">{message.content}</p>
+                </div>
+                {message.role === "user" && (
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4" />
+                  </div>
+                )}
               </div>
-            </ScrollArea>
+            ))}
           </div>
+        </ScrollArea>
 
-          {/* Chat Area */}
-          {selectedConversation ? (
-            <div className="flex-1 flex flex-col">
-              {/* Messages */}
-              <ScrollArea className="flex-1 p-6">
-                <div className="space-y-4">
-                  {selectedConversation.messages.map((message, index) => (
-                    <div
-                      key={index}
-                      className={`flex gap-3 ${
-                        message.role === "user" ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      {message.role === "assistant" && (
-                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                          <Bot className="h-4 w-4 text-primary-foreground" />
-                        </div>
-                      )}
-                      <div
-                        className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                          message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                      </div>
-                      {message.role === "user" && (
-                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              {/* Input */}
-              <div className="p-6 border-t border-border">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Ask me anything about your finances..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    className="flex-1"
-                  />
-                  <Button onClick={handleSend} size="icon">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+        {/* Fixed Input at Bottom - Above Bottom Nav */}
+        <div className="fixed bottom-20 left-0 right-0 bg-background border-t border-border">
+          <div className="max-w-lg mx-auto px-6 py-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Ask me anything about your finances..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                className="flex-1"
+              />
+              <Button onClick={handleSend} size="icon">
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              Select a conversation to start chatting
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
