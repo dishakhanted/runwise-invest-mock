@@ -17,6 +17,7 @@ import Accounts from "./pages/Accounts";
 import Investing from "./pages/Investing";
 import Notifications from "./pages/Notifications";
 import Support from "./pages/Support";
+import ActivityLog from "./pages/ActivityLog";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/investing" element={<Investing />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/activity-log" element={<ActivityLog />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

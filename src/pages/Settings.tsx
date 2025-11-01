@@ -49,6 +49,7 @@ const Settings = () => {
       icon: List,
       title: "Activity log",
       description: "See what's happening in your accounts.",
+      path: "/activity-log",
     },
     {
       icon: FolderOpen,
