@@ -23,12 +23,11 @@ export const BottomNav = () => {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 transition-colors min-w-[60px]",
+                "flex items-center justify-center transition-colors min-w-[60px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
               <item.icon className="h-6 w-6" />
-              <span className="text-xs">{item.label}</span>
             </Link>
           );
         })}

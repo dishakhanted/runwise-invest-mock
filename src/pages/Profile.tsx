@@ -1,16 +1,14 @@
 import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
-import { Logo } from "@/components/Logo";
 import {
   User,
-  Bell,
-  Settings,
+  Lock,
   Building2,
-  FileText,
-  BookOpen,
-  DollarSign,
-  Headphones,
+  TrendingUp,
+  Bell,
   HelpCircle,
+  List,
+  Folder,
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,27 +16,65 @@ import { Button } from "@/components/ui/button";
 const Profile = () => {
   const menuSections = [
     {
-      title: "PROFILE",
+      title: "SETTINGS",
       items: [
-        { icon: Bell, label: "Activity", action: () => {} },
-        { icon: Settings, label: "Settings", action: () => {} },
-        { icon: Building2, label: "Linked accounts", action: () => {} },
-        { icon: FileText, label: "Notes", action: () => {} },
-        { icon: FileText, label: "Disclosure", action: () => {} },
+        {
+          icon: User,
+          label: "Profile",
+          description: "Edit personal, contact, tax, and employment info.",
+          action: () => {},
+        },
+        {
+          icon: Lock,
+          label: "Security",
+          description:
+            "Set password, email, PIN, biometrics, two-factor authentication, trusted contact, and more.",
+          action: () => {},
+        },
+        {
+          icon: Building2,
+          label: "Accounts",
+          description:
+            "View account details, link transfer accounts, set beneficiaries, and more.",
+          action: () => {},
+        },
+        {
+          icon: TrendingUp,
+          label: "Investing",
+          description:
+            "Manage stock restrictions and securities lending across accounts.",
+          action: () => {},
+        },
+        {
+          icon: Bell,
+          label: "Notifications",
+          description: "Manage push and email preferences.",
+          action: () => {},
+        },
       ],
     },
     {
-      title: "RESOURCES",
+      title: "INFO",
       items: [
-        { icon: BookOpen, label: "Blog", action: () => {} },
-        { icon: DollarSign, label: "Runwise fees", action: () => {} },
-      ],
-    },
-    {
-      title: "SUPPORT",
-      items: [
-        { icon: Headphones, label: "Contact us", action: () => {} },
-        { icon: HelpCircle, label: "Help center", action: () => {} },
+        {
+          icon: HelpCircle,
+          label: "Support",
+          description: "Contact us, help center, ATM locator",
+          action: () => {},
+        },
+        {
+          icon: List,
+          label: "Activity log",
+          description: "See what's happening in your accounts.",
+          action: () => {},
+        },
+        {
+          icon: Folder,
+          label: "Documents",
+          description:
+            "Download or upload statements, tax documents, agreements",
+          action: () => {},
+        },
       ],
     },
   ];
@@ -46,25 +82,12 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-5xl font-bold">Profile</h1>
-          <Logo className="h-10 w-10" />
-        </div>
+        <h1 className="text-5xl font-bold mb-12">Disha</h1>
 
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center mb-4">
-            <User className="h-12 w-12 text-primary" />
-          </div>
-          <h2 className="text-xl font-semibold mb-1">
-            disha.khanted@gmail.com
-          </h2>
-          <p className="text-sm text-muted-foreground">Welcome to Runwisr</p>
-        </div>
-
-        <div className="space-y-6">
+        <div className="space-y-8">
           {menuSections.map((section) => (
             <div key={section.title}>
-              <h3 className="text-xs font-semibold text-muted-foreground mb-3 px-3">
+              <h3 className="text-xs font-semibold text-muted-foreground mb-4 px-1">
                 {section.title}
               </h3>
               <div className="space-y-1">
@@ -72,11 +95,18 @@ const Profile = () => {
                   <Button
                     key={item.label}
                     variant="ghost"
-                    className="w-full justify-start px-3 py-6 h-auto"
+                    className="w-full justify-start px-1 py-6 h-auto text-left"
                     onClick={item.action}
                   >
-                    <item.icon className="h-5 w-5 mr-3 text-primary" />
-                    <span className="text-base">{item.label}</span>
+                    <item.icon className="h-6 w-6 mr-4 text-primary flex-shrink-0" />
+                    <div className="flex flex-col items-start">
+                      <span className="text-lg font-medium mb-1">
+                        {item.label}
+                      </span>
+                      <span className="text-sm text-muted-foreground font-normal">
+                        {item.description}
+                      </span>
+                    </div>
                   </Button>
                 ))}
               </div>
@@ -85,10 +115,10 @@ const Profile = () => {
 
           <Button
             variant="ghost"
-            className="w-full justify-start px-3 py-6 h-auto text-destructive hover:text-destructive"
+            className="w-full justify-start px-1 py-6 h-auto text-destructive hover:text-destructive"
           >
-            <LogOut className="h-5 w-5 mr-3" />
-            <span className="text-base">Sign out</span>
+            <LogOut className="h-6 w-6 mr-4" />
+            <span className="text-lg font-medium">Sign out</span>
           </Button>
 
           <DisclosureFooter />
