@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import logo from "@/assets/runwisr-logo.png";
+import logo from "@/assets/growwise-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const Login = () => {
       <div className="flex-1 flex flex-col px-6 max-w-lg mx-auto w-full">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <img src={logo} alt="Runwisr" className="h-20 w-20" />
+          <img src={logo} alt="GrowWise" className="h-20 w-20" />
         </div>
 
         {/* Form */}
