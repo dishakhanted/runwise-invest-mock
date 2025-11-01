@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import Security from "./pages/Security";
 import Accounts from "./pages/Accounts";
 import Investing from "./pages/Investing";
+import Notifications from "./pages/Notifications";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/security" element={<Security />} />
           <Route path="/accounts" element={<Accounts />} />
           <Route path="/investing" element={<Investing />} />
+          <Route path="/notifications" element={<Notifications />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

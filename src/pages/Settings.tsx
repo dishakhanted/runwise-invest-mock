@@ -34,6 +34,7 @@ const Settings = () => {
       icon: Bell,
       title: "Notifications",
       description: "Manage push and email preferences.",
+      path: "/notifications",
     },
   ];
 
