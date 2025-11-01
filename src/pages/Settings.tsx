@@ -43,6 +43,7 @@ const Settings = () => {
       icon: HelpCircle,
       title: "Support",
       description: "Contact us, help center, ATM locator",
+      path: "/support",
     },
     {
       icon: List,
@@ -114,21 +115,40 @@ const Settings = () => {
             </h3>
             <div className="space-y-6">
               {infoItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-4 cursor-pointer hover:opacity-80 transition-opacity"
-                >
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                    <item.icon className="h-5 w-5 text-primary" />
+                item.path ? (
+                  <Link
+                    key={idx}
+                    to={item.path}
+                    className="flex items-start gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                      <item.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold mb-1">{item.title}</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground mt-2 flex-shrink-0" />
+                  </Link>
+                ) : (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                      <item.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold mb-1">{item.title}</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground mt-2 flex-shrink-0" />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-lg font-semibold mb-1">{item.title}</h4>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground mt-2 flex-shrink-0" />
-                </div>
+                )
               ))}
             </div>
           </div>
