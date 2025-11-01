@@ -101,8 +101,79 @@ const Documents = () => {
 
           {/* Statements Card */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-6 space-y-6">
               <h2 className="text-2xl font-bold">Statements and Trade Confirmations</h2>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <p className="text-base leading-relaxed">
+                  Account statements are typically posted within the first 5 business days of the month. To get something sooner,{" "}
+                  <Button
+                    variant="link"
+                    className="text-primary hover:text-primary/80 px-0 h-auto text-base inline"
+                  >
+                    download an account snapshot
+                  </Button>
+                </p>
+              </div>
+
+              {/* Filters */}
+              <div className="space-y-4">
+                <Select defaultValue="all-accounts">
+                  <SelectTrigger className="w-full bg-muted">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all-accounts">All Accounts</SelectItem>
+                    <SelectItem value="cash">Individual Cash Account</SelectItem>
+                    <SelectItem value="investing">Individual Automated Investing Account</SelectItem>
+                    <SelectItem value="stock">Stock Investing Account</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select defaultValue="all-types">
+                  <SelectTrigger className="w-full bg-muted">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all-types">All Document Types</SelectItem>
+                    <SelectItem value="statements">Statements</SelectItem>
+                    <SelectItem value="trade-confirmations">Trade Confirmations</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select defaultValue="all-dates">
+                  <SelectTrigger className="w-full bg-muted">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all-dates">All Dates</SelectItem>
+                    <SelectItem value="2025">2025</SelectItem>
+                    <SelectItem value="2024">2024</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Table Header */}
+              <div className="grid grid-cols-[1fr,2fr,1fr] gap-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-2 border-b">
+                <div>DATE</div>
+                <div>DOCUMENT NAME</div>
+                <div>DOWNLOAD</div>
+              </div>
+
+              {/* Table Rows */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-[1fr,2fr,1fr] gap-4 items-start">
+                  <div className="text-base">10/29/2025</div>
+                  <div className="text-base">Trade Confirmation for Stock Investing Account</div>
+                  <Button
+                    variant="link"
+                    className="text-primary hover:text-primary/80 px-0 h-auto text-base justify-start flex items-center gap-1"
+                  >
+                    <span className="text-xs font-bold border border-primary rounded px-1">PDF</span>
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
