@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
+import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { SuggestionDetailDialog } from "@/components/SuggestionDetailDialog";
 
 interface Suggestion {
@@ -113,18 +112,9 @@ const Explore = () => {
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
         {/* Header with Logo */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-8">
           <h1 className="text-5xl font-bold">Explore</h1>
           <Logo className="h-10 w-10" />
-        </div>
-
-        {/* Search */}
-        <div className="relative mb-8">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="Search investments, strategies..."
-            className="h-14 pl-12 bg-secondary border-0 rounded-2xl text-base"
-          />
         </div>
 
         {/* Suggestions Grid - Masonry Style */}
@@ -172,6 +162,7 @@ const Explore = () => {
       </div>
 
       <BottomNav />
+      <DisclosureFooter />
     </div>
   );
 };

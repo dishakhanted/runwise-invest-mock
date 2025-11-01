@@ -1,4 +1,5 @@
 import { BottomNav } from "@/components/BottomNav";
+import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { Logo } from "@/components/Logo";
 import {
   User,
@@ -22,7 +23,8 @@ const Profile = () => {
         { icon: Bell, label: "Activity", action: () => {} },
         { icon: Settings, label: "Settings", action: () => {} },
         { icon: Building2, label: "Linked accounts", action: () => {} },
-        { icon: FileText, label: "Documents", action: () => {} },
+        { icon: FileText, label: "Notes", action: () => {} },
+        { icon: FileText, label: "Disclosure", action: () => {} },
       ],
     },
     {
@@ -91,6 +93,7 @@ const Profile = () => {
         </div>
       </div>
       <BottomNav />
+      <DisclosureFooter />
     </div>
   );
 };

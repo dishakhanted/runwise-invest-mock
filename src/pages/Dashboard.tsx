@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { AccountCard } from "@/components/AccountCard";
 import { WealthChart } from "@/components/WealthChart";
 import { Logo } from "@/components/Logo";
@@ -355,6 +356,7 @@ const Dashboard = () => {
         isOpen={isLinkAccountOpen}
         onClose={() => setIsLinkAccountOpen(false)}
       />
+      <DisclosureFooter />
     </div>
   );
 };

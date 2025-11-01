@@ -1,4 +1,5 @@
 import { BottomNav } from "@/components/BottomNav";
+import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, Clock, RefreshCw, ArrowDown, ArrowUp, ArrowLeftRight, Building2, Send, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -129,6 +130,7 @@ const Transfer = () => {
       </div>
 
       <BottomNav />
+      <DisclosureFooter />
     </div>
   );
 };

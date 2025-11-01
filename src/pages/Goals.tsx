@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { Logo } from "@/components/Logo";
 import { GoalAIChatDialog } from "@/components/GoalAIChatDialog";
 import { NewGoalDialog } from "@/components/NewGoalDialog";
@@ -238,6 +239,7 @@ const Goals = () => {
         isOpen={isNewGoalOpen}
         onClose={() => setIsNewGoalOpen(false)}
       />
+      <DisclosureFooter />
     </div>
   );
 };
