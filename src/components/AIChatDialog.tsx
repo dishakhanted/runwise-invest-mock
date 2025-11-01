@@ -247,16 +247,16 @@ export const AIChatDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl h-[600px] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] max-h-[85vh] h-[600px] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
             AI Financial Assistant
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 px-6">
+          <div className="space-y-4 pr-4">
             {/* Recommendations Section */}
             {recommendations.length > 0 && (
               <div className="mb-6">
@@ -348,7 +348,7 @@ export const AIChatDialog = ({
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 pt-4 border-t">
+        <div className="flex gap-2 pt-4 px-6 pb-6 border-t">
           <Input
             placeholder="Ask me anything about your finances..."
             value={input}
