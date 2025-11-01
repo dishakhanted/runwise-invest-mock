@@ -22,6 +22,7 @@ const Settings = () => {
       icon: Landmark,
       title: "Accounts",
       description: "View account details, link transfer accounts, set beneficiaries, and more.",
+      path: "/accounts",
     },
     {
       icon: TrendingUp,
