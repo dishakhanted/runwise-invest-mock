@@ -338,6 +338,8 @@ const Dashboard = () => {
             Link Account
           </Button>
         </div>
+
+        <DisclosureFooter />
       </div>
 
       <BottomNav />
@@ -356,7 +358,6 @@ const Dashboard = () => {
         isOpen={isLinkAccountOpen}
         onClose={() => setIsLinkAccountOpen(false)}
       />
-      <DisclosureFooter />
     </div>
   );
 };
