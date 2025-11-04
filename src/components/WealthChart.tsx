@@ -48,6 +48,14 @@ export const WealthChart = ({
         className="w-full h-full"
         preserveAspectRatio="xMidYMid meet"
       >
+        {/* Gradient definition */}
+        <defs>
+          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="hsl(var(--chart-gradient-start))" />
+            <stop offset="100%" stopColor="hsl(var(--chart-gradient-end))" />
+          </linearGradient>
+        </defs>
+
         {/* Y-axis */}
         <line
           x1="40"
@@ -68,18 +76,18 @@ export const WealthChart = ({
           strokeWidth="2"
         />
 
-        {/* Diagonal dashed growth line */}
+        {/* Diagonal dashed growth line with gradient */}
         <line
           x1="40"
           y1="160"
           x2="380"
           y2="30"
-          stroke="hsl(var(--foreground))"
-          strokeWidth="2"
+          stroke="url(#chartGradient)"
+          strokeWidth="3"
           strokeDasharray="5,5"
         />
 
-        {/* Goal markers positioned along the line */}
+        {/* Goal markers as balloons positioned along the line */}
         {goals.map((goal, index) => {
           // Position goals evenly along the diagonal line
           const x = 40 + ((380 - 40) / (goals.length + 1)) * (index + 1);
@@ -87,30 +95,30 @@ export const WealthChart = ({
           
           return (
             <g key={goal.id}>
-              {/* Goal icon */}
+              {/* Balloon circle */}
               <circle
                 cx={x}
-                cy={y - 15}
-                r="15"
-                fill="hsl(var(--background))"
-                stroke="hsl(var(--foreground))"
-                strokeWidth="2"
+                cy={y - 25}
+                r="14"
+                fill="hsl(var(--primary))"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setSelectedGoal(goal)}
               />
-              <Target
-                x={x - 8}
-                y={y - 23}
-                className="w-4 h-4 text-foreground pointer-events-none"
-              />
-              {/* Stem connecting to line */}
+              {/* Balloon string */}
               <line
                 x1={x}
-                y1={y}
+                y1={y - 11}
                 x2={x}
-                y2={y - 1}
-                stroke="hsl(var(--foreground))"
-                strokeWidth="2"
+                y2={y}
+                stroke="hsl(var(--primary))"
+                strokeWidth="1.5"
+                opacity="0.6"
+              />
+              {/* Goal icon in balloon */}
+              <Target
+                x={x - 7}
+                y={y - 32}
+                className="w-3.5 h-3.5 text-primary-foreground pointer-events-none"
               />
             </g>
           );
