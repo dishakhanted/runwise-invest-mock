@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { AccountCard } from "@/components/AccountCard";
@@ -19,27 +19,60 @@ import {
   Target,
   MessageSquare,
   Link,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type ViewMode = "net-worth" | "assets" | "liabilities";
+
+type LinkedAccount = {
+  id: string;
+  account_type: string;
+  provider_name: string;
+  last_four_digits: string;
+  total_amount: number;
+  interest_rate: number;
+};
 
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLinkAccountOpen, setIsLinkAccountOpen] = useState(false);
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
 
-  const cashTotal = 105741.75;
-  const investmentsTotal = 0;
-  const fidelityTotal = 33068.62;
-  const robinhoodTotal = 8500.0;
-  const assetsTotal = cashTotal + investmentsTotal + fidelityTotal + robinhoodTotal;
+  useEffect(() => {
+    loadLinkedAccounts();
+  }, []);
+
+  const loadLinkedAccounts = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('linked_accounts')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading accounts:', error);
+      return;
+    }
+
+    setLinkedAccounts(data || []);
+  };
+
+  const bankAccounts = linkedAccounts.filter(acc => acc.account_type === 'bank');
+  const investmentAccounts = linkedAccounts.filter(acc => acc.account_type === 'investment');
+  const loanAccounts = linkedAccounts.filter(acc => acc.account_type === 'loan');
+
+  const cashTotal = bankAccounts.reduce((sum, acc) => sum + Number(acc.total_amount), 0);
+  const investmentsTotal = investmentAccounts.reduce((sum, acc) => sum + Number(acc.total_amount), 0);
+  const assetsTotal = cashTotal + investmentsTotal;
   
-  const educationLoan = 45000.0;
-  const vehicleLoan = 18500.0;
-  const liabilitiesTotal = educationLoan + vehicleLoan;
+  const liabilitiesTotal = loanAccounts.reduce((sum, acc) => sum + Number(acc.total_amount), 0);
   
   const netWorth = assetsTotal - liabilitiesTotal;
 
@@ -164,10 +197,10 @@ const Dashboard = () => {
                     <>Your net worth is {formatCurrency(netWorth)} with assets totaling {formatCurrency(assetsTotal)}. You're on track to reach your retirement goal. Click to chat with your AI assistant for personalized insights.</>
                   )}
                   {viewMode === "assets" && (
-                    <>Your total assets are {formatCurrency(assetsTotal)}, including {formatCurrency(cashTotal)} in cash and {formatCurrency(investmentsTotal + fidelityTotal + robinhoodTotal)} in investments. Click to explore optimization opportunities with your AI assistant.</>
+                    <>Your total assets are {formatCurrency(assetsTotal)}, including {formatCurrency(cashTotal)} in cash and {formatCurrency(investmentsTotal)} in investments. Click to explore optimization opportunities with your AI assistant.</>
                   )}
                   {viewMode === "liabilities" && (
-                    <>Your total liabilities are {formatCurrency(liabilitiesTotal)}, including an education loan of {formatCurrency(educationLoan)} and a vehicle loan of {formatCurrency(vehicleLoan)}. Click to discuss debt management strategies with your AI assistant.</>
+                    <>Your total liabilities are {formatCurrency(liabilitiesTotal)} across {loanAccounts.length} loan account{loanAccounts.length !== 1 ? 's' : ''}. Click to discuss debt management strategies with your AI assistant.</>
                   )}
                 </p>
               </div>
@@ -176,7 +209,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Cash Section */}
-        {showCashSection && (
+        {showCashSection && bankAccounts.length > 0 && (
           <div className="mt-8">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-semibold">Cash</h2>
@@ -184,67 +217,49 @@ const Dashboard = () => {
             </div>
 
             <div className="divide-y divide-border">
-              <AccountCard
-                icon={Building2}
-                iconColor="bg-icon-blue"
-                title="Checking Account"
-                subtitle="Santander"
-                amount="$65,000.00"
-                timeInfo="2 hours ago"
-              />
-              <AccountCard
-                icon={Building2}
-                iconColor="bg-icon-blue"
-                title="Savings Account"
-                subtitle="Santander"
-                amount="$40,741.75"
-                timeInfo="2 hours ago"
-              />
+              {bankAccounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  icon={Building2}
+                  iconColor="bg-icon-blue"
+                  title={`Account ending in ${account.last_four_digits}`}
+                  subtitle={`${account.provider_name} · ${account.interest_rate}% APY`}
+                  amount={formatCurrency(account.total_amount)}
+                  timeInfo="Recently updated"
+                />
+              ))}
             </div>
           </div>
         )}
 
         {/* Investments Section */}
-        {showInvestmentsSection && (
+        {showInvestmentsSection && investmentAccounts.length > 0 && (
           <div className="mt-8">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-semibold">Investments</h2>
               <p className="text-2xl font-semibold">
-                {formatCurrency(investmentsTotal + fidelityTotal + robinhoodTotal)}
+                {formatCurrency(investmentsTotal)}
               </p>
             </div>
 
             <div className="divide-y divide-border">
-              <AccountCard
-                icon={TrendingUp}
-                iconColor="bg-success"
-                title="Personal Investment - 6206"
-                subtitle="Fidelity Investments"
-                amount="$16,975.67"
-                timeInfo="16 hours ago"
-              />
-              <AccountCard
-                icon={TrendingUp}
-                iconColor="bg-success"
-                title="Roth IRA (after-tax) - 3355"
-                subtitle="Fidelity Investments"
-                amount="$16,092.95"
-                timeInfo="16 hours ago"
-              />
-              <AccountCard
-                icon={BarChart3}
-                iconColor="bg-icon-orange"
-                title="Trading Account"
-                subtitle="Robinhood"
-                amount="$8,500.00"
-                timeInfo="2 hours ago"
-              />
+              {investmentAccounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  icon={TrendingUp}
+                  iconColor="bg-success"
+                  title={`Investment Account - ${account.last_four_digits}`}
+                  subtitle={`${account.provider_name} · ${account.interest_rate}% return`}
+                  amount={formatCurrency(account.total_amount)}
+                  timeInfo="Recently updated"
+                />
+              ))}
             </div>
           </div>
         )}
 
         {/* Liabilities Section */}
-        {showLiabilitiesSection && (
+        {showLiabilitiesSection && loanAccounts.length > 0 && (
           <div className="mt-8">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-semibold">Liabilities</h2>
@@ -252,20 +267,17 @@ const Dashboard = () => {
             </div>
 
             <div className="divide-y divide-border">
-              <AccountCard
-                icon={GraduationCap}
-                iconColor="bg-destructive"
-                title="Education Loan"
-                subtitle="Federal Student Aid · 4.5% APR"
-                amount={`-${formatCurrency(educationLoan)}`}
-              />
-              <AccountCard
-                icon={Car}
-                iconColor="bg-destructive"
-                title="Vehicle Loan"
-                subtitle="Toyota Financial · 2.9% APR"
-                amount={`-${formatCurrency(vehicleLoan)}`}
-              />
+              {loanAccounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  icon={CreditCard}
+                  iconColor="bg-destructive"
+                  title={`Loan ending in ${account.last_four_digits}`}
+                  subtitle={`${account.provider_name} · ${account.interest_rate}% APR`}
+                  amount={`-${formatCurrency(account.total_amount)}`}
+                  timeInfo="Recently updated"
+                />
+              ))}
             </div>
           </div>
         )}
@@ -296,7 +308,7 @@ const Dashboard = () => {
         assetsTotal={assetsTotal}
         liabilitiesTotal={liabilitiesTotal}
         cashTotal={cashTotal}
-        investmentsTotal={investmentsTotal + fidelityTotal + robinhoodTotal}
+        investmentsTotal={investmentsTotal}
       />
       <LinkAccountDialog 
         isOpen={isLinkAccountOpen}
