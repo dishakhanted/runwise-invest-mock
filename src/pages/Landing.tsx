@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { WealthChart } from "@/components/WealthChart";
 import { useNavigate } from "react-router-dom";
+import logo from "@/assets/growwise-logo.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -8,8 +9,13 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex-1 flex flex-col justify-between px-6 py-12 max-w-lg mx-auto w-full">
+        {/* Logo */}
+        <div className="flex justify-center pt-8 pb-4">
+          <img src={logo} alt="GrowWise" className="h-32 w-32" />
+        </div>
+        
         {/* Content */}
-        <div className="flex-1 flex flex-col justify-center">
+        <div className="flex-1 flex flex-col justify-center -mt-20">
           <h1 className="text-5xl font-bold mb-4">Build</h1>
           <h2 className="text-4xl font-light text-foreground/90 mb-12">
             long-term wealth
