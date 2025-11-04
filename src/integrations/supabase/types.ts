@@ -160,6 +160,7 @@ export type Database = {
           city: string | null
           created_at: string | null
           credit_check_consent: boolean | null
+          date_of_birth: string | null
           employment_type: string | null
           goals: string | null
           id: string
@@ -182,6 +183,7 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           credit_check_consent?: boolean | null
+          date_of_birth?: string | null
           employment_type?: string | null
           goals?: string | null
           id?: string
@@ -204,6 +206,7 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           credit_check_consent?: boolean | null
+          date_of_birth?: string | null
           employment_type?: string | null
           goals?: string | null
           id?: string

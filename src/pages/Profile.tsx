@@ -60,6 +60,13 @@ const Profile = () => {
         hasArrow: true,
       },
       {
+        label: "Date of Birth",
+        value: profile?.date_of_birth 
+          ? new Date(profile.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          : "Not set",
+        hasArrow: true,
+      },
+      {
         label: "Employment type",
         value: profile?.employment_type || "Not set",
         hasArrow: true,

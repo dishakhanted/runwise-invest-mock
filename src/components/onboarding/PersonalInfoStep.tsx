@@ -19,6 +19,7 @@ const personalInfoSchema = z.object({
   middleName: z.string().optional(),
   legalLastName: z.string().min(1, "Legal last name is required"),
   suffix: z.string().optional(),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
@@ -44,6 +45,7 @@ export const PersonalInfoStep = ({ data, onNext }: PersonalInfoStepProps) => {
       middleName: data.middleName || "",
       legalLastName: data.legalLastName || "",
       suffix: data.suffix || "",
+      dateOfBirth: data.dateOfBirth || "",
       email: data.email || "",
       password: data.password || "",
       phone: data.phone || "",
@@ -128,6 +130,20 @@ export const PersonalInfoStep = ({ data, onNext }: PersonalInfoStepProps) => {
                 <FormItem>
                   <FormControl>
                     <Input placeholder="Suffix (optional)" {...field} className="h-14" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of Birth</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} className="h-14" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

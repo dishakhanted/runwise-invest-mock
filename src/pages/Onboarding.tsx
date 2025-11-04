@@ -11,6 +11,7 @@ export type OnboardingData = {
   middleName?: string;
   legalLastName?: string;
   suffix?: string;
+  dateOfBirth?: string;
   email?: string;
   password?: string;
   phone?: string;

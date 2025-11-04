@@ -121,6 +121,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           middle_name: data.middleName,
           legal_last_name: data.legalLastName,
           suffix: data.suffix,
+          date_of_birth: data.dateOfBirth,
           phone: data.phone,
           address: data.address,
           city: data.city,
