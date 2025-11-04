@@ -46,82 +46,75 @@ export const WealthChart = ({
       <svg
         viewBox="0 0 400 200"
         className="w-full h-full"
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid meet"
       >
-        {/* Gradient definition */}
-        <defs>
-          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="hsl(var(--chart-gradient-start))" />
-            <stop offset="100%" stopColor="hsl(var(--chart-gradient-end))" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Curved line */}
-        <path
-          d="M 0 120 Q 100 100, 200 80 T 400 40"
-          fill="none"
-          stroke="url(#chartGradient)"
-          strokeWidth="3"
-          className="drop-shadow-lg"
+        {/* Y-axis */}
+        <line
+          x1="40"
+          y1="20"
+          x2="40"
+          y2="160"
+          stroke="hsl(var(--foreground))"
+          strokeWidth="2"
+        />
+        
+        {/* X-axis */}
+        <line
+          x1="40"
+          y1="160"
+          x2="380"
+          y2="160"
+          stroke="hsl(var(--foreground))"
+          strokeWidth="2"
         />
 
-        {/* Current position marker */}
-        <circle 
-          cx="80" 
-          cy="105" 
-          r="10" 
-          fill="hsl(var(--chart-gradient-start))" 
-          filter="url(#glow)"
-          className="animate-pulse"
+        {/* Diagonal dashed growth line */}
+        <line
+          x1="40"
+          y1="160"
+          x2="380"
+          y2="30"
+          stroke="hsl(var(--foreground))"
+          strokeWidth="2"
+          strokeDasharray="5,5"
         />
 
-        {/* Future position marker */}
-        <circle 
-          cx="320" 
-          cy="50" 
-          r="10" 
-          fill="hsl(var(--chart-gradient-end))" 
-          filter="url(#glow)"
-          className="animate-pulse"
-        />
-
-        {/* Goal markers */}
-        {goals.map((goal) => (
-          <g key={goal.id}>
-            {/* Balloon circle */}
-            <circle
-              cx={goal.position.x}
-              cy={goal.position.y - 20}
-              r="12"
-              fill="hsl(var(--primary))"
-              className="cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setSelectedGoal(goal)}
-            />
-            {/* Balloon string */}
-            <line
-              x1={goal.position.x}
-              y1={goal.position.y - 8}
-              x2={goal.position.x}
-              y2={goal.position.y}
-              stroke="hsl(var(--primary))"
-              strokeWidth="1"
-              opacity="0.6"
-            />
-            {/* Goal icon in balloon */}
-            <Target
-              x={goal.position.x - 6}
-              y={goal.position.y - 26}
-              className="w-3 h-3 text-primary-foreground pointer-events-none"
-            />
-          </g>
-        ))}
+        {/* Goal markers positioned along the line */}
+        {goals.map((goal, index) => {
+          // Position goals evenly along the diagonal line
+          const x = 40 + ((380 - 40) / (goals.length + 1)) * (index + 1);
+          const y = 160 - ((160 - 30) / (goals.length + 1)) * (index + 1);
+          
+          return (
+            <g key={goal.id}>
+              {/* Goal icon */}
+              <circle
+                cx={x}
+                cy={y - 15}
+                r="15"
+                fill="hsl(var(--background))"
+                stroke="hsl(var(--foreground))"
+                strokeWidth="2"
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setSelectedGoal(goal)}
+              />
+              <Target
+                x={x - 8}
+                y={y - 23}
+                className="w-4 h-4 text-foreground pointer-events-none"
+              />
+              {/* Stem connecting to line */}
+              <line
+                x1={x}
+                y1={y}
+                x2={x}
+                y2={y - 1}
+                stroke="hsl(var(--foreground))"
+                strokeWidth="2"
+              />
+            </g>
+          );
+        })}
       </svg>
 
       {/* Labels */}
