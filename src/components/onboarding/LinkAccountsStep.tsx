@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { OnboardingData } from "@/pages/Onboarding";
 import { ChevronLeft, Building2, TrendingUp, CreditCard } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface LinkAccountsStepProps {
   data: OnboardingData;
@@ -68,11 +71,20 @@ const accountTypes = [
 ];
 
 export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps) => {
-  const [linkedAccounts, setLinkedAccounts] = useState<string[]>(
-    data.linkedAccounts || []
-  );
+  const [linkedAccounts, setLinkedAccounts] = useState<{[key: string]: number}>({
+    bank: 0,
+    investment: 0,
+    loan: 0
+  });
   const [dialogOpen, setDialogOpen] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<{ name: string; type: string } | null>(null);
+  const [formData, setFormData] = useState({
+    lastFourDigits: "",
+    totalAmount: "",
+    interestRate: ""
+  });
 
   const getProviders = () => {
     switch (dialogOpen) {
@@ -96,17 +108,83 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
     setSearchQuery("");
   };
 
-  const handleProviderClick = (providerName: string) => {
-    // Simulate account linking
-    if (!linkedAccounts.includes(dialogOpen!)) {
-      setLinkedAccounts(prev => [...prev, dialogOpen!]);
+  useEffect(() => {
+    loadLinkedAccounts();
+  }, []);
+
+  const loadLinkedAccounts = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: accounts, error } = await supabase
+      .from('linked_accounts')
+      .select('account_type')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading accounts:', error);
+      return;
     }
-    alert(`Connecting to ${providerName}...`);
+
+    const counts = { bank: 0, investment: 0, loan: 0 };
+    accounts?.forEach(account => {
+      counts[account.account_type as keyof typeof counts]++;
+    });
+    setLinkedAccounts(counts);
+  };
+
+  const handleProviderClick = (providerName: string) => {
+    setSelectedProvider({ name: providerName, type: dialogOpen! });
     setDialogOpen(null);
+    setFormDialogOpen(true);
+  };
+
+  const handleSaveAccount = async () => {
+    if (!selectedProvider) return;
+
+    // Validate form
+    if (!formData.lastFourDigits || !formData.totalAmount || !formData.interestRate) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (formData.lastFourDigits.length !== 4 || !/^\d+$/.test(formData.lastFourDigits)) {
+      toast.error("Last 4 digits must be exactly 4 numbers");
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please log in to continue");
+      return;
+    }
+
+    const { error } = await supabase
+      .from('linked_accounts')
+      .insert({
+        user_id: user.id,
+        account_type: selectedProvider.type,
+        provider_name: selectedProvider.name,
+        last_four_digits: formData.lastFourDigits,
+        total_amount: parseFloat(formData.totalAmount),
+        interest_rate: parseFloat(formData.interestRate)
+      });
+
+    if (error) {
+      console.error('Error saving account:', error);
+      toast.error("Failed to link account");
+      return;
+    }
+
+    toast.success(`${selectedProvider.name} account linked successfully!`);
+    setFormDialogOpen(false);
+    setFormData({ lastFourDigits: "", totalAmount: "", interestRate: "" });
+    setSelectedProvider(null);
+    loadLinkedAccounts();
   };
 
   const handleContinue = () => {
-    onNext({ linkedAccounts });
+    onNext({});
   };
 
   return (
@@ -128,7 +206,8 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
       <div className="flex-1 space-y-4">
         {accountTypes.map((account) => {
           const Icon = account.icon;
-          const isLinked = linkedAccounts.includes(account.id);
+          const count = linkedAccounts[account.id as keyof typeof linkedAccounts];
+          const isLinked = count > 0;
           
           return (
             <Card
@@ -151,7 +230,7 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
                   </p>
                   {isLinked && (
                     <p className="text-sm text-primary font-medium mt-2">
-                      ✓ Connected
+                      ✓ {count} {count === 1 ? 'account' : 'accounts'} connected
                     </p>
                   )}
                 </div>
@@ -165,7 +244,7 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
         <Button 
           onClick={handleContinue} 
           className="w-full h-14 text-lg rounded-2xl"
-          disabled={linkedAccounts.length === 0}
+          disabled={Object.values(linkedAccounts).every(count => count === 0)}
         >
           Continue
         </Button>
@@ -222,6 +301,73 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
                 <p>No providers found matching "{searchQuery}"</p>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Account Details Form Dialog */}
+      <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Enter {selectedProvider?.name} Account Details
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="lastFourDigits">Account Number (Last 4 Digits)</Label>
+              <Input
+                id="lastFourDigits"
+                placeholder="1234"
+                maxLength={4}
+                value={formData.lastFourDigits}
+                onChange={(e) => setFormData(prev => ({ ...prev, lastFourDigits: e.target.value.replace(/\D/g, '') }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="totalAmount">Total Amount ($)</Label>
+              <Input
+                id="totalAmount"
+                type="number"
+                placeholder="10000"
+                value={formData.totalAmount}
+                onChange={(e) => setFormData(prev => ({ ...prev, totalAmount: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="interestRate">Interest Rate (%)</Label>
+              <Input
+                id="interestRate"
+                type="number"
+                step="0.01"
+                placeholder="2.5"
+                value={formData.interestRate}
+                onChange={(e) => setFormData(prev => ({ ...prev, interestRate: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setFormDialogOpen(false);
+                  setFormData({ lastFourDigits: "", totalAmount: "", interestRate: "" });
+                  setSelectedProvider(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleSaveAccount}
+              >
+                Link Account
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

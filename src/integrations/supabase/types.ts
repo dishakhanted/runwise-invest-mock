@@ -89,6 +89,39 @@ export type Database = {
         }
         Relationships: []
       }
+      linked_accounts: {
+        Row: {
+          account_type: string
+          created_at: string
+          id: string
+          interest_rate: number
+          last_four_digits: string
+          provider_name: string
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          account_type: string
+          created_at?: string
+          id?: string
+          interest_rate?: number
+          last_four_digits: string
+          provider_name: string
+          total_amount?: number
+          user_id: string
+        }
+        Update: {
+          account_type?: string
+          created_at?: string
+          id?: string
+          interest_rate?: number
+          last_four_digits?: string
+          provider_name?: string
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
