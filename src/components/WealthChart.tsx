@@ -54,6 +54,13 @@ export const WealthChart = ({
             <stop offset="0%" stopColor="hsl(var(--chart-gradient-start))" />
             <stop offset="100%" stopColor="hsl(var(--chart-gradient-end))" />
           </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
         </defs>
 
         {/* Curved line */}
@@ -66,27 +73,23 @@ export const WealthChart = ({
         />
 
         {/* Current position marker */}
-        <circle cx="80" cy="105" r="8" fill="hsl(var(--chart-gradient-start))" />
-        <circle
-          cx="80"
-          cy="105"
-          r="14"
-          fill="none"
-          stroke="hsl(var(--chart-gradient-start))"
-          strokeWidth="2"
-          opacity="0.3"
+        <circle 
+          cx="80" 
+          cy="105" 
+          r="10" 
+          fill="hsl(var(--chart-gradient-start))" 
+          filter="url(#glow)"
+          className="animate-pulse"
         />
 
         {/* Future position marker */}
-        <circle cx="320" cy="50" r="8" fill="hsl(var(--chart-gradient-end))" />
-        <circle
-          cx="320"
-          cy="50"
-          r="14"
-          fill="none"
-          stroke="hsl(var(--chart-gradient-end))"
-          strokeWidth="2"
-          opacity="0.3"
+        <circle 
+          cx="320" 
+          cy="50" 
+          r="10" 
+          fill="hsl(var(--chart-gradient-end))" 
+          filter="url(#glow)"
+          className="animate-pulse"
         />
 
         {/* Goal markers */}
