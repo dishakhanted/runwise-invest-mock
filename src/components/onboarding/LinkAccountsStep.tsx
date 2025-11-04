@@ -85,6 +85,7 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
     totalAmount: "",
     interestRate: ""
   });
+  const [tempLinkedAccounts, setTempLinkedAccounts] = useState(data.linkedAccounts || []);
 
   const getProviders = () => {
     switch (dialogOpen) {
@@ -110,24 +111,11 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
 
   useEffect(() => {
     loadLinkedAccounts();
-  }, []);
+  }, [tempLinkedAccounts]);
 
-  const loadLinkedAccounts = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: accounts, error } = await supabase
-      .from('linked_accounts')
-      .select('account_type')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error loading accounts:', error);
-      return;
-    }
-
+  const loadLinkedAccounts = () => {
     const counts = { bank: 0, investment: 0, loan: 0 };
-    accounts?.forEach(account => {
+    tempLinkedAccounts.forEach(account => {
       counts[account.account_type as keyof typeof counts]++;
     });
     setLinkedAccounts(counts);
@@ -139,7 +127,7 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
     setFormDialogOpen(true);
   };
 
-  const handleSaveAccount = async () => {
+  const handleSaveAccount = () => {
     if (!selectedProvider) return;
 
     // Validate form
@@ -153,38 +141,24 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("Please log in to continue");
-      return;
-    }
+    // Store account data temporarily in state
+    const newAccount = {
+      account_type: selectedProvider.type,
+      provider_name: selectedProvider.name,
+      last_four_digits: formData.lastFourDigits,
+      total_amount: parseFloat(formData.totalAmount),
+      interest_rate: parseFloat(formData.interestRate)
+    };
 
-    const { error } = await supabase
-      .from('linked_accounts')
-      .insert({
-        user_id: user.id,
-        account_type: selectedProvider.type,
-        provider_name: selectedProvider.name,
-        last_four_digits: formData.lastFourDigits,
-        total_amount: parseFloat(formData.totalAmount),
-        interest_rate: parseFloat(formData.interestRate)
-      });
-
-    if (error) {
-      console.error('Error saving account:', error);
-      toast.error("Failed to link account");
-      return;
-    }
-
+    setTempLinkedAccounts(prev => [...prev, newAccount]);
     toast.success(`${selectedProvider.name} account linked successfully!`);
     setFormDialogOpen(false);
     setFormData({ lastFourDigits: "", totalAmount: "", interestRate: "" });
     setSelectedProvider(null);
-    loadLinkedAccounts();
   };
 
   const handleContinue = () => {
-    onNext({});
+    onNext({ linkedAccounts: tempLinkedAccounts });
   };
 
   return (

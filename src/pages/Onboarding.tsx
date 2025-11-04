@@ -4,6 +4,14 @@ import { IdentityVerificationStep } from "@/components/onboarding/IdentityVerifi
 import { LinkAccountsStep } from "@/components/onboarding/LinkAccountsStep";
 import { ChatbotStep } from "@/components/onboarding/ChatbotStep";
 
+export type LinkedAccountData = {
+  account_type: string;
+  provider_name: string;
+  last_four_digits: string;
+  total_amount: number;
+  interest_rate: number;
+};
+
 export type OnboardingData = {
   // Personal Info
   legalFirstName?: string;
@@ -25,7 +33,7 @@ export type OnboardingData = {
   creditCheckConsent?: boolean;
   
   // Linked Accounts
-  linkedAccounts?: string[];
+  linkedAccounts?: LinkedAccountData[];
   
   // Financial Information
   income?: string;

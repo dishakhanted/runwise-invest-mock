@@ -138,6 +138,20 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
 
       if (profileError) throw profileError;
 
+      // Create linked accounts
+      if (data.linkedAccounts && data.linkedAccounts.length > 0) {
+        const { error: accountsError } = await supabase
+          .from('linked_accounts')
+          .insert(
+            data.linkedAccounts.map(account => ({
+              ...account,
+              user_id: authData.user.id
+            }))
+          );
+
+        if (accountsError) console.error('Error creating linked accounts:', accountsError);
+      }
+
       // Parse and create goals from the conversation
       if (collectedData.goals) {
         const goalsText = collectedData.goals.toLowerCase();
