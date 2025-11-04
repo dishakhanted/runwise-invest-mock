@@ -114,12 +114,11 @@ export const WealthChart = ({
                 strokeWidth="1.5"
                 opacity="0.6"
               />
-              {/* Goal icon in balloon */}
-              <Target
-                x={x - 7}
-                y={y - 32}
-                className="w-3.5 h-3.5 text-primary-foreground pointer-events-none"
-              />
+              {/* Goal icon in balloon - using a simple path for target icon */}
+              <g transform={`translate(${x - 6}, ${y - 31})`}>
+                <circle cx="6" cy="6" r="4" fill="none" stroke="white" strokeWidth="1.5" />
+                <circle cx="6" cy="6" r="1.5" fill="white" />
+              </g>
             </g>
           );
         })}
