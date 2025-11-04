@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Check, X } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
 
 interface Goal {
@@ -54,13 +54,36 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
       allocationMessage += `${goal.allocation.bonds}% in bonds`;
     }
 
-    return `Hi! I'm your financial assistant. You're working toward "${goal.name}" with a target of ${formatCurrency(goal.targetAmount)}. You've saved ${formatCurrency(goal.currentAmount)} so far (${progress}% complete), with ${formatCurrency(remaining)} remaining. Your current allocation is ${allocationMessage}. I can help you optimize your strategy, adjust your allocation, or explore ways to reach your goal faster. What would you like to discuss?`;
+    return `Hi! I'm your financial assistant. You're working toward "${goal.name}" with a target of ${formatCurrency(goal.targetAmount)}. You've saved ${formatCurrency(goal.currentAmount)} so far (${progress}% complete). Here are some strategies to help you reach your goal:`;
   };
 
-  const { messages, input, setInput, isLoading, sendMessage, handleClose } = useFinancialChat({
+  const getInitialSuggestions = () => {
+    if (!goal) return [];
+    
+    const monthsRemaining = 24; // Calculate based on goal timeline
+    const monthlyNeeded = (goal.targetAmount - goal.currentAmount) / monthsRemaining;
+    
+    return [
+      {
+        id: 'suggestion-1',
+        title: 'Increase Monthly Contribution',
+        description: `Add $${Math.round(monthlyNeeded * 0.2)} to your monthly savings to reach your goal 4 months earlier.`,
+        status: 'pending' as const
+      },
+      {
+        id: 'suggestion-2',
+        title: 'Optimize Asset Allocation',
+        description: `Shift 10% from savings to stocks for potential higher returns while maintaining your risk level.`,
+        status: 'pending' as const
+      }
+    ];
+  };
+
+  const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: 'goal',
     contextData: goal,
     initialMessage: getInitialMessage(),
+    initialSuggestions: getInitialSuggestions(),
     onClose
   });
 
@@ -102,6 +125,58 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  
+                  {/* Suggestions */}
+                  {message.suggestions && message.suggestions.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {message.suggestions.map((suggestion) => (
+                        <div 
+                          key={suggestion.id}
+                          className="bg-background/50 rounded-lg p-3 border border-border"
+                        >
+                          <p className="text-sm font-medium mb-1">{suggestion.title}</p>
+                          <p className="text-xs text-muted-foreground mb-2">{suggestion.description}</p>
+                          
+                          {suggestion.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="flex-1 h-8"
+                                onClick={() => handleSuggestionAction(index, suggestion.id, 'approved')}
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 h-8"
+                                onClick={() => handleSuggestionAction(index, suggestion.id, 'denied')}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Deny
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {suggestion.status === 'approved' && (
+                            <div className="flex items-center gap-1 text-xs text-green-600">
+                              <Check className="h-3 w-3" />
+                              Approved
+                            </div>
+                          )}
+                          
+                          {suggestion.status === 'denied' && (
+                            <div className="flex items-center gap-1 text-xs text-red-600">
+                              <X className="h-3 w-3" />
+                              Denied
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {message.role === "user" && (
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">

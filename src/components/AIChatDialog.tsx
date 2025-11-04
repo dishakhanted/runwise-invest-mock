@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Check, X } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
 
 interface AIChatDialogProps {
@@ -38,15 +38,64 @@ export const AIChatDialog = ({
 
   const getInitialMessage = () => {
     if (viewMode === "net-worth") {
-      return `Hi! I'm your financial assistant. Your current net worth is ${formatCurrency(netWorth)}. You have ${formatCurrency(assetsTotal)} in assets and ${formatCurrency(liabilitiesTotal)} in liabilities. You're making great progress toward your retirement goal! How can I help you optimize your financial strategy today?`;
+      return `Hi! I'm your financial assistant. Your current net worth is ${formatCurrency(netWorth)}. You have ${formatCurrency(assetsTotal)} in assets and ${formatCurrency(liabilitiesTotal)} in liabilities. Here are some suggestions to optimize your financial strategy:`;
     } else if (viewMode === "assets") {
-      return `Hi! I'm your financial assistant. Your total assets are ${formatCurrency(assetsTotal)}, with ${formatCurrency(cashTotal)} in cash and ${formatCurrency(investmentsTotal)} in investments. I can help you optimize your portfolio allocation, find better investment opportunities, or discuss your savings strategy. What would you like to explore?`;
+      return `Hi! I'm your financial assistant. Your total assets are ${formatCurrency(assetsTotal)}, with ${formatCurrency(cashTotal)} in cash and ${formatCurrency(investmentsTotal)} in investments. Here are some recommendations:`;
     } else {
-      return `Hi! I'm your financial assistant. Your total liabilities are ${formatCurrency(liabilitiesTotal)}. I can help you create a debt payoff strategy, explore refinancing options, or prioritize which debts to tackle first. How can I assist you today?`;
+      return `Hi! I'm your financial assistant. Your total liabilities are ${formatCurrency(liabilitiesTotal)}. Here are some strategies to manage your debt:`;
     }
   };
 
-  const { messages, input, setInput, isLoading, sendMessage, handleClose } = useFinancialChat({
+  const getInitialSuggestions = () => {
+    if (viewMode === "net-worth") {
+      return [
+        {
+          id: 'suggestion-1',
+          title: 'Increase Investment Allocation',
+          description: 'Consider increasing your investment percentage by 5% to accelerate wealth building.',
+          status: 'pending' as const
+        },
+        {
+          id: 'suggestion-2',
+          title: 'Review Monthly Expenses',
+          description: 'Analyze your spending to identify areas where you can save $500/month.',
+          status: 'pending' as const
+        }
+      ];
+    } else if (viewMode === "assets") {
+      return [
+        {
+          id: 'suggestion-1',
+          title: 'Diversify Investments',
+          description: 'Consider diversifying your portfolio with international stocks for better returns.',
+          status: 'pending' as const
+        },
+        {
+          id: 'suggestion-2',
+          title: 'High-Yield Savings',
+          description: 'Move some cash to a high-yield savings account earning 4.5% APY.',
+          status: 'pending' as const
+        }
+      ];
+    } else {
+      return [
+        {
+          id: 'suggestion-1',
+          title: 'Debt Avalanche Method',
+          description: 'Focus on paying off highest-interest debt first to save on interest charges.',
+          status: 'pending' as const
+        },
+        {
+          id: 'suggestion-2',
+          title: 'Consider Refinancing',
+          description: 'Explore refinancing options that could lower your interest rates by 2%.',
+          status: 'pending' as const
+        }
+      ];
+    }
+  };
+
+  const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: 'dashboard',
     contextData: {
       viewMode,
@@ -57,6 +106,7 @@ export const AIChatDialog = ({
       investmentsTotal
     },
     initialMessage: getInitialMessage(),
+    initialSuggestions: getInitialSuggestions(),
     onClose
   });
 
@@ -98,6 +148,58 @@ export const AIChatDialog = ({
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  
+                  {/* Suggestions */}
+                  {message.suggestions && message.suggestions.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {message.suggestions.map((suggestion) => (
+                        <div 
+                          key={suggestion.id}
+                          className="bg-background/50 rounded-lg p-3 border border-border"
+                        >
+                          <p className="text-sm font-medium mb-1">{suggestion.title}</p>
+                          <p className="text-xs text-muted-foreground mb-2">{suggestion.description}</p>
+                          
+                          {suggestion.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="flex-1 h-8"
+                                onClick={() => handleSuggestionAction(index, suggestion.id, 'approved')}
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 h-8"
+                                onClick={() => handleSuggestionAction(index, suggestion.id, 'denied')}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Deny
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {suggestion.status === 'approved' && (
+                            <div className="flex items-center gap-1 text-xs text-green-600">
+                              <Check className="h-3 w-3" />
+                              Approved
+                            </div>
+                          )}
+                          
+                          {suggestion.status === 'denied' && (
+                            <div className="flex items-center gap-1 text-xs text-red-600">
+                              <X className="h-3 w-3" />
+                              Denied
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {message.role === "user" && (
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
