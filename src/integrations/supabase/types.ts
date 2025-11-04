@@ -78,19 +78,70 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
+          city: string | null
           created_at: string | null
+          credit_check_consent: boolean | null
+          employment_type: string | null
+          goals: string | null
           id: string
+          income: string | null
+          legal_first_name: string | null
+          legal_last_name: string | null
+          middle_name: string | null
+          onboarding_completed: boolean | null
+          phone: string | null
+          preferred_first_name: string | null
+          ssn_encrypted: string | null
+          state: string | null
+          suffix: string | null
           updated_at: string | null
+          user_id: string | null
+          zip_code: string | null
         }
         Insert: {
+          address?: string | null
+          city?: string | null
           created_at?: string | null
+          credit_check_consent?: boolean | null
+          employment_type?: string | null
+          goals?: string | null
           id?: string
+          income?: string | null
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          middle_name?: string | null
+          onboarding_completed?: boolean | null
+          phone?: string | null
+          preferred_first_name?: string | null
+          ssn_encrypted?: string | null
+          state?: string | null
+          suffix?: string | null
           updated_at?: string | null
+          user_id?: string | null
+          zip_code?: string | null
         }
         Update: {
+          address?: string | null
+          city?: string | null
           created_at?: string | null
+          credit_check_consent?: boolean | null
+          employment_type?: string | null
+          goals?: string | null
           id?: string
+          income?: string | null
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          middle_name?: string | null
+          onboarding_completed?: boolean | null
+          phone?: string | null
+          preferred_first_name?: string | null
+          ssn_encrypted?: string | null
+          state?: string | null
+          suffix?: string | null
           updated_at?: string | null
+          user_id?: string | null
+          zip_code?: string | null
         }
         Relationships: []
       }

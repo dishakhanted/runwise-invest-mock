@@ -38,13 +38,13 @@ const Landing = () => {
         {/* Buttons */}
         <div className="space-y-4">
           <Button
-            onClick={() => navigate("/onboarding")}
+            onClick={() => navigate("/auth")}
             className="w-full h-14 text-lg bg-foreground text-background hover:bg-foreground/90 rounded-2xl"
           >
             Get started
           </Button>
           <Button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/auth")}
             variant="ghost"
             className="w-full h-14 text-lg text-foreground hover:bg-secondary rounded-2xl"
           >
