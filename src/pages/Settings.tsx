@@ -3,9 +3,33 @@ import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { ChevronRight, Landmark, TrendingUp, Bell, HelpCircle, List, FolderOpen, LogOut, User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
   
   const settingsItems = [
     {
@@ -64,7 +88,9 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
-        <h1 className="text-3xl font-bold mb-8">Disha</h1>
+        <h1 className="text-3xl font-bold mb-8">
+          {profile?.preferred_first_name || profile?.legal_first_name || "User"}
+        </h1>
         
         <div className="space-y-8">
           {/* SETTINGS Section */}
