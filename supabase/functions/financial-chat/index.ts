@@ -25,19 +25,6 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-    // Get auth header to identify user
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      throw new Error("Unauthorized");
-    }
-
     // Build system prompt based on context
     let systemPrompt = "You are a knowledgeable financial assistant helping users manage their finances, investments, and financial goals. Provide clear, actionable advice. Be concise but thorough.";
     
