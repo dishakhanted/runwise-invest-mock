@@ -36,13 +36,56 @@ export const useFinancialChat = ({
   };
 
   const saveConversation = useCallback(async (messages: Message[], title?: string) => {
-    // Disabled for testing - conversations won't be saved
-    return null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      if (!conversationId) {
+        // Create new conversation
+        const { data, error } = await supabase
+          .from('conversations')
+          .insert({
+            user_id: user.id,
+            title: title || 'Financial Chat',
+            context_type: contextType,
+            context_data: contextData
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        setConversationId(data.id);
+        return data.id;
+      } else {
+        // Update existing conversation
+        const { error } = await supabase
+          .from('conversations')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', conversationId);
+
+        if (error) throw error;
+        return conversationId;
+      }
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+      return null;
+    }
   }, [conversationId, contextType, contextData]);
 
   const saveMessage = useCallback(async (convId: string, role: string, content: string) => {
-    // Disabled for testing - messages won't be saved
-    return;
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: convId,
+          role,
+          content
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
   }, []);
 
   const sendMessage = useCallback(async () => {
@@ -64,13 +107,17 @@ export const useFinancialChat = ({
         await saveMessage(convId, 'user', input.trim());
       }
 
-      // Call edge function with streaming (no auth for testing)
+      // Get auth token (optional - works without auth for testing)
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Call edge function with streaming
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/financial-chat`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(session ? { "Authorization": `Bearer ${session.access_token}` } : {}),
           },
           body: JSON.stringify({
             messages: newMessages,
