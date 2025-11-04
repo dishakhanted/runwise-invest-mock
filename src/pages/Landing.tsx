@@ -16,9 +16,9 @@ const Landing = () => {
         
         {/* Content */}
         <div className="flex-1 flex flex-col justify-center -mt-20">
-          <h1 className="text-5xl font-bold mb-4">⁠Your AI edge</h1>
+          <h1 className="text-5xl font-bold mb-4">AI edge</h1>
           <h2 className="text-4xl font-light text-foreground/90 mb-12">
-            in wealth building.
+            for your wealth building.
           </h2>
 
           <WealthChart
