@@ -110,6 +110,16 @@ const Profile = () => {
           <Logo className="h-10 w-10" />
         </div>
 
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-semibold">
+            {profile?.preferred_first_name && profile?.legal_last_name
+              ? `${profile.preferred_first_name} ${profile.legal_last_name}`
+              : profile?.legal_first_name && profile?.legal_last_name
+              ? `${profile.legal_first_name} ${profile.legal_last_name}`
+              : "User"}
+          </h2>
+        </div>
+
         <Tabs defaultValue="personal" className="w-full">
           <TabsList className="w-full grid grid-cols-4 mb-6">
             <TabsTrigger value="personal">Personal</TabsTrigger>
