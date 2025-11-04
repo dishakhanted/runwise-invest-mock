@@ -37,10 +37,9 @@ const Dashboard = () => {
   const robinhoodTotal = 8500.0;
   const assetsTotal = cashTotal + investmentsTotal + fidelityTotal + robinhoodTotal;
   
-  const homeLoan = 285000.0;
   const educationLoan = 45000.0;
   const vehicleLoan = 18500.0;
-  const liabilitiesTotal = homeLoan + educationLoan + vehicleLoan;
+  const liabilitiesTotal = educationLoan + vehicleLoan;
   
   const netWorth = assetsTotal - liabilitiesTotal;
 
@@ -167,7 +166,7 @@ const Dashboard = () => {
                     <>Your total assets are {formatCurrency(assetsTotal)}, including {formatCurrency(cashTotal)} in cash and {formatCurrency(investmentsTotal + fidelityTotal + robinhoodTotal)} in investments. Click to explore optimization opportunities with your AI assistant.</>
                   )}
                   {viewMode === "liabilities" && (
-                    <>Your total liabilities are {formatCurrency(liabilitiesTotal)}, including a home loan of {formatCurrency(homeLoan)}. Click to discuss debt management strategies with your AI assistant.</>
+                    <>Your total liabilities are {formatCurrency(liabilitiesTotal)}, including an education loan of {formatCurrency(educationLoan)} and a vehicle loan of {formatCurrency(vehicleLoan)}. Click to discuss debt management strategies with your AI assistant.</>
                   )}
                 </p>
               </div>
@@ -189,7 +188,7 @@ const Dashboard = () => {
                 iconColor="bg-icon-blue"
                 title="Checking Account"
                 subtitle="Santander"
-                amount="$25,000.00"
+                amount="$65,000.00"
                 timeInfo="2 hours ago"
               />
               <AccountCard
@@ -197,40 +196,8 @@ const Dashboard = () => {
                 iconColor="bg-icon-blue"
                 title="Savings Account"
                 subtitle="Santander"
-                amount="$40,000.00"
+                amount="$40,741.75"
                 timeInfo="2 hours ago"
-              />
-              <AccountCard
-                icon={Building2}
-                iconColor="bg-icon-purple"
-                title="Checking Account"
-                subtitle="Bank of America"
-                amount="$20,000.00"
-                timeInfo="1 hour ago"
-              />
-              <AccountCard
-                icon={Building2}
-                iconColor="bg-icon-purple"
-                title="Savings Account"
-                subtitle="Bank of America"
-                amount="$20,000.00"
-                timeInfo="1 hour ago"
-              />
-              <AccountCard
-                icon={Building2}
-                iconColor="bg-icon-blue"
-                title="Checking - 1928"
-                subtitle="Chase"
-                amount="$741.71"
-                timeInfo="17 hours ago"
-              />
-              <AccountCard
-                icon={Building2}
-                iconColor="bg-icon-blue"
-                title="Savings - 2132"
-                subtitle="Chase"
-                amount="$100.04"
-                timeInfo="17 hours ago"
               />
             </div>
           </div>
@@ -264,28 +231,12 @@ const Dashboard = () => {
                 timeInfo="16 hours ago"
               />
               <AccountCard
-                icon={TrendingUp}
-                iconColor="bg-success"
-                title="Stock Portfolio - 4421"
-                subtitle="Fidelity Investments"
-                amount="$15,234.89"
-                timeInfo="16 hours ago"
-              />
-              <AccountCard
                 icon={BarChart3}
                 iconColor="bg-icon-orange"
                 title="Trading Account"
                 subtitle="Robinhood"
                 amount="$8,500.00"
                 timeInfo="2 hours ago"
-              />
-              <AccountCard
-                icon={TrendingUp}
-                iconColor="bg-success"
-                title="Investment Account - 7788"
-                subtitle="Fidelity Investments"
-                amount="$17,833.73"
-                timeInfo="16 hours ago"
               />
             </div>
           </div>
@@ -300,13 +251,6 @@ const Dashboard = () => {
             </div>
 
             <div className="divide-y divide-border">
-              <AccountCard
-                icon={Home}
-                iconColor="bg-destructive"
-                title="Home Loan"
-                subtitle="Wells Fargo · 3.5% APR"
-                amount={`-${formatCurrency(homeLoan)}`}
-              />
               <AccountCard
                 icon={GraduationCap}
                 iconColor="bg-destructive"
@@ -352,7 +296,6 @@ const Dashboard = () => {
         liabilitiesTotal={liabilitiesTotal}
         cashTotal={cashTotal}
         investmentsTotal={investmentsTotal + fidelityTotal + robinhoodTotal}
-        homeLoan={homeLoan}
       />
       <LinkAccountDialog 
         isOpen={isLinkAccountOpen}

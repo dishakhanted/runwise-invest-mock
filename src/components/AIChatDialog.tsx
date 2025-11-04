@@ -29,7 +29,6 @@ interface AIChatDialogProps {
   liabilitiesTotal: number;
   cashTotal: number;
   investmentsTotal: number;
-  homeLoan: number;
 }
 
 export const AIChatDialog = ({ 
@@ -40,8 +39,7 @@ export const AIChatDialog = ({
   assetsTotal, 
   liabilitiesTotal,
   cashTotal,
-  investmentsTotal,
-  homeLoan
+  investmentsTotal
 }: AIChatDialogProps) => {
   const [deniedRecommendations, setDeniedRecommendations] = useState<Set<string>>(new Set());
   
@@ -112,14 +110,6 @@ export const AIChatDialog = ({
     } else {
       return [
         {
-          id: "liab1",
-          title: "Accelerate home loan payments",
-          description: `Adding ${formatCurrency(200)}/month to your mortgage could save ${formatCurrency(45000)} in interest and pay it off 5 years early.`,
-          icon: Building2,
-          iconColor: "bg-primary/10 text-primary border-l-primary",
-          isActionable: true,
-        },
-        {
           id: "liab2",
           title: "Refinance education loan",
           description: "Current rates are lower - refinancing could reduce your monthly payment by ${formatCurrency(150)}/month.",
@@ -145,7 +135,7 @@ export const AIChatDialog = ({
     } else if (viewMode === "assets") {
       return `Hi! I'm your financial assistant. Your total assets are ${formatCurrency(assetsTotal)}, with ${formatCurrency(cashTotal)} in cash and ${formatCurrency(investmentsTotal)} in investments. I can help you optimize your portfolio allocation, find better investment opportunities, or discuss your savings strategy. What would you like to explore?`;
     } else {
-      return `Hi! I'm your financial assistant. Your total liabilities are ${formatCurrency(liabilitiesTotal)}, including your home loan of ${formatCurrency(homeLoan)}. I can help you create a debt payoff strategy, explore refinancing options, or prioritize which debts to tackle first. How can I assist you today?`;
+      return `Hi! I'm your financial assistant. Your total liabilities are ${formatCurrency(liabilitiesTotal)}. I can help you create a debt payoff strategy, explore refinancing options, or prioritize which debts to tackle first. How can I assist you today?`;
     }
   };
 
@@ -196,8 +186,6 @@ export const AIChatDialog = ({
       detailedExplanation = `High-yield savings accounts maximize your cash returns:\n\n1. **Free Money**: ${formatCurrency(1200)}/year in additional interest is essentially a risk-free return.\n\n2. **Liquidity**: Same accessibility as regular savings, but with 4-6x higher returns.\n\n3. **Portfolio Efficiency**: Every dollar should work as hard as possible - this improves your overall portfolio performance.\n\n4. **Inflation Protection**: Higher yields help preserve purchasing power over time.`;
     } else if (rec.id === "asset3") {
       detailedExplanation = `Maximizing tax-advantaged accounts is a powerful wealth-building strategy:\n\n1. **Tax Savings**: ${formatCurrency(1500)}/year in tax savings compounds over time to significant wealth.\n\n2. **Protected Growth**: Tax-deferred growth means more money compounds faster.\n\n3. **Retirement Security**: IRAs are protected from creditors and provide guaranteed retirement income.\n\n4. **Portfolio Impact**: The tax savings can be reinvested, creating a multiplier effect on your wealth.`;
-    } else if (rec.id === "liab1") {
-      detailedExplanation = `Accelerating mortgage payments has far-reaching benefits:\n\n1. **Interest Savings**: ${formatCurrency(45000)} saved in interest is equivalent to earning that much tax-free.\n\n2. **Ownership Faster**: Being debt-free 5 years earlier provides immense financial flexibility and security.\n\n3. **Forced Savings**: Extra payments build equity, which is wealth you can access if needed.\n\n4. **Portfolio Impact**: Once paid off, redirect mortgage payments to investments for exponential wealth growth.`;
     } else if (rec.id === "liab2") {
       detailedExplanation = `Refinancing at lower rates improves your entire financial picture:\n\n1. **Cash Flow**: ${formatCurrency(150)}/month freed up can be invested or used to pay down other debts faster.\n\n2. **Interest Savings**: Over the loan term, you could save ${formatCurrency(10000)}+ in interest.\n\n3. **Debt-Free Faster**: Lower rates mean more principal paydown with each payment.\n\n4. **Credit Improvement**: Lower monthly obligations improve your debt-to-income ratio, opening other opportunities.`;
     } else {

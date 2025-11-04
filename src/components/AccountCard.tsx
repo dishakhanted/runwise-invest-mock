@@ -22,11 +22,11 @@ export const AccountCard = ({
     <div className="flex items-center gap-4 py-4">
       <div
         className={cn(
-          "w-14 h-14 rounded-full flex items-center justify-center shrink-0",
+          "w-10 h-10 rounded-full flex items-center justify-center shrink-0 opacity-70",
           iconColor
         )}
       >
-        <Icon className="h-7 w-7 text-background" />
+        <Icon className="h-5 w-5 text-background" />
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-foreground">{title}</h3>
