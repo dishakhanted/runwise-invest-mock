@@ -14,6 +14,7 @@ interface Conversation {
   title: string;
   context_type: string;
   updated_at: string;
+  lastMessage?: string;
 }
 
 const Inbox = () => {
@@ -34,7 +35,25 @@ const Inbox = () => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      setConversations(data || []);
+      
+      // Fetch last message for each conversation
+      const conversationsWithMessages = await Promise.all(
+        (data || []).map(async (conv) => {
+          const { data: messages } = await supabase
+            .from('messages')
+            .select('content')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          
+          return {
+            ...conv,
+            lastMessage: messages?.[0]?.content || 'No messages yet'
+          };
+        })
+      );
+      
+      setConversations(conversationsWithMessages);
     } catch (error) {
       console.error('Error loading conversations:', error);
       toast({
@@ -125,6 +144,9 @@ const Inbox = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 truncate">{conversation.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-1 line-clamp-2">
+                        {conversation.lastMessage}
+                      </p>
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-xs text-muted-foreground">
                           {getContextLabel(conversation.context_type)} • {formatDistanceToNow(new Date(conversation.updated_at), { addSuffix: true })}
