@@ -79,9 +79,23 @@ export const useFinancialChat = ({
 
   const generateTitle = (firstUserMessage: string) => {
     // Generate a concise title from the first user message
-    const words = firstUserMessage.trim().split(' ');
-    if (words.length <= 6) return firstUserMessage;
-    return words.slice(0, 6).join(' ') + '...';
+    const message = firstUserMessage.trim();
+    
+    // Extract key words (remove common words)
+    const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'my', 'i', 'can', 'you', 'me', 'how', 'what', 'when', 'where', 'why'];
+    const words = message.toLowerCase().split(' ')
+      .filter(word => word.length > 2 && !commonWords.includes(word))
+      .slice(0, 5);
+    
+    if (words.length === 0) {
+      // Fallback to first few words
+      const fallbackWords = message.split(' ').slice(0, 3);
+      return fallbackWords.join(' ').charAt(0).toUpperCase() + fallbackWords.join(' ').slice(1);
+    }
+    
+    // Capitalize first letter of each word
+    const title = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    return title;
   };
 
   const saveConversation = useCallback(async (messages: Message[], title?: string) => {
