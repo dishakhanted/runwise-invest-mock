@@ -1,11 +1,12 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Logo } from "@/components/Logo";
 
 const Index = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+      <div className="flex flex-col items-center text-center">
+        <Logo className="h-32 w-32 mb-8" />
+        <h1 className="mb-4 text-4xl font-bold">Welcome to GrowWise</h1>
+        <p className="text-xl text-muted-foreground">Your intelligent financial companion</p>
       </div>
     </div>
   );

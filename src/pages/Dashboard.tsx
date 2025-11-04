@@ -73,6 +73,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <h1 className="text-5xl font-bold">{formatCurrency(getCurrentAmount())}</h1>
+          <Logo className="h-12 w-12" />
         </div>
 
         {/* Toggle Buttons */}
