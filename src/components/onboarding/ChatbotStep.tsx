@@ -132,7 +132,7 @@ export const ChatbotStep = ({ onComplete, onBack }: ChatbotStepProps) => {
       </ScrollArea>
 
       <div className="mt-6 space-y-3">
-        {!isComplete ? (
+        {!isComplete && (
           <div className="flex gap-2">
             <Input
               value={input}
@@ -149,14 +149,14 @@ export const ChatbotStep = ({ onComplete, onBack }: ChatbotStepProps) => {
               <Send className="h-5 w-5" />
             </Button>
           </div>
-        ) : (
-          <Button
-            onClick={handleComplete}
-            className="w-full h-14 text-lg rounded-2xl"
-          >
-            Complete Setup
-          </Button>
         )}
+        <Button
+          onClick={handleComplete}
+          className="w-full h-14 text-lg rounded-2xl"
+          variant={isComplete ? "default" : "outline"}
+        >
+          Complete Setup
+        </Button>
       </div>
     </div>
   );
