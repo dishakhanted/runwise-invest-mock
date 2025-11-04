@@ -24,7 +24,7 @@ interface Goal {
 }
 
 const Goals = () => {
-  const [goals] = useState<Goal[]>([
+  const [goals, setGoals] = useState<Goal[]>([
     {
       id: "1",
       name: "Emergency Fund",
@@ -57,6 +57,15 @@ const Goals = () => {
   const [selectedGoalId, setSelectedGoalId] = useState(goals[0]?.id || "");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isNewGoalOpen, setIsNewGoalOpen] = useState(false);
+
+  const handleCreateGoal = (newGoal: Omit<Goal, "id">) => {
+    const goal: Goal = {
+      ...newGoal,
+      id: Date.now().toString(),
+    };
+    setGoals([...goals, goal]);
+    setSelectedGoalId(goal.id);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -240,6 +249,7 @@ const Goals = () => {
       <NewGoalDialog 
         isOpen={isNewGoalOpen}
         onClose={() => setIsNewGoalOpen(false)}
+        onCreateGoal={handleCreateGoal}
       />
     </div>
   );

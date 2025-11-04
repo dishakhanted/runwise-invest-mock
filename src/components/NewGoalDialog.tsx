@@ -11,6 +11,18 @@ import { useToast } from "@/hooks/use-toast";
 interface NewGoalDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onCreateGoal: (goal: {
+    name: string;
+    targetAmount: number;
+    currentAmount: number;
+    savingAccount: string;
+    investmentAccount: string;
+    allocation: {
+      savings: number;
+      stocks: number;
+      bonds: number;
+    };
+  }) => void;
 }
 
 interface Message {
@@ -18,7 +30,7 @@ interface Message {
   content: string;
 }
 
-export const NewGoalDialog = ({ isOpen, onClose }: NewGoalDialogProps) => {
+export const NewGoalDialog = ({ isOpen, onClose, onCreateGoal }: NewGoalDialogProps) => {
   const { toast } = useToast();
   const [goalName, setGoalName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -146,6 +158,16 @@ Do you have any questions about this goal, or are you ready to create it?`,
       });
       return;
     }
+
+    // Create the goal with default allocation
+    onCreateGoal({
+      name: goalName,
+      targetAmount: parseInt(targetAmount),
+      currentAmount: 0,
+      savingAccount: "Savings Account",
+      investmentAccount: "Investment Account",
+      allocation: { savings: 60, stocks: 30, bonds: 10 },
+    });
 
     toast({
       title: "Goal Created!",
