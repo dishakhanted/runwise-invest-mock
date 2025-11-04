@@ -11,12 +11,34 @@ import { useFinancialChat } from "@/hooks/useFinancialChat";
 const Chat = () => {
   const navigate = useNavigate();
 
-  const initialMessage = "Hi! I'm your financial assistant. I can help you with budgeting, investment advice, savings strategies, and answer any questions about your finances. What would you like to discuss today?";
+  const initialMessage = "Hi! I'm your financial assistant. Here are some suggestions to optimize your financial strategy:";
+  
+  const initialSuggestions = [
+    {
+      id: 'suggestion-1',
+      title: 'Increase Emergency Fund',
+      description: 'Build your emergency fund to cover 6 months of expenses for better financial security.',
+      status: 'pending' as const
+    },
+    {
+      id: 'suggestion-2',
+      title: 'Review Investment Allocation',
+      description: 'Consider rebalancing your portfolio to optimize returns based on your risk tolerance.',
+      status: 'pending' as const
+    },
+    {
+      id: 'suggestion-3',
+      title: 'Set Up Automatic Savings',
+      description: 'Automate 15% of your income to savings to build wealth consistently.',
+      status: 'pending' as const
+    }
+  ];
 
   const { messages, input, setInput, isLoading, sendMessage, handleSuggestionAction } = useFinancialChat({
     contextType: 'general',
     contextData: null,
     initialMessage,
+    initialSuggestions,
   });
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

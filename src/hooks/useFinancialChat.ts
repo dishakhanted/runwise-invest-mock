@@ -19,6 +19,7 @@ interface UseFinancialChatProps {
   contextType: 'dashboard' | 'goal' | 'general';
   contextData?: any;
   initialMessage: string;
+  initialSuggestions?: Suggestion[];
   onClose?: () => void;
 }
 
@@ -26,10 +27,15 @@ export const useFinancialChat = ({
   contextType,
   contextData,
   initialMessage,
+  initialSuggestions,
   onClose
 }: UseFinancialChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: initialMessage }
+    { 
+      role: "assistant", 
+      content: initialMessage,
+      suggestions: initialSuggestions 
+    }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
