@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { Logo } from "@/components/Logo";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Goal {
   id: string;
@@ -24,47 +26,110 @@ interface Goal {
 }
 
 const Goals = () => {
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: "1",
-      name: "Emergency Fund",
-      targetAmount: 50000,
-      currentAmount: 30000,
-      savingAccount: "High Yield Savings",
-      investmentAccount: "None",
-      allocation: { savings: 100, stocks: 0, bonds: 0 },
-    },
-    {
-      id: "2",
-      name: "House Down Payment",
-      targetAmount: 100000,
-      currentAmount: 45000,
-      savingAccount: "Savings Account",
-      investmentAccount: "Brokerage",
-      allocation: { savings: 40, stocks: 50, bonds: 10 },
-    },
-    {
-      id: "3",
-      name: "Retirement at 65",
-      targetAmount: 1000000,
-      currentAmount: 237672,
-      savingAccount: "Roth IRA",
-      investmentAccount: "401(k)",
-      allocation: { savings: 20, stocks: 60, bonds: 20 },
-    },
-  ]);
+  const { toast } = useToast();
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadGoals();
+  }, []);
+
+  const loadGoals = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedGoals: Goal[] = (data || []).map(goal => ({
+        id: goal.id,
+        name: goal.name,
+        targetAmount: Number(goal.target_amount),
+        currentAmount: Number(goal.current_amount),
+        savingAccount: goal.saving_account || 'None',
+        investmentAccount: goal.investment_account || 'None',
+        allocation: {
+          savings: goal.allocation_savings,
+          stocks: goal.allocation_stocks,
+          bonds: goal.allocation_bonds
+        }
+      }));
+
+      setGoals(formattedGoals);
+    } catch (error) {
+      console.error('Error loading goals:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load goals",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [selectedGoalId, setSelectedGoalId] = useState(goals[0]?.id || "");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isNewGoalOpen, setIsNewGoalOpen] = useState(false);
 
-  const handleCreateGoal = (newGoal: Omit<Goal, "id">) => {
-    const goal: Goal = {
-      ...newGoal,
-      id: Date.now().toString(),
-    };
-    setGoals([...goals, goal]);
-    setSelectedGoalId(goal.id);
+  const handleCreateGoal = async (newGoal: Omit<Goal, "id">) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('goals')
+        .insert({
+          user_id: user.id,
+          name: newGoal.name,
+          target_amount: newGoal.targetAmount,
+          current_amount: newGoal.currentAmount,
+          saving_account: newGoal.savingAccount,
+          investment_account: newGoal.investmentAccount,
+          allocation_savings: newGoal.allocation.savings,
+          allocation_stocks: newGoal.allocation.stocks,
+          allocation_bonds: newGoal.allocation.bonds
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const goal: Goal = {
+        id: data.id,
+        name: data.name,
+        targetAmount: Number(data.target_amount),
+        currentAmount: Number(data.current_amount),
+        savingAccount: data.saving_account,
+        investmentAccount: data.investment_account,
+        allocation: {
+          savings: data.allocation_savings,
+          stocks: data.allocation_stocks,
+          bonds: data.allocation_bonds
+        }
+      };
+
+      setGoals([...goals, goal]);
+      setSelectedGoalId(goal.id);
+
+      toast({
+        title: "Success",
+        description: "Goal created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create goal",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatCurrency = (amount: number) => {

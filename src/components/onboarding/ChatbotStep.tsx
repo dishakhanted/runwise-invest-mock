@@ -137,6 +137,68 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
 
       if (profileError) throw profileError;
 
+      // Parse and create goals from the conversation
+      if (collectedData.goals) {
+        const goalsText = collectedData.goals.toLowerCase();
+        const goalsList = [];
+
+        // Parse common financial goals
+        if (goalsText.includes('retirement')) {
+          goalsList.push({
+            name: 'Retirement Planning',
+            target_amount: 1000000,
+            current_amount: 0,
+            allocation_savings: 20,
+            allocation_stocks: 60,
+            allocation_bonds: 20
+          });
+        }
+        if (goalsText.includes('house') || goalsText.includes('home')) {
+          goalsList.push({
+            name: 'House Down Payment',
+            target_amount: 100000,
+            current_amount: 0,
+            allocation_savings: 40,
+            allocation_stocks: 50,
+            allocation_bonds: 10
+          });
+        }
+        if (goalsText.includes('emergency')) {
+          goalsList.push({
+            name: 'Emergency Fund',
+            target_amount: 50000,
+            current_amount: 0,
+            allocation_savings: 100,
+            allocation_stocks: 0,
+            allocation_bonds: 0
+          });
+        }
+        if (goalsText.includes('debt') || goalsText.includes('loan')) {
+          goalsList.push({
+            name: 'Pay Off Debt',
+            target_amount: 50000,
+            current_amount: 0,
+            allocation_savings: 100,
+            allocation_stocks: 0,
+            allocation_bonds: 0
+          });
+        }
+
+        // Create goals in database
+        if (goalsList.length > 0) {
+          const { error: goalsError } = await supabase
+            .from('goals')
+            .insert(
+              goalsList.map(goal => ({
+                ...goal,
+                user_id: authData.user.id
+              }))
+            );
+
+          if (goalsError) console.error('Error creating goals:', goalsError);
+        }
+      }
+
       toast({
         title: "Account created!",
         description: "Welcome to GrowWise. Redirecting to your dashboard...",

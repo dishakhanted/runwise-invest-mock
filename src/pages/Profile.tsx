@@ -5,77 +5,91 @@ import { ChevronRight, ChevronLeft, Lock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading profile...</p>
+      </div>
+    );
+  }
   
   const profileData = {
     personalInfo: [
       {
         label: "Name",
-        value: "Disha Padamraj Khanted",
+        value: profile?.legal_first_name && profile?.legal_last_name 
+          ? `${profile.legal_first_name}${profile.middle_name ? ' ' + profile.middle_name : ''} ${profile.legal_last_name}${profile.suffix ? ' ' + profile.suffix : ''}`
+          : "Not set",
         action: "Request to update",
         actionType: "button",
       },
       {
         label: "Preferred name",
-        value: "Disha",
+        value: profile?.preferred_first_name || "Not set",
         hasArrow: true,
       },
       {
-        label: "Marital status",
-        value: "Single",
-        hasArrow: true,
-      },
-      {
-        label: "Country of citizenship",
-        value: "India",
-        locked: true,
-      },
-      {
-        label: "Liquid net worth",
-        value: "$70,000",
+        label: "Employment type",
+        value: profile?.employment_type || "Not set",
         hasArrow: true,
       },
     ],
     taxInfo: [
       {
         label: "Pretax annual income",
-        value: "$94,000",
-        hasArrow: true,
-      },
-      {
-        label: "Tax filing state",
-        value: "Illinois",
-        hasInfo: true,
-      },
-      {
-        label: "Tax filing status",
-        value: "Single",
+        value: profile?.income || "Not set",
         hasArrow: true,
       },
     ],
     contactInfo: [
       {
+        label: "Phone",
+        value: profile?.phone || "Not set",
+        hasArrow: true,
+      },
+      {
         label: "Residential address",
-        value: "151 N Michigan Ave Apt 1114, Chicago, IL 60601-7538",
+        value: profile?.address && profile?.city && profile?.state && profile?.zip_code
+          ? `${profile.address}, ${profile.city}, ${profile.state} ${profile.zip_code}`
+          : "Not set",
         hasArrow: true,
       },
     ],
     employmentInfo: [
       {
         label: "Employment type",
-        value: "Employed",
-        hasArrow: true,
-      },
-      {
-        label: "Current employer",
-        value: "Columbia university",
-        hasArrow: true,
-      },
-      {
-        label: "Job title",
-        value: "Research",
+        value: profile?.employment_type || "Not set",
         hasArrow: true,
       },
     ],
@@ -128,7 +142,7 @@ const Profile = () => {
                       {item.hasArrow && (
                         <ChevronRight className="h-5 w-5 text-primary mt-1" />
                       )}
-                      {item.locked && (
+                      {'locked' in item && item.locked && (
                         <Lock className="h-5 w-5 text-primary mt-1" />
                       )}
                     </div>
@@ -155,7 +169,7 @@ const Profile = () => {
                       {item.hasArrow && (
                         <ChevronRight className="h-5 w-5 text-primary mt-1" />
                       )}
-                      {item.hasInfo && (
+                      {'hasInfo' in item && item.hasInfo && (
                         <Info className="h-5 w-5 text-primary mt-1" />
                       )}
                     </div>

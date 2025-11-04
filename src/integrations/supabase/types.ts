@@ -44,6 +44,51 @@ export type Database = {
         }
         Relationships: []
       }
+      goals: {
+        Row: {
+          allocation_bonds: number
+          allocation_savings: number
+          allocation_stocks: number
+          created_at: string
+          current_amount: number
+          id: string
+          investment_account: string | null
+          name: string
+          saving_account: string | null
+          target_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allocation_bonds?: number
+          allocation_savings?: number
+          allocation_stocks?: number
+          created_at?: string
+          current_amount?: number
+          id?: string
+          investment_account?: string | null
+          name: string
+          saving_account?: string | null
+          target_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allocation_bonds?: number
+          allocation_savings?: number
+          allocation_stocks?: number
+          created_at?: string
+          current_amount?: number
+          id?: string
+          investment_account?: string | null
+          name?: string
+          saving_account?: string | null
+          target_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
