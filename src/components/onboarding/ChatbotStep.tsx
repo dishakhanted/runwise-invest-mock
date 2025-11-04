@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { OnboardingData } from "@/pages/Onboarding";
 import { ChevronLeft, Send } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface ChatbotStepProps {
   data: OnboardingData;
@@ -16,7 +19,10 @@ interface Message {
   content: string;
 }
 
-export const ChatbotStep = ({ onComplete, onBack }: ChatbotStepProps) => {
+export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -86,8 +92,69 @@ export const ChatbotStep = ({ onComplete, onBack }: ChatbotStepProps) => {
     }, 800);
   };
 
-  const handleComplete = () => {
-    onComplete(collectedData);
+  const handleComplete = async () => {
+    setIsCreatingAccount(true);
+    
+    try {
+      // Create the account
+      if (!data.email || !data.password) {
+        throw new Error("Email and password are required");
+      }
+
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (signUpError) throw signUpError;
+      if (!authData.user) throw new Error("Failed to create account");
+
+      // Save profile data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          legal_first_name: data.legalFirstName,
+          preferred_first_name: data.preferredFirstName,
+          middle_name: data.middleName,
+          legal_last_name: data.legalLastName,
+          suffix: data.suffix,
+          phone: data.phone,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          zip_code: data.zipCode,
+          ssn_encrypted: data.ssn, // Note: Should be encrypted in production
+          credit_check_consent: data.creditCheckConsent || false,
+          income: collectedData.income,
+          employment_type: collectedData.employmentType,
+          goals: collectedData.goals,
+          onboarding_completed: true,
+        })
+        .eq('user_id', authData.user.id);
+
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Account created!",
+        description: "Welcome to GrowWise. Redirecting to your dashboard...",
+      });
+
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+    } catch (error: any) {
+      console.error("Account creation error:", error);
+      toast({
+        title: "Account Creation Failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingAccount(false);
+    }
   };
 
   const isComplete = currentQuestion > questions.length;
@@ -154,8 +221,9 @@ export const ChatbotStep = ({ onComplete, onBack }: ChatbotStepProps) => {
           onClick={handleComplete}
           className="w-full h-14 text-lg rounded-2xl"
           variant={isComplete ? "default" : "outline"}
+          disabled={isCreatingAccount}
         >
-          Complete Setup
+          {isCreatingAccount ? "Creating Account..." : "Complete Setup"}
         </Button>
       </div>
     </div>

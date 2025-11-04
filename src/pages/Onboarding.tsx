@@ -12,6 +12,7 @@ export type OnboardingData = {
   legalLastName?: string;
   suffix?: string;
   email?: string;
+  password?: string;
   phone?: string;
   address?: string;
   city?: string;
