@@ -170,58 +170,62 @@ const Chat = () => {
       <div className="max-w-lg mx-auto w-full flex flex-col h-screen">
         {/* Header */}
         <div className="px-6 py-6 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Sheet open={isInboxOpen} onOpenChange={setIsInboxOpen}>
-              <SheetTrigger asChild>
-                <Button size="icon" variant="ghost" className="rounded-full">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-80">
-                <SheetHeader>
-                  <SheetTitle>Conversations</SheetTitle>
-                </SheetHeader>
-                <ScrollArea className="h-[calc(100vh-8rem)] mt-6">
-                  <div className="space-y-2">
-                    {conversations.map((conv) => (
-                      <Card
-                        key={conv.id}
-                        className={`p-4 cursor-pointer transition-colors hover:bg-muted ${
-                          selectedConversationId === conv.id ? "bg-muted border-primary" : ""
-                        }`}
-                        onClick={() => {
-                          setSelectedConversationId(conv.id);
-                          setIsInboxOpen(false);
-                        }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <MessageSquare className="h-5 w-5 mt-1 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm mb-1 truncate">{conv.title}</h3>
-                            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                              {conv.lastMessage}
-                            </p>
-                            <span className="text-xs text-muted-foreground">
-                              {formatTimestamp(conv.timestamp)}
-                            </span>
-                          </div>
+          <h1 className="text-2xl font-bold">{selectedConversation?.title || "AI Assistant"}</h1>
+          
+          <Sheet open={isInboxOpen} onOpenChange={setIsInboxOpen}>
+            <SheetTrigger asChild>
+              <Button size="icon" variant="ghost" className="rounded-full">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[85vw] max-w-sm">
+              <SheetHeader>
+                <SheetTitle>Conversations</SheetTitle>
+              </SheetHeader>
+              
+              <Button
+                onClick={() => {
+                  handleNewChat();
+                  setIsInboxOpen(false);
+                }}
+                className="w-full mt-4 mb-4"
+                variant="default"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Chat
+              </Button>
+              
+              <ScrollArea className="h-[calc(100vh-12rem)]">
+                <div className="space-y-2">
+                  {conversations.map((conv) => (
+                    <Card
+                      key={conv.id}
+                      className={`p-4 cursor-pointer transition-colors hover:bg-muted ${
+                        selectedConversationId === conv.id ? "bg-muted border-primary" : ""
+                      }`}
+                      onClick={() => {
+                        setSelectedConversationId(conv.id);
+                        setIsInboxOpen(false);
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <MessageSquare className="h-5 w-5 mt-1 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm mb-1 truncate">{conv.title}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                            {conv.lastMessage}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTimestamp(conv.timestamp)}
+                          </span>
                         </div>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
-            <h1 className="text-2xl font-bold">{selectedConversation?.title || "AI Assistant"}</h1>
-          </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleNewChat}
-            className="rounded-full"
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
         </div>
 
         {/* Messages Area */}
