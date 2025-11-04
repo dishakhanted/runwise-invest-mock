@@ -169,7 +169,7 @@ Do you have any questions about this goal, or are you ready to create it?`,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-md max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
@@ -178,7 +178,7 @@ Do you have any questions about this goal, or are you ready to create it?`,
         </DialogHeader>
 
         <div className="space-y-4">
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[50vh] pr-4">
             <div className="space-y-4">
               {messages.map((message, index) => (
                 <div
