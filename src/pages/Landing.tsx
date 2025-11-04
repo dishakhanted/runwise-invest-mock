@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { WealthChart } from "@/components/WealthChart";
 import { useNavigate } from "react-router-dom";
-import logo from "@/assets/growwise-logo.png";
+import logo from "@/assets/growwise-logo-transparent.png";
 
 const Landing = () => {
   const navigate = useNavigate();
