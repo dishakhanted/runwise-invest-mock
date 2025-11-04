@@ -104,7 +104,7 @@ export const WealthChart = ({
                 cx={x}
                 cy={y - 25}
                 r="14"
-                fill="#22c55e"
+                fill="hsl(var(--primary))"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setSelectedGoal(goal)}
               />
