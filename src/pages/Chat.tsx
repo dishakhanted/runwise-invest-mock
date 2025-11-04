@@ -5,7 +5,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
-import { Bot, Send, User, Plus, Menu, MessageSquare, X } from "lucide-react";
+import { Bot, Send, User, Plus, Inbox, MessageSquare, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Message {
   role: "user" | "assistant";
@@ -22,6 +23,7 @@ interface Conversation {
 }
 
 const Chat = () => {
+  const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: "1",
@@ -81,7 +83,6 @@ const Chat = () => {
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>("1");
   const [input, setInput] = useState("");
-  const [isInboxOpen, setIsInboxOpen] = useState(false);
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
@@ -175,72 +176,11 @@ const Chat = () => {
             size="icon" 
             variant="ghost" 
             className="rounded-full"
-            onClick={() => setIsInboxOpen(!isInboxOpen)}
+            onClick={() => navigate('/inbox')}
           >
-            <Menu className="h-5 w-5" />
+            <Inbox className="h-5 w-5" />
           </Button>
         </div>
-
-        {/* Inbox Overlay */}
-        {isInboxOpen && (
-          <div className="absolute top-0 left-0 right-0 bottom-0 bg-background z-50 flex flex-col">
-            <div className="px-6 py-6 border-b border-border flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Conversations</h2>
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="rounded-full"
-                onClick={() => setIsInboxOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            
-            <div className="px-6 py-4">
-              <Button
-                onClick={() => {
-                  handleNewChat();
-                  setIsInboxOpen(false);
-                }}
-                className="w-full"
-                variant="default"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                New Chat
-              </Button>
-            </div>
-            
-            <ScrollArea className="flex-1 px-6">
-              <div className="space-y-2 pb-6">
-                {conversations.map((conv) => (
-                  <Card
-                    key={conv.id}
-                    className={`p-4 cursor-pointer transition-colors hover:bg-muted ${
-                      selectedConversationId === conv.id ? "bg-muted border-primary" : ""
-                    }`}
-                    onClick={() => {
-                      setSelectedConversationId(conv.id);
-                      setIsInboxOpen(false);
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <MessageSquare className="h-5 w-5 mt-1 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm mb-1 truncate">{conv.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                          {conv.lastMessage}
-                        </p>
-                        <span className="text-xs text-muted-foreground">
-                          {formatTimestamp(conv.timestamp)}
-                        </span>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
 
         {/* Messages Area */}
         <ScrollArea className="flex-1 px-6 py-6">
