@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, Trash2 } from "lucide-react";
+import { MessageSquare, Trash2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface Conversation {
   id: string;
@@ -16,6 +17,7 @@ interface Conversation {
 }
 
 const Inbox = () => {
+  const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -83,9 +85,17 @@ const Inbox = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">Inbox</h1>
-          <Logo className="h-10 w-10" />
+        <div className="flex items-center gap-4 mb-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/chat')}
+            className="flex-shrink-0"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-4xl font-bold flex-1">Inbox</h1>
+          <Logo className="h-10 w-10 flex-shrink-0" />
         </div>
 
         {loading ? (
