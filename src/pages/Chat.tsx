@@ -3,10 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
-import { Bot, Send, User, Plus, Menu, MessageSquare } from "lucide-react";
+import { Bot, Send, User, Plus, Menu, MessageSquare, X } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -167,66 +166,81 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen bg-background flex justify-center">
-      <div className="max-w-md w-full flex flex-col h-screen border-x border-border">
+      <div className="max-w-md w-full flex flex-col h-screen border-x border-border relative">
         {/* Header */}
         <div className="px-6 py-6 border-b border-border flex items-center justify-between">
           <h1 className="text-2xl font-bold">{selectedConversation?.title || "AI Assistant"}</h1>
           
-          <Sheet open={isInboxOpen} onOpenChange={setIsInboxOpen}>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="ghost" className="rounded-full">
-                <Menu className="h-5 w-5" />
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="rounded-full"
+            onClick={() => setIsInboxOpen(!isInboxOpen)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Inbox Overlay */}
+        {isInboxOpen && (
+          <div className="absolute top-0 left-0 right-0 bottom-0 bg-background z-50 flex flex-col">
+            <div className="px-6 py-6 border-b border-border flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Conversations</h2>
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="rounded-full"
+                onClick={() => setIsInboxOpen(false)}
+              >
+                <X className="h-5 w-5" />
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[85vw] max-w-sm">
-              <SheetHeader>
-                <SheetTitle>Conversations</SheetTitle>
-              </SheetHeader>
-              
+            </div>
+            
+            <div className="px-6 py-4">
               <Button
                 onClick={() => {
                   handleNewChat();
                   setIsInboxOpen(false);
                 }}
-                className="w-full mt-4 mb-4"
+                className="w-full"
                 variant="default"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 New Chat
               </Button>
-              
-              <ScrollArea className="h-[calc(100vh-12rem)]">
-                <div className="space-y-2">
-                  {conversations.map((conv) => (
-                    <Card
-                      key={conv.id}
-                      className={`p-4 cursor-pointer transition-colors hover:bg-muted ${
-                        selectedConversationId === conv.id ? "bg-muted border-primary" : ""
-                      }`}
-                      onClick={() => {
-                        setSelectedConversationId(conv.id);
-                        setIsInboxOpen(false);
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <MessageSquare className="h-5 w-5 mt-1 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm mb-1 truncate">{conv.title}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                            {conv.lastMessage}
-                          </p>
-                          <span className="text-xs text-muted-foreground">
-                            {formatTimestamp(conv.timestamp)}
-                          </span>
-                        </div>
+            </div>
+            
+            <ScrollArea className="flex-1 px-6">
+              <div className="space-y-2 pb-6">
+                {conversations.map((conv) => (
+                  <Card
+                    key={conv.id}
+                    className={`p-4 cursor-pointer transition-colors hover:bg-muted ${
+                      selectedConversationId === conv.id ? "bg-muted border-primary" : ""
+                    }`}
+                    onClick={() => {
+                      setSelectedConversationId(conv.id);
+                      setIsInboxOpen(false);
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <MessageSquare className="h-5 w-5 mt-1 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm mb-1 truncate">{conv.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                          {conv.lastMessage}
+                        </p>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTimestamp(conv.timestamp)}
+                        </span>
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              </ScrollArea>
-            </SheetContent>
-          </Sheet>
-        </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
 
         {/* Messages Area */}
         <ScrollArea className="flex-1 px-6 py-6">
