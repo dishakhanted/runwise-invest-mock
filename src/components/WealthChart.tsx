@@ -54,6 +54,10 @@ export const WealthChart = ({
             <stop offset="0%" stopColor="hsl(var(--chart-gradient-start))" />
             <stop offset="100%" stopColor="hsl(var(--chart-gradient-end))" />
           </linearGradient>
+          <linearGradient id="balloonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#eab308" />
+          </linearGradient>
         </defs>
 
         {/* Y-axis */}
@@ -100,7 +104,7 @@ export const WealthChart = ({
                 cx={x}
                 cy={y - 25}
                 r="14"
-                fill="hsl(var(--primary))"
+                fill="url(#balloonGradient)"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setSelectedGoal(goal)}
               />
