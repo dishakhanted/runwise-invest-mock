@@ -166,8 +166,8 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <div className="max-w-lg mx-auto w-full flex flex-col h-screen">
+    <div className="min-h-screen bg-background flex justify-center">
+      <div className="max-w-md w-full flex flex-col h-screen border-x border-border">
         {/* Header */}
         <div className="px-6 py-6 border-b border-border flex items-center justify-between">
           <h1 className="text-2xl font-bold">{selectedConversation?.title || "AI Assistant"}</h1>
