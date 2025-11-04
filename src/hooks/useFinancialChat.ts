@@ -5,6 +5,14 @@ import { useToast } from "@/hooks/use-toast";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  suggestions?: Suggestion[];
+}
+
+interface Suggestion {
+  id: string;
+  title: string;
+  description: string;
+  status?: 'pending' | 'approved' | 'denied';
 }
 
 interface UseFinancialChatProps {
@@ -27,6 +35,25 @@ export const useFinancialChat = ({
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const handleSuggestionAction = useCallback((messageIndex: number, suggestionId: string, action: 'approved' | 'denied') => {
+    setMessages(prev => prev.map((msg, idx) => {
+      if (idx === messageIndex && msg.suggestions) {
+        return {
+          ...msg,
+          suggestions: msg.suggestions.map(s => 
+            s.id === suggestionId ? { ...s, status: action } : s
+          )
+        };
+      }
+      return msg;
+    }));
+
+    toast({
+      title: action === 'approved' ? "Suggestion Approved" : "Suggestion Denied",
+      description: `You ${action} this suggestion.`,
+    });
+  }, [toast]);
 
   const generateTitle = (firstUserMessage: string) => {
     // Generate a concise title from the first user message
@@ -157,14 +184,30 @@ export const useFinancialChat = ({
                 
                 if (content) {
                   assistantMessage += content;
+                  
+                  // Check if message contains suggestions (simple pattern matching)
+                  let suggestions: Suggestion[] | undefined;
+                  if (assistantMessage.includes('Suggestion:') || assistantMessage.includes('I suggest')) {
+                    // Extract suggestions (this is a simple implementation)
+                    // In production, you'd want the AI to return structured data
+                    suggestions = [{
+                      id: `suggestion-${Date.now()}`,
+                      title: 'Financial Action',
+                      description: assistantMessage.split('\n')[0].substring(0, 100),
+                      status: 'pending'
+                    }];
+                  }
+                  
                   setMessages(prev => {
                     const last = prev[prev.length - 1];
                     if (last?.role === 'assistant') {
                       return prev.map((m, i) =>
-                        i === prev.length - 1 ? { ...m, content: assistantMessage } : m
+                        i === prev.length - 1 
+                          ? { ...m, content: assistantMessage, suggestions } 
+                          : m
                       );
                     }
-                    return [...prev, { role: 'assistant', content: assistantMessage }];
+                    return [...prev, { role: 'assistant', content: assistantMessage, suggestions }];
                   });
                 }
               } catch (e) {
@@ -205,6 +248,7 @@ export const useFinancialChat = ({
     setInput,
     isLoading,
     sendMessage,
-    handleClose
+    handleClose,
+    handleSuggestionAction
   };
 };

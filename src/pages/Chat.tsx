@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
-import { Bot, Send, User, Inbox } from "lucide-react";
+import { Bot, Send, User, Inbox, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
 
@@ -13,7 +13,7 @@ const Chat = () => {
 
   const initialMessage = "Hi! I'm your financial assistant. I can help you with budgeting, investment advice, savings strategies, and answer any questions about your finances. What would you like to discuss today?";
 
-  const { messages, input, setInput, isLoading, sendMessage } = useFinancialChat({
+  const { messages, input, setInput, isLoading, sendMessage, handleSuggestionAction } = useFinancialChat({
     contextType: 'general',
     contextData: null,
     initialMessage,
@@ -65,6 +65,58 @@ const Chat = () => {
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  
+                  {/* Suggestions */}
+                  {message.suggestions && message.suggestions.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {message.suggestions.map((suggestion) => (
+                        <div 
+                          key={suggestion.id}
+                          className="bg-background/50 rounded-lg p-3 border border-border"
+                        >
+                          <p className="text-sm font-medium mb-1">{suggestion.title}</p>
+                          <p className="text-xs text-muted-foreground mb-2">{suggestion.description}</p>
+                          
+                          {suggestion.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="flex-1 h-8"
+                                onClick={() => handleSuggestionAction(index, suggestion.id, 'approved')}
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 h-8"
+                                onClick={() => handleSuggestionAction(index, suggestion.id, 'denied')}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Deny
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {suggestion.status === 'approved' && (
+                            <div className="flex items-center gap-1 text-xs text-green-600">
+                              <Check className="h-3 w-3" />
+                              Approved
+                            </div>
+                          )}
+                          
+                          {suggestion.status === 'denied' && (
+                            <div className="flex items-center gap-1 text-xs text-red-600">
+                              <X className="h-3 w-3" />
+                              Denied
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {message.role === "user" && (
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
