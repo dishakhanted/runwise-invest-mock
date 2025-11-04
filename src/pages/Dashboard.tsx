@@ -37,14 +37,24 @@ type LinkedAccount = {
   interest_rate: number;
 };
 
+type Goal = {
+  id: string;
+  name: string;
+  target_amount: number;
+  current_amount: number;
+  target_age?: number;
+};
+
 const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLinkAccountOpen, setIsLinkAccountOpen] = useState(false);
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
 
   useEffect(() => {
     loadLinkedAccounts();
+    loadGoals();
   }, []);
 
   const loadLinkedAccounts = async () => {
@@ -62,6 +72,23 @@ const Dashboard = () => {
     }
 
     setLinkedAccounts(data || []);
+  };
+
+  const loadGoals = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading goals:', error);
+      return;
+    }
+
+    setGoals(data || []);
   };
 
   const bankAccounts = linkedAccounts.filter(acc => acc.account_type === 'bank');
@@ -150,33 +177,18 @@ const Dashboard = () => {
         {viewMode === "net-worth" && (
           <WealthChart
             currentAmount={formatCurrency(getCurrentAmount())}
-            futureAmount="$1.3M net worth at 65"
-            goals={[
-              {
-                id: "1",
-                name: "Emergency Fund",
-                targetAmount: 50000,
-                currentAmount: 30000,
-                targetAge: 35,
-                position: { x: 150, y: 95 },
+            futureAmount={goals.length > 0 ? `${goals.length} goal${goals.length !== 1 ? 's' : ''} tracked` : "Set goals to track progress"}
+            goals={goals.map((goal, index) => ({
+              id: goal.id,
+              name: goal.name,
+              targetAmount: Number(goal.target_amount),
+              currentAmount: Number(goal.current_amount),
+              targetAge: goal.target_age,
+              position: { 
+                x: 120 + (index * 100), 
+                y: 100 - (index * 15) 
               },
-              {
-                id: "2",
-                name: "House Down Payment",
-                targetAmount: 100000,
-                currentAmount: 45000,
-                targetAge: 45,
-                position: { x: 220, y: 75 },
-              },
-              {
-                id: "3",
-                name: "Retirement",
-                targetAmount: 1000000,
-                currentAmount: 237672,
-                targetAge: 65,
-                position: { x: 320, y: 50 },
-              },
-            ]}
+            }))}
           />
         )}
 

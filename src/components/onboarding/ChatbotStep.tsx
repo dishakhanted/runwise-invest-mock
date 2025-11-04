@@ -119,34 +119,16 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
             ]
           }));
           
-          // Ask for age if it's retirement, otherwise move to next goal
-          if (currentGoal === 'Retirement Planning') {
-            setGoalDetailStep('age');
-            const assistantMessage: Message = {
-              role: "assistant",
-              content: "At what age would you like to retire?",
-            };
-            setMessages((prev) => [...prev, assistantMessage]);
-          } else {
-            // Move to next goal or finish
-            if (currentGoalIndex < parsedGoals.length - 1) {
-              setCurrentGoalIndex(prev => prev + 1);
-              setGoalDetailStep('amount');
-              const assistantMessage: Message = {
-                role: "assistant",
-                content: `Great! Now let's talk about your "${parsedGoals[currentGoalIndex + 1]}" goal. What's your target amount for this goal?`,
-              };
-              setMessages((prev) => [...prev, assistantMessage]);
-            } else {
-              // All goals collected
-              setIsCollectingGoalDetails(false);
-              const assistantMessage: Message = {
-                role: "assistant",
-                content: "Perfect! I have everything I need. Based on your income, employment type, and goals, we'll create a personalized financial plan for you. Click 'Complete Setup' to get started!",
-              };
-              setMessages((prev) => [...prev, assistantMessage]);
-            }
-          }
+          // Always ask for target age for all goals
+          setGoalDetailStep('age');
+          const agePrompt = currentGoal === 'Retirement Planning' 
+            ? "At what age would you like to retire?"
+            : `At what age would you like to achieve this goal?`;
+          const assistantMessage: Message = {
+            role: "assistant",
+            content: agePrompt,
+          };
+          setMessages((prev) => [...prev, assistantMessage]);
         } else if (goalDetailStep === 'age') {
           const age = parseInt(currentInput.replace(/[^0-9]/g, ''));
           if (isNaN(age) || age < 18 || age > 100) {
@@ -304,6 +286,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           return {
             name: goal.name,
             target_amount: goal.targetAmount,
+            target_age: goal.targetAge,
             current_amount: 0,
             allocation_savings: allocation.savings,
             allocation_stocks: allocation.stocks,
