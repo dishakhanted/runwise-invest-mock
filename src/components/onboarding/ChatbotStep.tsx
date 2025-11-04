@@ -36,7 +36,12 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     income: "",
     employmentType: "",
     goals: "",
+    goalsDetails: [] as Array<{ name: string; targetAmount: number; targetAge?: number }>,
   });
+  const [isCollectingGoalDetails, setIsCollectingGoalDetails] = useState(false);
+  const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
+  const [goalDetailStep, setGoalDetailStep] = useState<'amount' | 'age'>('amount');
+  const [parsedGoals, setParsedGoals] = useState<string[]>([]);
 
   const questions = [
     {
@@ -55,24 +60,161 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     }
   }, [messages]);
 
+  const parseGoals = (goalsText: string): string[] => {
+    const goals = [];
+    const text = goalsText.toLowerCase();
+    
+    if (text.includes('retirement') || text.includes('retire')) {
+      goals.push('Retirement Planning');
+    }
+    if (text.includes('house') || text.includes('home') || text.includes('property')) {
+      goals.push('House Down Payment');
+    }
+    if (text.includes('emergency') || text.includes('fund')) {
+      goals.push('Emergency Fund');
+    }
+    if (text.includes('debt') || text.includes('loan') || text.includes('pay off')) {
+      goals.push('Pay Off Debt');
+    }
+    if (text.includes('education') || text.includes('college') || text.includes('school')) {
+      goals.push('Education Fund');
+    }
+    if (text.includes('vacation') || text.includes('travel')) {
+      goals.push('Vacation Fund');
+    }
+    
+    return goals.length > 0 ? goals : ['General Savings'];
+  };
+
   const handleSend = () => {
     if (!input.trim()) return;
 
     const userMessage: Message = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
 
-    // Store the answer
-    if (currentQuestion === 0) {
-      setCollectedData(prev => ({ ...prev, income: input }));
-    } else if (currentQuestion === 1) {
-      setCollectedData(prev => ({ ...prev, employmentType: input }));
-    } else if (currentQuestion === 2) {
-      setCollectedData(prev => ({ ...prev, goals: input }));
-    }
-
+    const currentInput = input;
     setInput("");
 
-    // Simulate assistant response
+    // Handle goal detail collection
+    if (isCollectingGoalDetails) {
+      setTimeout(() => {
+        const currentGoal = parsedGoals[currentGoalIndex];
+        
+        if (goalDetailStep === 'amount') {
+          const amount = parseFloat(currentInput.replace(/[^0-9.]/g, ''));
+          if (isNaN(amount)) {
+            const assistantMessage: Message = {
+              role: "assistant",
+              content: "Please enter a valid number for the target amount.",
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+            return;
+          }
+          
+          setCollectedData(prev => ({
+            ...prev,
+            goalsDetails: [
+              ...prev.goalsDetails,
+              { name: currentGoal, targetAmount: amount }
+            ]
+          }));
+          
+          // Ask for age if it's retirement, otherwise move to next goal
+          if (currentGoal === 'Retirement Planning') {
+            setGoalDetailStep('age');
+            const assistantMessage: Message = {
+              role: "assistant",
+              content: "At what age would you like to retire?",
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+          } else {
+            // Move to next goal or finish
+            if (currentGoalIndex < parsedGoals.length - 1) {
+              setCurrentGoalIndex(prev => prev + 1);
+              setGoalDetailStep('amount');
+              const assistantMessage: Message = {
+                role: "assistant",
+                content: `Great! Now let's talk about your "${parsedGoals[currentGoalIndex + 1]}" goal. What's your target amount for this goal?`,
+              };
+              setMessages((prev) => [...prev, assistantMessage]);
+            } else {
+              // All goals collected
+              setIsCollectingGoalDetails(false);
+              const assistantMessage: Message = {
+                role: "assistant",
+                content: "Perfect! I have everything I need. Based on your income, employment type, and goals, we'll create a personalized financial plan for you. Click 'Complete Setup' to get started!",
+              };
+              setMessages((prev) => [...prev, assistantMessage]);
+            }
+          }
+        } else if (goalDetailStep === 'age') {
+          const age = parseInt(currentInput.replace(/[^0-9]/g, ''));
+          if (isNaN(age) || age < 18 || age > 100) {
+            const assistantMessage: Message = {
+              role: "assistant",
+              content: "Please enter a valid retirement age (between 18 and 100).",
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+            return;
+          }
+          
+          // Update the last goal with target age
+          setCollectedData(prev => ({
+            ...prev,
+            goalsDetails: prev.goalsDetails.map((g, idx) => 
+              idx === prev.goalsDetails.length - 1 ? { ...g, targetAge: age } : g
+            )
+          }));
+          
+          // Move to next goal or finish
+          if (currentGoalIndex < parsedGoals.length - 1) {
+            setCurrentGoalIndex(prev => prev + 1);
+            setGoalDetailStep('amount');
+            const assistantMessage: Message = {
+              role: "assistant",
+              content: `Great! Now let's talk about your "${parsedGoals[currentGoalIndex + 1]}" goal. What's your target amount for this goal?`,
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+          } else {
+            // All goals collected
+            setIsCollectingGoalDetails(false);
+            const assistantMessage: Message = {
+              role: "assistant",
+              content: "Perfect! I have everything I need. Based on your income, employment type, and goals, we'll create a personalized financial plan for you. Click 'Complete Setup' to get started!",
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+          }
+        }
+      }, 800);
+      return;
+    }
+
+    // Handle regular questions
+    if (currentQuestion === 0) {
+      setCollectedData(prev => ({ ...prev, income: currentInput }));
+    } else if (currentQuestion === 1) {
+      setCollectedData(prev => ({ ...prev, employmentType: currentInput }));
+    } else if (currentQuestion === 2) {
+      setCollectedData(prev => ({ ...prev, goals: currentInput }));
+      
+      // Parse goals and start collecting details
+      const goals = parseGoals(currentInput);
+      setParsedGoals(goals);
+      
+      setTimeout(() => {
+        setIsCollectingGoalDetails(true);
+        setCurrentGoalIndex(0);
+        setGoalDetailStep('amount');
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: `Great! I identified these goals: ${goals.join(', ')}. Let's get more specific. For your "${goals[0]}" goal, what's your target amount?`,
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }, 800);
+      return;
+    }
+
+    // Simulate assistant response for regular questions
     setTimeout(() => {
       if (currentQuestion < questions.length) {
         const assistantMessage: Message = {
@@ -81,13 +223,6 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
         };
         setMessages((prev) => [...prev, assistantMessage]);
         setCurrentQuestion((prev) => prev + 1);
-      } else {
-        // Final message
-        const assistantMessage: Message = {
-          role: "assistant",
-          content: "Perfect! I have everything I need. Based on your income, employment type, and goals, we'll create a personalized financial plan for you. Click 'Complete Setup' to get started!",
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
       }
     }, 800);
   };
@@ -152,66 +287,40 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
         if (accountsError) console.error('Error creating linked accounts:', accountsError);
       }
 
-      // Parse and create goals from the conversation
-      if (collectedData.goals) {
-        const goalsText = collectedData.goals.toLowerCase();
-        const goalsList = [];
+      // Create goals from collected details
+      if (collectedData.goalsDetails.length > 0) {
+        const goalsList = collectedData.goalsDetails.map(goal => {
+          // Set allocation based on goal type
+          let allocation = { savings: 40, stocks: 40, bonds: 20 };
+          
+          if (goal.name === 'Retirement Planning') {
+            allocation = { savings: 20, stocks: 60, bonds: 20 };
+          } else if (goal.name === 'Emergency Fund' || goal.name === 'Pay Off Debt') {
+            allocation = { savings: 100, stocks: 0, bonds: 0 };
+          } else if (goal.name === 'House Down Payment') {
+            allocation = { savings: 40, stocks: 50, bonds: 10 };
+          }
+          
+          return {
+            name: goal.name,
+            target_amount: goal.targetAmount,
+            current_amount: 0,
+            allocation_savings: allocation.savings,
+            allocation_stocks: allocation.stocks,
+            allocation_bonds: allocation.bonds
+          };
+        });
 
-        // Parse common financial goals
-        if (goalsText.includes('retirement')) {
-          goalsList.push({
-            name: 'Retirement Planning',
-            target_amount: 1000000,
-            current_amount: 0,
-            allocation_savings: 20,
-            allocation_stocks: 60,
-            allocation_bonds: 20
-          });
-        }
-        if (goalsText.includes('house') || goalsText.includes('home')) {
-          goalsList.push({
-            name: 'House Down Payment',
-            target_amount: 100000,
-            current_amount: 0,
-            allocation_savings: 40,
-            allocation_stocks: 50,
-            allocation_bonds: 10
-          });
-        }
-        if (goalsText.includes('emergency')) {
-          goalsList.push({
-            name: 'Emergency Fund',
-            target_amount: 50000,
-            current_amount: 0,
-            allocation_savings: 100,
-            allocation_stocks: 0,
-            allocation_bonds: 0
-          });
-        }
-        if (goalsText.includes('debt') || goalsText.includes('loan')) {
-          goalsList.push({
-            name: 'Pay Off Debt',
-            target_amount: 50000,
-            current_amount: 0,
-            allocation_savings: 100,
-            allocation_stocks: 0,
-            allocation_bonds: 0
-          });
-        }
+        const { error: goalsError } = await supabase
+          .from('goals')
+          .insert(
+            goalsList.map(goal => ({
+              ...goal,
+              user_id: authData.user.id
+            }))
+          );
 
-        // Create goals in database
-        if (goalsList.length > 0) {
-          const { error: goalsError } = await supabase
-            .from('goals')
-            .insert(
-              goalsList.map(goal => ({
-                ...goal,
-                user_id: authData.user.id
-              }))
-            );
-
-          if (goalsError) console.error('Error creating goals:', goalsError);
-        }
+        if (goalsError) console.error('Error creating goals:', goalsError);
       }
 
       toast({
@@ -234,7 +343,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     }
   };
 
-  const isComplete = currentQuestion > questions.length;
+  const isComplete = !isCollectingGoalDetails && currentQuestion > questions.length;
 
   return (
     <div className="flex-1 flex flex-col h-full">
