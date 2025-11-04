@@ -21,6 +21,7 @@ import ActivityLog from "./pages/ActivityLog";
 import Documents from "./pages/Documents";
 import Chat from "./pages/Chat";
 import Inbox from "./pages/Inbox";
+import ConversationView from "./pages/ConversationView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/explore" element={<Explore />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/inbox" element={<Inbox />} />
+          <Route path="/inbox/:conversationId" element={<ConversationView />} />
           <Route path="/transfer" element={<Transfer />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/profile" element={<Profile />} />

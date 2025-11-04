@@ -116,6 +116,7 @@ const Inbox = () => {
               <Card
                 key={conversation.id}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate(`/inbox/${conversation.id}`)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
