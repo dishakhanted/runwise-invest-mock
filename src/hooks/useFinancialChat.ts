@@ -43,6 +43,7 @@ export const useFinancialChat = ({
   const { toast } = useToast();
 
   const handleSuggestionAction = useCallback((messageIndex: number, suggestionId: string, action: 'approved' | 'denied') => {
+    // Update suggestion status
     setMessages(prev => prev.map((msg, idx) => {
       if (idx === messageIndex && msg.suggestions) {
         return {
@@ -55,11 +56,26 @@ export const useFinancialChat = ({
       return msg;
     }));
 
+    // Find the suggestion title
+    const message = messages[messageIndex];
+    const suggestion = message.suggestions?.find(s => s.id === suggestionId);
+    
+    // Add AI response based on action
+    setTimeout(() => {
+      if (action === 'approved' && suggestion) {
+        const response = `Great choice! I've noted that you approved "${suggestion.title}". I'll help you implement this strategy. Would you like me to create a detailed action plan or answer any questions about how to get started?`;
+        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      } else if (action === 'denied' && suggestion) {
+        const response = `Understood. I've noted that you declined "${suggestion.title}". Would you like me to suggest alternative approaches or explain why this recommendation might not fit your situation?`;
+        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      }
+    }, 300);
+
     toast({
       title: action === 'approved' ? "Suggestion Approved" : "Suggestion Denied",
       description: `You ${action} this suggestion.`,
     });
-  }, [toast]);
+  }, [messages, toast]);
 
   const generateTitle = (firstUserMessage: string) => {
     // Generate a concise title from the first user message
