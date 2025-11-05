@@ -18,6 +18,7 @@ interface Goal {
   currentAmount: number;
   savingAccount: string;
   investmentAccount: string;
+  description?: string;
   allocation: {
     savings: number;
     stocks: number;
@@ -54,6 +55,7 @@ const Goals = () => {
         currentAmount: Number(goal.current_amount),
         savingAccount: goal.saving_account || 'None',
         investmentAccount: goal.investment_account || 'None',
+        description: goal.description || undefined,
         allocation: {
           savings: goal.allocation_savings,
           stocks: goal.allocation_stocks,
@@ -292,9 +294,13 @@ const Goals = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold mb-1">Goal Summary & Insights</h3>
                     <p className="text-sm text-muted-foreground">
-                      You're {Math.round(getProgress(selectedGoal.currentAmount, selectedGoal.targetAmount))}% of the way to your {selectedGoal.name} goal. 
-                      You need {formatCurrency(selectedGoal.targetAmount - selectedGoal.currentAmount)} more to reach your target. 
-                      Click to chat with your AI assistant for personalized strategies to reach this goal faster.
+                      {selectedGoal.description || (
+                        <>
+                          You're {Math.round(getProgress(selectedGoal.currentAmount, selectedGoal.targetAmount))}% of the way to your {selectedGoal.name} goal. 
+                          You need {formatCurrency(selectedGoal.targetAmount - selectedGoal.currentAmount)} more to reach your target. 
+                          Click to chat with your AI assistant for personalized strategies to reach this goal faster.
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>

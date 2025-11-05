@@ -51,6 +51,7 @@ export type Database = {
           allocation_stocks: number
           created_at: string
           current_amount: number
+          description: string | null
           id: string
           investment_account: string | null
           name: string
@@ -66,6 +67,7 @@ export type Database = {
           allocation_stocks?: number
           created_at?: string
           current_amount?: number
+          description?: string | null
           id?: string
           investment_account?: string | null
           name: string
@@ -81,6 +83,7 @@ export type Database = {
           allocation_stocks?: number
           created_at?: string
           current_amount?: number
+          description?: string | null
           id?: string
           investment_account?: string | null
           name?: string
