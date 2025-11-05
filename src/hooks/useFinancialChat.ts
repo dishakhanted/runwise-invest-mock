@@ -42,8 +42,25 @@ export const useFinancialChat = ({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleSuggestionAction = useCallback((messageIndex: number, suggestionId: string, action: 'approved' | 'denied') => {
-    // Update suggestion status
+  const handleSuggestionAction = useCallback((messageIndex: number, suggestionId: string, action: 'approved' | 'denied' | 'know_more') => {
+    // Find the suggestion title
+    const message = messages[messageIndex];
+    const suggestion = message.suggestions?.find(s => s.id === suggestionId);
+    
+    if (action === 'know_more') {
+      // Add user message asking for more info
+      const userMessage = `Tell me more about "${suggestion?.title}"`;
+      setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+      
+      // Trigger AI response about the suggestion
+      setTimeout(() => {
+        const response = `Let me explain more about "${suggestion?.title}":\n\n${suggestion?.description}\n\nThis suggestion can help you by:\n- Optimizing your financial strategy\n- Reducing unnecessary expenses\n- Improving your long-term financial health\n\nWould you like me to create a detailed action plan for implementing this?`;
+        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      }, 500);
+      return;
+    }
+
+    // Update suggestion status for approve/deny
     setMessages(prev => prev.map((msg, idx) => {
       if (idx === messageIndex && msg.suggestions) {
         return {
@@ -55,10 +72,6 @@ export const useFinancialChat = ({
       }
       return msg;
     }));
-
-    // Find the suggestion title
-    const message = messages[messageIndex];
-    const suggestion = message.suggestions?.find(s => s.id === suggestionId);
     
     // Add AI response based on action
     setTimeout(() => {

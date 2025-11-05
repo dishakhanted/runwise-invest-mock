@@ -131,8 +131,8 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
     if (!selectedProvider) return;
 
     // Validate form
-    if (!formData.lastFourDigits || !formData.totalAmount || !formData.interestRate) {
-      toast.error("Please fill in all fields");
+    if (!formData.lastFourDigits || !formData.totalAmount) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -147,7 +147,7 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
       provider_name: selectedProvider.name,
       last_four_digits: formData.lastFourDigits,
       total_amount: parseFloat(formData.totalAmount),
-      interest_rate: parseFloat(formData.interestRate)
+      interest_rate: formData.interestRate ? parseFloat(formData.interestRate) : 0
     };
 
     setTempLinkedAccounts(prev => [...prev, newAccount]);
@@ -312,7 +312,7 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="interestRate">Interest Rate (%)</Label>
+              <Label htmlFor="interestRate">Interest Rate (%) <span className="text-muted-foreground text-sm">(Optional)</span></Label>
               <Input
                 id="interestRate"
                 type="number"
