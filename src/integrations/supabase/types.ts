@@ -55,6 +55,7 @@ export type Database = {
           investment_account: string | null
           name: string
           saving_account: string | null
+          target_age: number | null
           target_amount: number
           updated_at: string
           user_id: string
@@ -69,6 +70,7 @@ export type Database = {
           investment_account?: string | null
           name: string
           saving_account?: string | null
+          target_age?: number | null
           target_amount: number
           updated_at?: string
           user_id: string
@@ -83,6 +85,7 @@ export type Database = {
           investment_account?: string | null
           name?: string
           saving_account?: string | null
+          target_age?: number | null
           target_amount?: number
           updated_at?: string
           user_id?: string
