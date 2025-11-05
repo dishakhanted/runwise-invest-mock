@@ -40,7 +40,10 @@ serve(async (req) => {
       systemPrompt += `- Target Amount: $${contextData.targetAmount?.toLocaleString() || 0}\n`;
       systemPrompt += `- Current Amount: $${contextData.currentAmount?.toLocaleString() || 0}\n`;
       systemPrompt += `- Progress: ${((contextData.currentAmount / contextData.targetAmount) * 100).toFixed(1)}%\n`;
-      systemPrompt += `- Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds`;
+      systemPrompt += `- Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds\n`;
+      if (contextData.description) {
+        systemPrompt += `\nGoal Strategy & Insights:\n${contextData.description}`;
+      }
     }
 
     console.log('Calling Lovable AI with system prompt:', systemPrompt);

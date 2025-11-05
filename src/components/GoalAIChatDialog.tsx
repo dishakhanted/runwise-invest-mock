@@ -12,6 +12,7 @@ interface Goal {
   currentAmount: number;
   savingAccount: string;
   investmentAccount: string;
+  description?: string;
   allocation: {
     savings: number;
     stocks: number;
