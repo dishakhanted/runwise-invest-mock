@@ -78,11 +78,9 @@ serve(async (req) => {
             if (!error) {
               goalUpdateDetected = true;
               goalUpdateSummary = `✅ Goal Updated Successfully!\n\n` +
-                `📊 New Target: $${newTargetAmount.toLocaleString()}\n` +
-                `⏰ Timeline: 8 years${newTargetAge ? ` (by age ${newTargetAge})` : ''}\n` +
-                `💰 Current Progress: $${contextData.currentAmount?.toLocaleString() || 0}\n` +
-                `📈 Amount Needed: $${(newTargetAmount - (contextData.currentAmount || 0)).toLocaleString()}\n\n` +
-                `With this new goal, you'll need to save approximately $${Math.round((newTargetAmount - (contextData.currentAmount || 0)) / (8 * 12)).toLocaleString()} per month over the next 8 years.`;
+                `Your goal has been updated to $${newTargetAmount.toLocaleString()}. ` +
+                `It will now take you 8 years to reach your goal. ` +
+                `Do you want to increase the allocation to reach the goal earlier?`;
             }
           }
         }
