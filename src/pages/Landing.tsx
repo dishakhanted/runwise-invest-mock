@@ -9,22 +9,12 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex-1 flex flex-col justify-between px-6 py-12 max-w-lg mx-auto w-full">
-        {/* Logo */}
-        <div className="flex justify-center pt-4 pb-4">
-          <Logo className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32" />
-        </div>
-        
         {/* Content */}
         <div className="flex-1 flex flex-col justify-center -mt-20">
           <h1 className="text-5xl font-bold mb-4">AI edge</h1>
-          <h2 className="text-4xl font-light text-foreground/90 mb-12">
-            for your wealth building.
-          </h2>
+          <h2 className="text-4xl font-light text-foreground/90 mb-12">for your wealth building.</h2>
 
-          <WealthChart
-            currentAmount="$237,672"
-            futureAmount="$1.3M net worth at 65"
-          />
+          <WealthChart currentAmount="$237,672" futureAmount="$1.3M net worth at 65" />
         </div>
 
         {/* Pagination dots */}
