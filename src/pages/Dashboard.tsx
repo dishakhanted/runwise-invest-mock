@@ -6,6 +6,7 @@ import { WealthChart } from "@/components/WealthChart";
 import { Logo } from "@/components/Logo";
 import { AIChatDialog } from "@/components/AIChatDialog";
 import { LinkAccountDialog } from "@/components/LinkAccountDialog";
+import { FinancialSuggestionsDialog } from "@/components/FinancialSuggestionsDialog";
 import {
   Wallet,
   Umbrella,
@@ -49,6 +50,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLinkAccountOpen, setIsLinkAccountOpen] = useState(false);
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
 
@@ -217,7 +219,7 @@ const Dashboard = () => {
         {/* AI Summary Box */}
         <Card 
           className="mt-6 cursor-pointer hover:shadow-lg transition-shadow border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
-          onClick={() => setIsChatOpen(true)}
+          onClick={() => setIsSuggestionsOpen(true)}
         >
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -226,16 +228,11 @@ const Dashboard = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Financial Summary</h3>
-                <p className="text-sm text-muted-foreground">
-                  {viewMode === "net-worth" && (
-                    <>Your net worth is {formatCurrency(netWorth)} with assets totaling {formatCurrency(assetsTotal)}. You're on track to reach your retirement goal. Click to chat with your AI assistant for personalized insights.</>
-                  )}
-                  {viewMode === "assets" && (
-                    <>Your total assets are {formatCurrency(assetsTotal)}, including {formatCurrency(cashTotal)} in cash and {formatCurrency(investmentsTotal)} in investments. Click to explore optimization opportunities with your AI assistant.</>
-                  )}
-                  {viewMode === "liabilities" && (
-                    <>Your total liabilities are {formatCurrency(liabilitiesTotal)} across {loanAccounts.length} loan account{loanAccounts.length !== 1 ? 's' : ''}. Click to discuss debt management strategies with your AI assistant.</>
-                  )}
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  You are in decent shape for your age!<br /><br />
+                  I have good news! You can get debt neutral in 3 years, Yes No more loans.<br />
+                  Oh no, you have only 2 months of expenses as a safety net, it's a pickle.<br /><br />
+                  Click to chat with your AI assistant Groww for personalized insights
                 </p>
               </div>
             </div>
@@ -347,6 +344,10 @@ const Dashboard = () => {
       <LinkAccountDialog 
         isOpen={isLinkAccountOpen}
         onClose={() => setIsLinkAccountOpen(false)}
+      />
+      <FinancialSuggestionsDialog
+        isOpen={isSuggestionsOpen}
+        onClose={() => setIsSuggestionsOpen(false)}
       />
     </div>
   );
