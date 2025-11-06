@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User, Check, X } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
+import { useMemo } from "react";
 
 interface Goal {
   id: string;
@@ -80,11 +81,14 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     ];
   };
 
+  const initialMessageMemo = useMemo(() => getInitialMessage(), [goal]);
+  const initialSuggestionsMemo = useMemo(() => getInitialSuggestions(), [goal]);
+
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: 'goal',
     contextData: goal ? { ...goal, id: goal.id } : null,
-    initialMessage: getInitialMessage(),
-    initialSuggestions: getInitialSuggestions(),
+    initialMessage: initialMessageMemo,
+    initialSuggestions: initialSuggestionsMemo,
     onClose
   });
 
