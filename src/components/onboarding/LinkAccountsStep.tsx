@@ -81,11 +81,20 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<{ name: string; type: string } | null>(null);
   const [formData, setFormData] = useState({
-    lastFourDigits: "",
-    totalAmount: "",
-    interestRate: ""
+    accountNumber: ""
   });
   const [tempLinkedAccounts, setTempLinkedAccounts] = useState(data.linkedAccounts || []);
+
+  // Auto-populate balances based on provider
+  const getAutoBalance = (providerName: string): { amount: number; rate: number } => {
+    const balances: Record<string, { amount: number; rate: number }> = {
+      "Chase": { amount: 4700, rate: 0.01 },
+      "Wells Fargo": { amount: 5800, rate: 0.01 },
+      "Fidelity": { amount: 8000, rate: 7.5 },
+      "SoFi": { amount: 27800, rate: 5.25 }
+    };
+    return balances[providerName] || { amount: 0, rate: 0 };
+  };
 
   const getProviders = () => {
     switch (dialogOpen) {
@@ -131,29 +140,27 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
     if (!selectedProvider) return;
 
     // Validate form
-    if (!formData.lastFourDigits || !formData.totalAmount) {
-      toast.error("Please fill in all required fields");
+    if (!formData.accountNumber) {
+      toast.error("Please enter account number");
       return;
     }
 
-    if (formData.lastFourDigits.length !== 4 || !/^\d+$/.test(formData.lastFourDigits)) {
-      toast.error("Last 4 digits must be exactly 4 numbers");
-      return;
-    }
+    // Get auto-populated balance and rate
+    const { amount, rate } = getAutoBalance(selectedProvider.name);
 
     // Store account data temporarily in state
     const newAccount = {
       account_type: selectedProvider.type,
       provider_name: selectedProvider.name,
-      last_four_digits: formData.lastFourDigits,
-      total_amount: parseFloat(formData.totalAmount),
-      interest_rate: formData.interestRate ? parseFloat(formData.interestRate) : 0
+      last_four_digits: formData.accountNumber.slice(-4),
+      total_amount: amount,
+      interest_rate: rate
     };
 
     setTempLinkedAccounts(prev => [...prev, newAccount]);
     toast.success(`${selectedProvider.name} account linked successfully!`);
     setFormDialogOpen(false);
-    setFormData({ lastFourDigits: "", totalAmount: "", interestRate: "" });
+    setFormData({ accountNumber: "" });
     setSelectedProvider(null);
   };
 
@@ -290,38 +297,22 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="lastFourDigits">Account Number (Last 4 Digits)</Label>
+              <Label htmlFor="accountNumber">Account Number</Label>
               <Input
-                id="lastFourDigits"
-                placeholder="1234"
-                maxLength={4}
-                value={formData.lastFourDigits}
-                onChange={(e) => setFormData(prev => ({ ...prev, lastFourDigits: e.target.value.replace(/\D/g, '') }))}
+                id="accountNumber"
+                placeholder="Enter your account number"
+                value={formData.accountNumber}
+                onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="totalAmount">Total Amount ($)</Label>
-              <Input
-                id="totalAmount"
-                type="number"
-                placeholder="10000"
-                value={formData.totalAmount}
-                onChange={(e) => setFormData(prev => ({ ...prev, totalAmount: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="interestRate">Interest Rate (%) <span className="text-muted-foreground text-sm">(Optional)</span></Label>
-              <Input
-                id="interestRate"
-                type="number"
-                step="0.01"
-                placeholder="2.5"
-                value={formData.interestRate}
-                onChange={(e) => setFormData(prev => ({ ...prev, interestRate: e.target.value }))}
-              />
-            </div>
+            {selectedProvider && getAutoBalance(selectedProvider.name).amount > 0 && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Balance will be automatically populated: ${getAutoBalance(selectedProvider.name).amount.toLocaleString()}
+                </p>
+              </div>
+            )}
 
             <div className="flex gap-3 pt-4">
               <Button
@@ -329,7 +320,7 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
                 className="flex-1"
                 onClick={() => {
                   setFormDialogOpen(false);
-                  setFormData({ lastFourDigits: "", totalAmount: "", interestRate: "" });
+                  setFormData({ accountNumber: "" });
                   setSelectedProvider(null);
                 }}
               >
