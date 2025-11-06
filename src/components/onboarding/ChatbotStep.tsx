@@ -36,6 +36,9 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     income: "",
     employmentType: "",
     goals: "",
+    vision30: "",
+    vision35: "",
+    vision60: "",
     goalsDetails: [] as Array<{ name: string; targetAmount: number; targetAge?: number }>,
   });
   const [isCollectingGoalDetails, setIsCollectingGoalDetails] = useState(false);
@@ -51,6 +54,18 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     {
       field: "employmentType",
       prompt: "Thank you connecting your accounts and giving these details, before we start, what brings you here today?",
+    },
+    {
+      field: "goals",
+      prompt: "Great! Imagine yourself at 30 — what would make you feel like you're doing well?",
+    },
+    {
+      field: "vision30",
+      prompt: "And by 35?",
+    },
+    {
+      field: "vision35",
+      prompt: "And when you're 60? Still working? Traveling?",
     },
   ];
 
@@ -178,22 +193,10 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
       setCollectedData(prev => ({ ...prev, employmentType: currentInput }));
     } else if (currentQuestion === 2) {
       setCollectedData(prev => ({ ...prev, goals: currentInput }));
-      
-      // Parse goals and start collecting details
-      const goals = parseGoals(currentInput);
-      setParsedGoals(goals);
-      
-      setTimeout(() => {
-        setIsCollectingGoalDetails(true);
-        setCurrentGoalIndex(0);
-        setGoalDetailStep('amount');
-        const assistantMessage: Message = {
-          role: "assistant",
-          content: `Great! I identified these goals: ${goals.join(', ')}. Let's get more specific. For your "${goals[0]}" goal, what's your target amount?`,
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-      }, 800);
-      return;
+    } else if (currentQuestion === 3) {
+      setCollectedData(prev => ({ ...prev, vision30: currentInput }));
+    } else if (currentQuestion === 4) {
+      setCollectedData(prev => ({ ...prev, vision35: currentInput }));
     }
 
     // Simulate assistant response for regular questions
@@ -269,42 +272,39 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
         if (accountsError) console.error('Error creating linked accounts:', accountsError);
       }
 
-      // Create goals from collected details
-      if (collectedData.goalsDetails.length > 0) {
-        const goalsList = collectedData.goalsDetails.map(goal => {
-          // Set allocation based on goal type
-          let allocation = { savings: 40, stocks: 40, bonds: 20 };
-          
-          if (goal.name === 'Retirement Planning') {
-            allocation = { savings: 20, stocks: 60, bonds: 20 };
-          } else if (goal.name === 'Emergency Fund' || goal.name === 'Pay Off Debt') {
-            allocation = { savings: 100, stocks: 0, bonds: 0 };
-          } else if (goal.name === 'House Down Payment') {
-            allocation = { savings: 40, stocks: 50, bonds: 10 };
-          }
-          
-          return {
-            name: goal.name,
-            target_amount: goal.targetAmount,
-            target_age: goal.targetAge,
-            current_amount: 0,
-            allocation_savings: allocation.savings,
-            allocation_stocks: allocation.stocks,
-            allocation_bonds: allocation.bonds
-          };
-        });
+      // Create default goals: Student Loan Payoff and Retirement
+      const currentYear = new Date().getFullYear();
+      const currentAge = data.dateOfBirth ? 
+        new Date().getFullYear() - new Date(data.dateOfBirth).getFullYear() : 25;
+      
+      const defaultGoals = [
+        {
+          name: 'Pay Off Student Loan',
+          target_amount: 50000,
+          target_age: currentAge + 5,
+          current_amount: 0,
+          allocation_savings: 50,
+          allocation_stocks: 30,
+          allocation_bonds: 20,
+          user_id: authData.user.id
+        },
+        {
+          name: 'Retirement Planning',
+          target_amount: 1000000,
+          target_age: 65,
+          current_amount: 0,
+          allocation_savings: 20,
+          allocation_stocks: 60,
+          allocation_bonds: 20,
+          user_id: authData.user.id
+        }
+      ];
 
-        const { error: goalsError } = await supabase
-          .from('goals')
-          .insert(
-            goalsList.map(goal => ({
-              ...goal,
-              user_id: authData.user.id
-            }))
-          );
+      const { error: goalsError } = await supabase
+        .from('goals')
+        .insert(defaultGoals);
 
-        if (goalsError) console.error('Error creating goals:', goalsError);
-      }
+      if (goalsError) console.error('Error creating goals:', goalsError);
 
       toast({
         title: "Account created!",
