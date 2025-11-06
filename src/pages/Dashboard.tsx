@@ -237,6 +237,12 @@ const Dashboard = () => {
                       Your idle cash can earn 4–5% — let's put it to work.<br /><br />
                       Click to chat with your AI assistant and tweak for better returns.
                     </>
+                  ) : viewMode === "liabilities" ? (
+                    <>
+                      You currently owe $27,800 — mainly from your education loan.<br />
+                      It's well-managed and shrinking fast, but it still keeps your net worth slightly negative for now.<br /><br />
+                      We can discuss whether increasing your EMI a bit could help close it sooner or how it'll affect your investing pace going forward.
+                    </>
                   ) : (
                     <>
                       You are in decent shape for your age!<br /><br />
