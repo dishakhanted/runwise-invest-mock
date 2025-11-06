@@ -42,8 +42,9 @@ export const useFinancialChat = ({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Reset messages when initial message or suggestions change
+  // Reset messages when initial message or suggestions change only if no active conversation
   useEffect(() => {
+    if (conversationId) return; // preserve ongoing chats when context changes (e.g., goal updates)
     setMessages([
       { 
         role: "assistant", 
@@ -51,8 +52,7 @@ export const useFinancialChat = ({
         suggestions: initialSuggestions 
       }
     ]);
-    setConversationId(null);
-  }, [initialMessage, initialSuggestions]);
+  }, [initialMessage, initialSuggestions, conversationId]);
 
   const handleSuggestionAction = useCallback((messageIndex: number, suggestionId: string, action: 'approved' | 'denied' | 'know_more') => {
     console.log('handleSuggestionAction called:', { messageIndex, suggestionId, action });
