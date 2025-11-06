@@ -7,32 +7,57 @@ import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { Bot, Send, User, Inbox, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
+import { supabase } from "@/integrations/supabase/client";
 
 const Chat = () => {
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const initialMessage = "Hi! I'm your financial assistant. Here are some suggestions to optimize your financial strategy:";
-  
-  const initialSuggestions = [
-    {
-      id: 'suggestion-1',
-      title: 'Increase Emergency Fund',
-      description: 'Build your emergency fund to cover 6 months of expenses for better financial security.',
-      status: 'pending' as const
-    },
-    {
-      id: 'suggestion-2',
-      title: 'Review Investment Allocation',
-      description: 'Consider rebalancing your portfolio to optimize returns based on your risk tolerance.',
-      status: 'pending' as const
-    },
-    {
-      id: 'suggestion-3',
-      title: 'Set Up Automatic Savings',
-      description: 'Automate 15% of your income to savings to build wealth consistently.',
-      status: 'pending' as const
+  useEffect(() => {
+    loadUnreadCount();
+    
+    // Subscribe to conversation changes for real-time updates
+    const channel = supabase
+      .channel('inbox-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations'
+        },
+        () => {
+          loadUnreadCount();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const loadUnreadCount = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count, error } = await supabase
+        .from('conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (!error && count !== null) {
+        setUnreadCount(count);
+      }
+    } catch (error) {
+      console.error('Error loading unread count:', error);
     }
-  ];
+  };
+
+  const initialMessage = "Hello, how may I help you today?";
+  
+  const initialSuggestions = undefined;
 
   const { messages, input, setInput, isLoading, sendMessage, handleSuggestionAction } = useFinancialChat({
     contextType: 'general',
@@ -57,10 +82,15 @@ const Chat = () => {
           <Button 
             size="icon" 
             variant="ghost" 
-            className="rounded-full"
+            className="rounded-full relative"
             onClick={() => navigate('/inbox')}
           >
             <Inbox className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </Button>
         </div>
 
