@@ -1,9 +1,49 @@
+import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
+import { WhatIfChatDialog } from "@/components/WhatIfChatDialog";
+
+interface WhatIfScenario {
+  title: string;
+  initialPrompt: string;
+  goalTemplate?: {
+    name: string;
+    targetAmount: number;
+    description: string;
+  };
+}
+
+const whatIfScenarios: WhatIfScenario[] = [
+  {
+    title: "Plan to Buy a Car Soon?",
+    initialPrompt: "Yeah, I don't have one yet but was actually thinking about it. Tell me more.",
+    goalTemplate: {
+      name: "Car Purchase",
+      targetAmount: 13000,
+      description: "Good timing. You can easily free up $500 a month from your savings once your emergency fund hits its full target — it won't affect your long-term goals. I'll park that amount in a short-tenor liquid or ultra-short debt fund, where it earns modest returns but stays easily accessible. In about two years, you'll have $12K–$13K, enough for a solid used car or a down payment on a new one.",
+    },
+  },
+  {
+    title: "Plan to Start a Family at 35?",
+    initialPrompt: "I'm thinking about starting a family around 35. What should I plan for financially?",
+    goalTemplate: {
+      name: "Family Planning Fund",
+      targetAmount: 50000,
+      description: "A wife and kid changes two things: income stability and housing needs. Let's build a dedicated fund that covers the initial expenses and helps you transition smoothly when the time comes.",
+    },
+  },
+];
 
 const Explore = () => {
+  const [selectedScenario, setSelectedScenario] = useState<WhatIfScenario | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleWhatIfClick = (index: number) => {
+    setSelectedScenario(whatIfScenarios[index]);
+    setIsDialogOpen(true);
+  };
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
@@ -33,10 +73,16 @@ const Explore = () => {
             <CardContent className="p-4">
               <CardTitle className="text-lg text-primary mb-4">What if?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
-                <li>
+                <li 
+                  className="cursor-pointer hover:bg-accent/50 p-2 rounded-md transition-colors"
+                  onClick={() => handleWhatIfClick(0)}
+                >
                   <span className="font-semibold">What if you plan to buy a car soon?</span> San Francisco life gets much easier with your own wheels — especially once you're balancing work, errands, or weekend drives outside the city.
                 </li>
-                <li>
+                <li 
+                  className="cursor-pointer hover:bg-accent/50 p-2 rounded-md transition-colors"
+                  onClick={() => handleWhatIfClick(1)}
+                >
                   <span className="font-semibold">What if you plan to start a family at 35?</span> A wife and kid changes two things: income stability and housing needs.
                 </li>
               </ul>
@@ -89,6 +135,12 @@ const Explore = () => {
 
         <DisclosureFooter />
       </div>
+
+      <WhatIfChatDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        scenario={selectedScenario}
+      />
 
       <BottomNav />
     </div>
