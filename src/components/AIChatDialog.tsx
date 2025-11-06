@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,6 +118,9 @@ export const AIChatDialog = ({
     }
   };
 
+  const initialMessageMemo = useMemo(() => getInitialMessage(), [showFinancialSummary, viewMode, netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal]);
+  const initialSuggestionsMemo = useMemo(() => getInitialSuggestions(), [showFinancialSummary, viewMode]);
+
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: 'dashboard',
     contextData: {
@@ -128,8 +131,8 @@ export const AIChatDialog = ({
       cashTotal,
       investmentsTotal
     },
-    initialMessage: getInitialMessage(),
-    initialSuggestions: getInitialSuggestions(),
+    initialMessage: initialMessageMemo,
+    initialSuggestions: initialSuggestionsMemo,
     onClose
   });
 
