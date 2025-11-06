@@ -92,10 +92,27 @@ export const WealthChart = ({
         />
 
         {/* Goal markers as balloons positioned along the line */}
-        {goals.map((goal, index) => {
-          // Position goals evenly along the diagonal line
-          const x = 40 + ((380 - 40) / (goals.length + 1)) * (index + 1);
-          const y = 160 - ((160 - 30) / (goals.length + 1)) * (index + 1);
+        {goals.map((goal) => {
+          // Position goals based on target age relative to timeline
+          // Assume timeline from age 25 (today) to age 80
+          const minAge = 25;
+          const maxAge = 80;
+          const ageRange = maxAge - minAge;
+          
+          // If goal has a target age, position it proportionally
+          // Otherwise, distribute evenly like before
+          let ageProgress;
+          if (goal.targetAge) {
+            ageProgress = Math.min(Math.max((goal.targetAge - minAge) / ageRange, 0), 1);
+          } else {
+            // Fallback to even distribution for goals without target_age
+            const index = goals.indexOf(goal);
+            ageProgress = (index + 1) / (goals.length + 1);
+          }
+          
+          // Calculate position along the diagonal line
+          const x = 40 + ((380 - 40) * ageProgress);
+          const y = 160 - ((160 - 30) * ageProgress);
           
           return (
             <g key={goal.id}>

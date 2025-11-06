@@ -55,6 +55,27 @@ const Dashboard = () => {
   useEffect(() => {
     loadLinkedAccounts();
     loadGoals();
+
+    // Set up real-time subscription for goals updates
+    const channel = supabase
+      .channel('dashboard-goals-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'goals'
+        },
+        (payload) => {
+          console.log('Goal updated on dashboard:', payload);
+          loadGoals(); // Reload goals when any change occurs
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadLinkedAccounts = async () => {
@@ -81,7 +102,8 @@ const Dashboard = () => {
     const { data, error } = await supabase
       .from('goals')
       .select('*')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .order('target_age', { ascending: true, nullsFirst: false });
 
     if (error) {
       console.error('Error loading goals:', error);
