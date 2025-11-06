@@ -10,7 +10,7 @@ const Landing = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex-1 flex flex-col justify-between px-6 py-12 max-w-lg mx-auto w-full">
         {/* Logo */}
-        <div className="flex justify-center pt-8 pb-4">
+        <div className="flex justify-center pt-4 pb-4">
           <Logo className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32" />
         </div>
         
