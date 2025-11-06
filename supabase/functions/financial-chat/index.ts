@@ -60,7 +60,7 @@ serve(async (req) => {
           { role: "system", content: systemPrompt },
           ...messages,
         ],
-        stream: true,
+        stream: false,
       }),
     });
 
@@ -84,10 +84,15 @@ serve(async (req) => {
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
-    // Return the stream directly
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-    });
+    const data = await response.json();
+    const message = data.choices[0]?.message?.content || "I apologize, but I couldn't generate a response.";
+
+    return new Response(
+      JSON.stringify({ message }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
 
   } catch (error) {
     console.error("Error in financial-chat:", error);

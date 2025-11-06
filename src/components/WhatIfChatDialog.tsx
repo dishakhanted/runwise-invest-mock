@@ -63,14 +63,14 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
 
     const userMessage = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    const updatedMessages: Message[] = [...messages, { role: "user" as const, content: userMessage }];
+    setMessages(updatedMessages);
     setIsLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke("financial-chat", {
         body: {
-          message: userMessage,
-          conversationHistory: messages,
+          messages: updatedMessages,
         },
       });
 
@@ -79,7 +79,7 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
       setMessages((prev) => [
         ...prev,
         {
-          role: "assistant",
+          role: "assistant" as const,
           content: data.message,
         },
       ]);
@@ -142,10 +142,45 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
     onClose();
   };
 
+  const sendMessage = async (messagesToSend: Message[]) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("financial-chat", {
+        body: {
+          messages: messagesToSend,
+        },
+      });
+
+      if (error) throw error;
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant" as const,
+          content: data.message,
+        },
+      ]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleKnowMore = () => {
     setShowActions(false);
     setInput("Tell me more about this plan");
-    handleSend();
+    // Trigger send immediately
+    setTimeout(() => {
+      const knowMoreMessage: Message[] = [...messages, { role: "user" as const, content: "Tell me more about this plan" }];
+      setMessages(knowMoreMessage);
+      sendMessage(knowMoreMessage);
+    }, 0);
   };
 
   return (
