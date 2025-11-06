@@ -140,11 +140,14 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
         targetAge = currentAge + 4; // 4 years from now
       }
 
+      // Initial allocation: $400 from savings + $200 from stocks
+      const initialAmount = 600;
+
       const { error } = await supabase.from("goals").insert({
         user_id: user.id,
         name: "Car",
         target_amount: 12000,
-        current_amount: 0,
+        current_amount: initialAmount,
         description: scenario.goalTemplate.description,
         allocation_savings: 70,
         allocation_stocks: 20,
@@ -156,7 +159,7 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
 
       toast({
         title: "Goal Created",
-        description: `Car purchase goal (target: $12,000 in 4 years${targetAge ? `, by age ${targetAge}` : ''}) has been added to your goals.`,
+        description: `Car purchase goal (target: $12,000 in 4 years${targetAge ? `, by age ${targetAge}` : ''}) has been added with $${initialAmount} initial allocation.`,
       });
 
       onClose();
