@@ -37,6 +37,27 @@ const Goals = () => {
 
   useEffect(() => {
     loadGoals();
+
+    // Set up real-time subscription for goals updates
+    const channel = supabase
+      .channel('goals-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'goals'
+        },
+        (payload) => {
+          console.log('Goal updated:', payload);
+          loadGoals(); // Reload goals when any change occurs
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadGoals = async () => {
