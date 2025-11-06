@@ -325,7 +325,7 @@ const Goals = () => {
                         <>
                           You're {Math.round(getProgress(selectedGoal.currentAmount, selectedGoal.targetAmount))}% of the way to your {selectedGoal.name} goal. 
                           You need {formatCurrency(selectedGoal.targetAmount - selectedGoal.currentAmount)} more to reach your target. 
-                          Click to chat with your AI assistant for personalized strategies to reach this goal faster.
+                          Click to chat with GrowW AI for personalized strategies to reach this goal faster.
                         </>
                       )}
                     </p>

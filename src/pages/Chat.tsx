@@ -52,7 +52,7 @@ const Chat = () => {
       <div className="max-w-md w-full flex flex-col h-screen border-x border-border relative">
         {/* Header */}
         <div className="px-6 py-6 border-b border-border flex items-center justify-between">
-          <h1 className="text-2xl font-bold">AI Assistant</h1>
+          <h1 className="text-2xl font-bold">GrowW AI</h1>
           
           <Button 
             size="icon" 

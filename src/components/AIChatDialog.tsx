@@ -160,7 +160,7 @@ export const AIChatDialog = ({
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
-            AI Financial Assistant
+            GrowW AI
           </DialogTitle>
         </DialogHeader>
 

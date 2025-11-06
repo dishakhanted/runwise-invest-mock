@@ -235,7 +235,7 @@ const Dashboard = () => {
                     <>
                       Earn up to 2–3% higher returns — add a dash of Small-Cap Growth.<br />
                       Your idle cash can earn 4–5% — let's put it to work.<br /><br />
-                      Click to chat with your AI assistant and tweak for better returns.
+                      Click to chat with GrowW AI and tweak for better returns.
                     </>
                   ) : viewMode === "liabilities" ? (
                     <>
@@ -248,7 +248,7 @@ const Dashboard = () => {
                       You are in decent shape for your age!<br /><br />
                       I have good news! You can get debt neutral in 3 years, Yes No more loans.<br />
                       Oh no, you have only 2 months of expenses as a safety net, it's a pickle.<br /><br />
-                      Click to chat with your AI assistant Groww for personalized insights
+                      Click to chat with GrowW AI for personalized insights
                     </>
                   )}
                 </p>
