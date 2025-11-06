@@ -18,16 +18,16 @@ interface AIChatDialogProps {
   showFinancialSummary?: boolean;
 }
 
-export const AIChatDialog = ({ 
-  isOpen, 
-  onClose, 
-  viewMode, 
-  netWorth, 
-  assetsTotal, 
+export const AIChatDialog = ({
+  isOpen,
+  onClose,
+  viewMode,
+  netWorth,
+  assetsTotal,
   liabilitiesTotal,
   cashTotal,
   investmentsTotal,
-  showFinancialSummary = false
+  showFinancialSummary = false,
 }: AIChatDialogProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -39,10 +39,10 @@ export const AIChatDialog = ({
   };
 
   const getInitialMessage = () => {
-    if (showFinancialSummary) {
+    if (viewMode === "net-worth" && showFinancialSummary) {
       return `With your $5,200 monthly income, here's the simple game plan — about $3,700 covers your living costs, and the remaining $1,500 works for you: $500 goes to your loan, $500 builds your emergency fund in liquid investments, and $500 grows in medium-risk retirement and home funds — every dollar has a job this year.`;
     }
-    
+
     if (viewMode === "net-worth") {
       return `Hi! I'm your financial assistant. Your current net worth is ${formatCurrency(netWorth)}. You have ${formatCurrency(assetsTotal)} in assets and ${formatCurrency(liabilitiesTotal)} in liabilities. Here are some suggestions to optimize your financial strategy:`;
     } else if (viewMode === "assets") {
@@ -56,84 +56,91 @@ export const AIChatDialog = ({
     if (showFinancialSummary && viewMode === "net-worth") {
       return [
         {
-          id: 'suggestion-1',
-          title: 'Increase Education Loan Payment',
-          description: "Hey, Right now, you're paying $320 a month on your student loan. If you bump that to $500, you'll be completely debt-free in 36 months. That's an extra $180 a month, roughly what you spend on takeout and Ubers. Should I do it for you?",
-          status: 'pending' as const
+          id: "suggestion-1",
+          title: "Increase Education Loan Payment",
+          description:
+            "Hey, Right now, you're paying $320 a month on your student loan. If you bump that to $500, you'll be completely debt-free in 36 months. That's an extra $180 a month, roughly what you spend on takeout and Ubers. Should I do it for you?",
+          status: "pending" as const,
         },
         {
-          id: 'suggestion-2',
-          title: 'Build Emergency Fund of 6 Months',
-          description: "You've got $5,800 saved, about two months of expenses. Let's make that six months ($18K). To do that, shall I auto transfer $500 a month into it. By this time next year, you'll have a real cushion.",
-          status: 'pending' as const
-        }
+          id: "suggestion-2",
+          title: "Build Emergency Fund of 6 Months",
+          description:
+            "You've got $5,800 saved, about two months of expenses. Let's make that six months ($18K). To do that, shall I auto transfer $500 a month into it. By this time next year, you'll have a real cushion.",
+          status: "pending" as const,
+        },
       ];
     }
-    
+
     if (viewMode === "net-worth") {
       return [
         {
-          id: 'suggestion-1',
-          title: 'Increase Investment Allocation',
-          description: 'Consider increasing your investment percentage by 5% to accelerate wealth building.',
-          status: 'pending' as const
+          id: "suggestion-1",
+          title: "Increase Investment Allocation",
+          description: "Consider increasing your investment percentage by 5% to accelerate wealth building.",
+          status: "pending" as const,
         },
         {
-          id: 'suggestion-2',
-          title: 'Review Monthly Expenses',
-          description: 'Analyze your spending to identify areas where you can save $500/month.',
-          status: 'pending' as const
-        }
+          id: "suggestion-2",
+          title: "Review Monthly Expenses",
+          description: "Analyze your spending to identify areas where you can save $500/month.",
+          status: "pending" as const,
+        },
       ];
     } else if (viewMode === "assets") {
       return [
         {
-          id: 'suggestion-1',
-          title: 'Activate Small-Cap Growth Exposure',
-          description: "Hello, your portfolio's steady, but we can add some growth power.\n If we move 5% of your investments (about $1,200) into a small-cap ETF like Vanguard Small-Cap (VB), you'll capture higher long-term returns while keeping risk balanced. I'll rebalance your portfolio automatically, so you stay diversified.",
-          status: 'pending' as const
+          id: "suggestion-1",
+          title: "Activate Small-Cap Growth Exposure",
+          description:
+            "Hello, your portfolio's steady, but we can add some growth power.\n If we move 5% of your investments (about $1,200) into a small-cap ETF like Vanguard Small-Cap (VB), you'll capture higher long-term returns while keeping risk balanced. I'll rebalance your portfolio automatically, so you stay diversified.",
+          status: "pending" as const,
         },
         {
-          id: 'suggestion-2',
-          title: 'Put Idle Cash to Work',
-          description: "You've got $200 sitting idle in your savings account each month.\n Let's make it earn for you — I can move it to a liquid fund (Schwab Value Advantage – SWVXX) that's low-risk, withdrawable anytime, and earns 4–5% annually instead of 0%. Small steps, steady gains.",
-          status: 'pending' as const
-        }
+          id: "suggestion-2",
+          title: "Put Idle Cash to Work",
+          description:
+            "You've got $200 sitting idle in your savings account each month.\n Let's make it earn for you — I can move it to a liquid fund (Schwab Value Advantage – SWVXX) that's low-risk, withdrawable anytime, and earns 4–5% annually instead of 0%. Small steps, steady gains.",
+          status: "pending" as const,
+        },
       ];
     } else {
       return [
         {
-          id: 'suggestion-1',
-          title: 'Debt Avalanche Method',
-          description: 'Focus on paying off highest-interest debt first to save on interest charges.',
-          status: 'pending' as const
+          id: "suggestion-1",
+          title: "Debt Avalanche Method",
+          description: "Focus on paying off highest-interest debt first to save on interest charges.",
+          status: "pending" as const,
         },
         {
-          id: 'suggestion-2',
-          title: 'Consider Refinancing',
-          description: 'Explore refinancing options that could lower your interest rates by 2%.',
-          status: 'pending' as const
-        }
+          id: "suggestion-2",
+          title: "Consider Refinancing",
+          description: "Explore refinancing options that could lower your interest rates by 2%.",
+          status: "pending" as const,
+        },
       ];
     }
   };
 
-  const initialMessageMemo = useMemo(() => getInitialMessage(), [showFinancialSummary, viewMode, netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal]);
+  const initialMessageMemo = useMemo(
+    () => getInitialMessage(),
+    [showFinancialSummary, viewMode, netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal],
+  );
   const initialSuggestionsMemo = useMemo(() => getInitialSuggestions(), [showFinancialSummary, viewMode]);
 
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
-    contextType: 'dashboard',
+    contextType: "dashboard",
     contextData: {
       viewMode,
       netWorth,
       assetsTotal,
       liabilitiesTotal,
       cashTotal,
-      investmentsTotal
+      investmentsTotal,
     },
     initialMessage: initialMessageMemo,
     initialSuggestions: initialSuggestionsMemo,
-    onClose
+    onClose,
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -141,7 +148,7 @@ export const AIChatDialog = ({
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
-      const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      const scrollContainer = scrollRef.current.querySelector("[data-radix-scroll-area-viewport]");
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
@@ -167,12 +174,7 @@ export const AIChatDialog = ({
         <ScrollArea className="flex-1 px-6" ref={scrollRef}>
           <div className="space-y-4 pr-4">
             {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex gap-3 ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+              <div key={index} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 {message.role === "assistant" && (
                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                     <Bot className="h-4 w-4 text-primary-foreground" />
@@ -180,32 +182,27 @@ export const AIChatDialog = ({
                 )}
                 <div
                   className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  
+
                   {/* Suggestions */}
                   {message.suggestions && message.suggestions.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {message.suggestions.map((suggestion) => (
-                        <div 
-                          key={suggestion.id}
-                          className="bg-background/50 rounded-lg p-3 border border-border"
-                        >
+                        <div key={suggestion.id} className="bg-background/50 rounded-lg p-3 border border-border">
                           <p className="text-sm font-medium mb-1">{suggestion.title}</p>
                           <p className="text-xs text-muted-foreground mb-2">{suggestion.description}</p>
-                          
-                          {suggestion.status === 'pending' && (
+
+                          {suggestion.status === "pending" && (
                             <div className="flex flex-col gap-2">
                               <div className="flex gap-2">
                                 <Button
                                   size="sm"
                                   variant="default"
                                   className="flex-1 h-8"
-                                  onClick={() => handleSuggestionAction(index, suggestion.id, 'approved')}
+                                  onClick={() => handleSuggestionAction(index, suggestion.id, "approved")}
                                 >
                                   <Check className="h-3 w-3 mr-1" />
                                   Approve
@@ -214,7 +211,7 @@ export const AIChatDialog = ({
                                   size="sm"
                                   variant="outline"
                                   className="flex-1 h-8"
-                                  onClick={() => handleSuggestionAction(index, suggestion.id, 'denied')}
+                                  onClick={() => handleSuggestionAction(index, suggestion.id, "denied")}
                                 >
                                   <X className="h-3 w-3 mr-1" />
                                   Deny
@@ -224,21 +221,21 @@ export const AIChatDialog = ({
                                 size="sm"
                                 variant="ghost"
                                 className="w-full h-8"
-                                onClick={() => handleSuggestionAction(index, suggestion.id, 'know_more')}
+                                onClick={() => handleSuggestionAction(index, suggestion.id, "know_more")}
                               >
                                 Know more
                               </Button>
                             </div>
                           )}
-                          
-                          {suggestion.status === 'approved' && (
+
+                          {suggestion.status === "approved" && (
                             <div className="flex items-center gap-1 text-xs text-green-600">
                               <Check className="h-3 w-3" />
                               Approved
                             </div>
                           )}
-                          
-                          {suggestion.status === 'denied' && (
+
+                          {suggestion.status === "denied" && (
                             <div className="flex items-center gap-1 text-xs text-red-600">
                               <X className="h-3 w-3" />
                               Denied
