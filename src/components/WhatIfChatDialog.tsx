@@ -125,6 +125,21 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Get user's current age from profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('date_of_birth')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let targetAge = null;
+      if (profile?.date_of_birth) {
+        const today = new Date();
+        const birthDate = new Date(profile.date_of_birth);
+        const currentAge = today.getFullYear() - birthDate.getFullYear();
+        targetAge = currentAge + 4; // 4 years from now
+      }
+
       const { error } = await supabase.from("goals").insert({
         user_id: user.id,
         name: "Car",
@@ -134,13 +149,14 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
         allocation_savings: 70,
         allocation_stocks: 20,
         allocation_bonds: 10,
+        ...(targetAge && { target_age: targetAge }),
       });
 
       if (error) throw error;
 
       toast({
         title: "Goal Created",
-        description: "Car purchase goal (target: $12,000 in 3 years) has been added to your goals.",
+        description: `Car purchase goal (target: $12,000 in 4 years${targetAge ? `, by age ${targetAge}` : ''}) has been added to your goals.`,
       });
 
       onClose();
