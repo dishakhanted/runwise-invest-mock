@@ -204,7 +204,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
       setTimeout(() => {
         const assistantMessage: Message = {
           role: "assistant",
-          content: "Perfect! Based on your responses, I'll help you set up two important goals: paying off your $50,000 student loan in 5 years, and planning for a comfortable retirement. We'll automatically allocate funds from your savings and investment accounts to help you achieve these goals. Click 'Complete Setup' to get started!",
+          content: "Perfect! Based on your responses, I'll help you set up two important goals: paying off your $27,800 student loan in 5 years, home down payment and planning for a comfortable retirement. We'll automatically allocate funds from your savings and investment accounts to help you achieve these goals. Click 'Complete Setup' to get started!",
         };
         setMessages((prev) => [...prev, assistantMessage]);
         setCurrentQuestion((prev) => prev + 1);
