@@ -121,6 +121,17 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
   const handleApprove = async () => {
     if (!scenario?.goalTemplate) return;
 
+    // Hide action buttons
+    setShowActions(false);
+
+    // Add user's approval as a message
+    setMessages((prev) => [
+      ...prev,
+      { role: "user" as const, content: "Approve" },
+    ]);
+
+    setIsLoading(true);
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
@@ -157,28 +168,46 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
 
       if (error) throw error;
 
-      toast({
-        title: "Goal Created",
-        description: `Car purchase goal (target: $12,000 in 4 years${targetAge ? `, by age ${targetAge}` : ''}) has been added with $${initialAmount} initial allocation.`,
-      });
-
-      onClose();
+      // Add assistant confirmation message
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant" as const,
+          content: `Perfect! I've created your Car purchase goal with a target of $12,000${targetAge ? ` by age ${targetAge}` : ' in 4 years'}. I've allocated an initial $${initialAmount} from your savings and stocks. Your allocation strategy is 70% savings, 20% stocks, and 10% bonds. You can track this goal in your Goals page.`,
+        },
+      ]);
     } catch (error) {
       console.error("Error creating goal:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create goal. Please try again.",
-        variant: "destructive",
-      });
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant" as const,
+          content: "I apologize, but there was an error creating your goal. Please try again.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeny = () => {
-    toast({
-      title: "Understood",
-      description: "No goal will be created at this time.",
-    });
-    onClose();
+    // Hide action buttons
+    setShowActions(false);
+
+    // Add user's denial as a message
+    setMessages((prev) => [
+      ...prev,
+      { role: "user" as const, content: "Deny" },
+    ]);
+
+    // Add assistant acknowledgment
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant" as const,
+        content: "No problem! If you change your mind or want to explore other financial goals, just let me know. Is there anything else I can help you with?",
+      },
+    ]);
   };
 
   const sendMessage = async (messagesToSend: Message[]) => {
