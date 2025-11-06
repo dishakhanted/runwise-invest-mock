@@ -197,6 +197,19 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
       setCollectedData(prev => ({ ...prev, vision30: currentInput }));
     } else if (currentQuestion === 4) {
       setCollectedData(prev => ({ ...prev, vision35: currentInput }));
+    } else if (currentQuestion === 5) {
+      // Last question - store vision60 and show final message
+      setCollectedData(prev => ({ ...prev, vision60: currentInput }));
+      
+      setTimeout(() => {
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: "Perfect! Based on your responses, I'll help you set up two important goals: paying off your $50,000 student loan in 5 years, and planning for a comfortable retirement. We'll automatically allocate funds from your savings and investment accounts to help you achieve these goals. Click 'Complete Setup' to get started!",
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        setCurrentQuestion((prev) => prev + 1);
+      }, 800);
+      return;
     }
 
     // Simulate assistant response for regular questions
