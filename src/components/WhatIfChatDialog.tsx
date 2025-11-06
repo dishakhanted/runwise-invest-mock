@@ -125,8 +125,8 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
 
       const { error } = await supabase.from("goals").insert({
         user_id: user.id,
-        name: scenario.goalTemplate.name,
-        target_amount: scenario.goalTemplate.targetAmount,
+        name: "Car",
+        target_amount: 12000,
         current_amount: 0,
         description: scenario.goalTemplate.description,
         allocation_savings: 70,
@@ -138,7 +138,7 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
 
       toast({
         title: "Goal Created",
-        description: `${scenario.goalTemplate.name} has been added to your goals.`,
+        description: "Car purchase goal (target: $12,000 in 3 years) has been added to your goals.",
       });
 
       onClose();
