@@ -88,7 +88,7 @@ export const useFinancialChat = ({
     // Add AI response based on action
     setTimeout(() => {
       if (action === 'approved' && suggestion) {
-        const response = `Great choice! I've noted that you approved "${suggestion.title}". I'll help you implement this strategy. Would you like me to create a detailed action plan or answer any questions about how to get started?`;
+        const response = `okay great, on it!`;
         setMessages(prev => [...prev, { role: 'assistant', content: response }]);
       } else if (action === 'denied' && suggestion) {
         const response = `Understood. I've noted that you declined "${suggestion.title}". Would you like me to suggest alternative approaches or explain why this recommendation might not fit your situation?`;
