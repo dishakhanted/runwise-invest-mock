@@ -306,14 +306,6 @@ export const LinkAccountsStep = ({ data, onNext, onBack }: LinkAccountsStepProps
               />
             </div>
 
-            {selectedProvider && getAutoBalance(selectedProvider.name).amount > 0 && (
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Balance will be automatically populated: ${getAutoBalance(selectedProvider.name).amount.toLocaleString()}
-                </p>
-              </div>
-            )}
-
             <div className="flex gap-3 pt-4">
               <Button
                 variant="outline"
