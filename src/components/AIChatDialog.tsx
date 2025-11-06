@@ -46,7 +46,7 @@ export const AIChatDialog = ({
     if (viewMode === "net-worth") {
       return `Hi! I'm your financial assistant. Your current net worth is ${formatCurrency(netWorth)}. You have ${formatCurrency(assetsTotal)} in assets and ${formatCurrency(liabilitiesTotal)} in liabilities. Here are some suggestions to optimize your financial strategy:`;
     } else if (viewMode === "assets") {
-      return `Hi! I'm your financial assistant. Your total assets are ${formatCurrency(assetsTotal)}, with ${formatCurrency(cashTotal)} in cash and ${formatCurrency(investmentsTotal)} in investments. Here are some recommendations:`;
+      return `You've built a solid base - here are some suggestions`;
     } else {
       return `Hi! I'm your financial assistant. Your total liabilities are ${formatCurrency(liabilitiesTotal)}. Here are some strategies to manage your debt:`;
     }
