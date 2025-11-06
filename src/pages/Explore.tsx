@@ -69,9 +69,9 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 bg-card">
+          <Card className="border-success/25 bg-success/8">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-primary mb-4">🤔 What if?</CardTitle>
+              <CardTitle className="text-lg text-success mb-4">🤔 What if?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
                 <li 
                   className="cursor-pointer hover:bg-accent/50 p-2 rounded-md transition-colors"
@@ -91,9 +91,9 @@ const Explore = () => {
         </div>
 
         {/* Fin-shorts Section */}
-        <Card className="mb-4 border-border/50 bg-card">
+        <Card className="mb-4 border-success/30 bg-success/12">
           <CardContent className="p-4">
-            <CardTitle className="text-lg text-primary mb-4">⚡ Fin-shorts</CardTitle>
+            <CardTitle className="text-lg text-success mb-4">⚡ Fin-shorts</CardTitle>
             <ul className="space-y-3 text-sm text-foreground">
               <li>
                 <span className="font-semibold">💻 Tech Wakes, Market Naps:</span> S&P 500 stays flat as Big Tech quietly adds $150 billion in value.
@@ -110,9 +110,9 @@ const Explore = () => {
 
         {/* Bottom Row - Alternate Investments & Harvest gains */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Card className="border-border/50 bg-card">
+          <Card className="border-success/28 bg-success/10">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-primary mb-4">🌍 Alternate Investments</CardTitle>
+              <CardTitle className="text-lg text-success mb-4">🌍 Alternate Investments</CardTitle>
               <p className="text-sm text-foreground mb-3">
                 Ever thought about diversifying beyond U.S. equity markets?
               </p>
