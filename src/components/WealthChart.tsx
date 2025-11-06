@@ -92,29 +92,45 @@ export const WealthChart = ({
         />
 
         {/* Goal markers as balloons positioned along the line */}
-        {goals.map((goal) => {
-          // Position goals based on target age relative to timeline
-          // Assume timeline from age 25 (today) to age 80
+        {(() => {
+          // Sort goals by target age
+          const sortedGoals = [...goals].sort((a, b) => {
+            const ageA = a.targetAge || 999;
+            const ageB = b.targetAge || 999;
+            return ageA - ageB;
+          });
+
           const minAge = 25;
           const maxAge = 80;
           const ageRange = maxAge - minAge;
-          
-          // If goal has a target age, position it proportionally
-          // Otherwise, distribute evenly like before
-          let ageProgress;
-          if (goal.targetAge) {
-            ageProgress = Math.min(Math.max((goal.targetAge - minAge) / ageRange, 0), 1);
-          } else {
-            // Fallback to even distribution for goals without target_age
-            const index = goals.indexOf(goal);
-            ageProgress = (index + 1) / (goals.length + 1);
+          const minSpacing = 40; // Minimum pixel spacing between goals
+
+          // Calculate positions with collision prevention
+          const positions = sortedGoals.map((goal, index) => {
+            let ageProgress;
+            if (goal.targetAge) {
+              ageProgress = Math.min(Math.max((goal.targetAge - minAge) / ageRange, 0), 1);
+            } else {
+              ageProgress = (index + 1) / (sortedGoals.length + 1);
+            }
+            
+            let x = 40 + ((380 - 40) * ageProgress);
+            const y = 160 - ((160 - 30) * ageProgress);
+            
+            return { goal, x, y, originalX: x };
+          });
+
+          // Adjust positions to prevent overlapping
+          for (let i = 1; i < positions.length; i++) {
+            const prev = positions[i - 1];
+            const curr = positions[i];
+            
+            if (curr.x - prev.x < minSpacing) {
+              curr.x = prev.x + minSpacing;
+            }
           }
-          
-          // Calculate position along the diagonal line
-          const x = 40 + ((380 - 40) * ageProgress);
-          const y = 160 - ((160 - 30) * ageProgress);
-          
-          return (
+
+          return positions.map(({ goal, x, y }) => (
             <g key={goal.id}>
               {/* Balloon circle */}
               <circle
@@ -141,8 +157,8 @@ export const WealthChart = ({
                 <circle cx="6" cy="6" r="1.5" fill="white" />
               </g>
             </g>
-          );
-        })}
+          ));
+        })()}
       </svg>
 
       {/* Labels */}
