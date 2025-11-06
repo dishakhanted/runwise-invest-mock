@@ -295,7 +295,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           name: 'Pay Off Student Loan',
           target_amount: 50000,
           target_age: currentAge + 5,
-          current_amount: 0,
+          current_amount: 3500, // $500 from savings + $3000 from stocks
           allocation_savings: 50,
           allocation_stocks: 30,
           allocation_bonds: 20,
@@ -305,7 +305,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           name: 'Retirement Planning',
           target_amount: 1000000,
           target_age: 65,
-          current_amount: 0,
+          current_amount: 5300, // $300 from savings + $5000 from stocks
           allocation_savings: 20,
           allocation_stocks: 60,
           allocation_bonds: 20,
