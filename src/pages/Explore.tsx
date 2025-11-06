@@ -7,7 +7,7 @@ import { WhatIfChatDialog } from "@/components/WhatIfChatDialog";
 
 interface WhatIfScenario {
   title: string;
-  initialPrompt: string;
+  introMessage: string;
   goalTemplate?: {
     name: string;
     targetAmount: number;
@@ -18,7 +18,7 @@ interface WhatIfScenario {
 const whatIfScenarios: WhatIfScenario[] = [
   {
     title: "Plan to Buy a Car Soon?",
-    initialPrompt: "Yeah, I don't have one yet but was actually thinking about it. Tell me more.",
+    introMessage: "San Francisco life gets much easier with your own wheels — especially once you're balancing work, errands, or weekend drives outside the city. Have you thought about getting a car?",
     goalTemplate: {
       name: "Car Purchase",
       targetAmount: 13000,
@@ -27,7 +27,7 @@ const whatIfScenarios: WhatIfScenario[] = [
   },
   {
     title: "Plan to Start a Family at 35?",
-    initialPrompt: "I'm thinking about starting a family around 35. What should I plan for financially?",
+    introMessage: "Starting a family is a big step that comes with new financial considerations. A wife and kid changes two things: income stability and housing needs. Have you thought about planning for this?",
     goalTemplate: {
       name: "Family Planning Fund",
       targetAmount: 50000,

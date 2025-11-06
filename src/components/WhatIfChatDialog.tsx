@@ -14,7 +14,7 @@ interface Message {
 
 interface WhatIfScenario {
   title: string;
-  initialPrompt: string;
+  introMessage: string;
   goalTemplate?: {
     name: string;
     targetAmount: number;
@@ -38,15 +38,13 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
 
   useEffect(() => {
     if (isOpen && scenario) {
-      // Initialize with the scenario's initial prompt
+      // Initialize with the assistant's intro message
       setMessages([
         {
-          role: "user",
-          content: scenario.initialPrompt,
+          role: "assistant",
+          content: scenario.introMessage,
         },
       ]);
-      // Auto-send the initial message
-      sendInitialMessage(scenario.initialPrompt);
     } else {
       setMessages([]);
       setShowActions(false);
@@ -59,39 +57,6 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
     }
   }, [messages]);
 
-  const sendInitialMessage = async (prompt: string) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("financial-chat", {
-        body: {
-          message: prompt,
-          conversationHistory: [],
-        },
-      });
-
-      if (error) throw error;
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: data.message,
-        },
-      ]);
-      
-      // Show action buttons after the first response
-      setShowActions(true);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast({
-        title: "Error",
-        description: "Failed to get response. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -118,6 +83,9 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
           content: data.message,
         },
       ]);
+      
+      // Show action buttons after the first AI response
+      setShowActions(true);
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
