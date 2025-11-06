@@ -96,10 +96,8 @@ export const useFinancialChat = ({
       }
     }, 300);
 
-    toast({
-      title: action === 'approved' ? "Suggestion Approved" : "Suggestion Denied",
-      description: `You ${action} this suggestion.`,
-    });
+    // Inline chat response only; toast removed per UX preference
+
   }, [messages, toast]);
 
   const generateTitle = (firstUserMessage: string) => {
