@@ -252,14 +252,6 @@ export const useFinancialChat = ({
           await saveMessage(convId, 'assistant', assistantMessage);
         }
         
-        // Show success toast if goal was updated
-        if (data.goalUpdated) {
-          toast({
-            title: "Goal Updated",
-            description: "Your goal has been successfully updated!",
-          });
-        }
-        
         setIsLoading(false);
         return;
       }
