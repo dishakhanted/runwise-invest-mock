@@ -40,13 +40,7 @@ export const AIChatDialog = ({
 
   const getInitialMessage = () => {
     if (showFinancialSummary) {
-      return `You are in decent shape for your age!
-
-I have good news! You can get debt neutral in 3 years, Yes No more loans.
-
-Oh no, you have only 2 months of expenses as a safety net, it's a pickle.
-
-With your $5,200 monthly income, here's the simple game plan — about $3,700 covers your living costs, and the remaining $1,500 works for you: $500 goes to your loan, $500 builds your emergency fund in liquid investments, and $500 grows in medium-risk retirement and home funds — every dollar has a job this year.`;
+      return `With your $5,200 monthly income, here's the simple game plan — about $3,700 covers your living costs, and the remaining $1,500 works for you: $500 goes to your loan, $500 builds your emergency fund in liquid investments, and $500 grows in medium-risk retirement and home funds — every dollar has a job this year.`;
     }
     
     if (viewMode === "net-worth") {
