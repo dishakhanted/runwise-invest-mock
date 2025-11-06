@@ -1,4 +1,4 @@
-import logo from "@/assets/growwise-logo-new.png";
+import logo from "@/assets/growwise-logo-transparent.png";
 
 interface LogoProps {
   className?: string;
