@@ -55,35 +55,35 @@ const Explore = () => {
 
         {/* Top Row - Love Equity & What if */}
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <Card className="border-border/50">
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-primary mb-4">Love Equity?</CardTitle>
+              <CardTitle className="text-lg text-primary mb-4">💰 Love Equity?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
                 <li>
-                  <span className="font-semibold">S&P 500 up 1.2% this week</span> — Tech and Energy lead gains, defensive sectors flat.
+                  <span className="font-semibold">📈 S&P 500 up 1.2% this week</span> — Tech and Energy lead gains, defensive sectors flat.
                 </li>
                 <li>
-                  <span className="font-semibold">Upcoming IPOs to watch:</span> Stripe (re-filed), Databricks, and Reddit (AI-data push).
+                  <span className="font-semibold">🚀 Upcoming IPOs to watch:</span> Stripe (re-filed), Databricks, and Reddit (AI-data push).
                 </li>
               </ul>
             </CardContent>
           </Card>
 
-          <Card className="border-border/50">
+          <Card className="border-success/30 bg-gradient-to-br from-success/10 to-success/5">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-primary mb-4">What if?</CardTitle>
+              <CardTitle className="text-lg text-success mb-4">🤔 What if?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
                 <li 
                   className="cursor-pointer hover:bg-accent/50 p-2 rounded-md transition-colors"
                   onClick={() => handleWhatIfClick(0)}
                 >
-                  <span className="font-semibold">What if you plan to buy a car soon?</span> San Francisco life gets much easier with your own wheels — especially once you're balancing work, errands, or weekend drives outside the city.
+                  <span className="font-semibold">🚗 What if you plan to buy a car soon?</span> San Francisco life gets much easier with your own wheels — especially once you're balancing work, errands, or weekend drives outside the city.
                 </li>
                 <li 
                   className="cursor-pointer hover:bg-accent/50 p-2 rounded-md transition-colors"
                   onClick={() => handleWhatIfClick(1)}
                 >
-                  <span className="font-semibold">What if you plan to start a family at 35?</span> A wife and kid changes two things: income stability and housing needs.
+                  <span className="font-semibold">👨‍👩‍👧 What if you plan to start a family at 35?</span> A wife and kid changes two things: income stability and housing needs.
                 </li>
               </ul>
             </CardContent>
@@ -91,18 +91,18 @@ const Explore = () => {
         </div>
 
         {/* Fin-shorts Section */}
-        <Card className="mb-4 border-border/50">
+        <Card className="mb-4 border-accent/30 bg-gradient-to-br from-accent/10 to-accent/5">
           <CardContent className="p-4">
-            <CardTitle className="text-lg text-primary mb-4">Fin-shorts</CardTitle>
+            <CardTitle className="text-lg text-accent-foreground mb-4">⚡ Fin-shorts</CardTitle>
             <ul className="space-y-3 text-sm text-foreground">
               <li>
-                <span className="font-semibold">Tech Wakes, Market Naps:</span> S&P 500 stays flat as Big Tech quietly adds $150 billion in value.
+                <span className="font-semibold">💻 Tech Wakes, Market Naps:</span> S&P 500 stays flat as Big Tech quietly adds $150 billion in value.
               </li>
               <li>
-                <span className="font-semibold">Red Sea Ripples Hit Oil:</span> Tensions push Brent above $88, shaking airlines and transport stocks.
+                <span className="font-semibold">🛢️ Red Sea Ripples Hit Oil:</span> Tensions push Brent above $88, shaking airlines and transport stocks.
               </li>
               <li>
-                <span className="font-semibold">AI ETFs Print Gold:</span> $2 billion pours into AI funds — investors chase the new digital rush.
+                <span className="font-semibold">🤖 AI ETFs Print Gold:</span> $2 billion pours into AI funds — investors chase the new digital rush.
               </li>
             </ul>
           </CardContent>
@@ -110,24 +110,24 @@ const Explore = () => {
 
         {/* Bottom Row - Alternate Investments & Harvest gains */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Card className="border-border/50">
+          <Card className="border-warning/30 bg-gradient-to-br from-warning/10 to-warning/5">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-primary mb-4">Alternate Investments</CardTitle>
+              <CardTitle className="text-lg text-warning mb-4">🌍 Alternate Investments</CardTitle>
               <p className="text-sm text-foreground mb-3">
                 Ever thought about diversifying beyond U.S. equity markets?
               </p>
               <ol className="list-decimal list-inside space-y-2 text-sm text-foreground">
-                <li>Diversify beyond U.S. markets — add a touch of Gold & Global ETFs.</li>
-                <li>Make your portfolio future-proof with 5% in emerging markets.</li>
+                <li>✨ Diversify beyond U.S. markets — add a touch of Gold & Global ETFs.</li>
+                <li>🔮 Make your portfolio future-proof with 5% in emerging markets.</li>
               </ol>
             </CardContent>
           </Card>
 
-          <Card className="border-border/50">
+          <Card className="border-info/30 bg-gradient-to-br from-info/10 to-info/5">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-primary mb-4">Harvest your gains</CardTitle>
+              <CardTitle className="text-lg text-info mb-4">🎯 Harvest your gains</CardTitle>
               <p className="text-sm text-foreground">
-                Taxes and investing always dance together; learn a bit of tax harvesting now, and you'll keep more of what you earn later.
+                💸 Taxes and investing always dance together; learn a bit of tax harvesting now, and you'll keep more of what you earn later.
               </p>
             </CardContent>
           </Card>
