@@ -45,6 +45,8 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
           content: scenario.introMessage,
         },
       ]);
+      // Make sure actions are hidden initially
+      setShowActions(false);
     } else {
       setMessages([]);
       setShowActions(false);
