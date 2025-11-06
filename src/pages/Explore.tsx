@@ -55,9 +55,9 @@ const Explore = () => {
 
         {/* Top Row - Love Equity & What if */}
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <Card className="border-success/40 bg-success/15">
+          <Card className="border-[hsl(var(--card-teal))]/30 bg-[hsl(var(--card-teal))]/10">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-success mb-4">💰 Love Equity?</CardTitle>
+              <CardTitle className="text-2xl text-[hsl(var(--card-teal))] mb-4">💰 Love Equity?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
                 <li>
                   <span className="font-semibold">📈 S&P 500 up 1.2% this week</span> — Tech and Energy lead gains, defensive sectors flat.
@@ -69,9 +69,9 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-success/25 bg-success/25">
+          <Card className="border-[hsl(var(--card-amber))]/30 bg-[hsl(var(--card-amber))]/10">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-success mb-4">🤔 What if?</CardTitle>
+              <CardTitle className="text-2xl text-[hsl(var(--card-amber))] mb-4">🤔 What if?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
                 <li 
                   className="cursor-pointer hover:bg-accent/50 p-2 rounded-md transition-colors"
@@ -91,9 +91,9 @@ const Explore = () => {
         </div>
 
         {/* Fin-shorts Section */}
-        <Card className="mb-4 border-border/50 bg-card">
+        <Card className="mb-4 border-[hsl(var(--card-sky))]/30 bg-[hsl(var(--card-sky))]/10">
           <CardContent className="p-4">
-            <CardTitle className="text-lg text-primary mb-4">⚡ Fin-shorts</CardTitle>
+            <CardTitle className="text-2xl text-[hsl(var(--card-sky))] mb-4">⚡ Fin-shorts</CardTitle>
             <ul className="space-y-3 text-sm text-foreground">
               <li>
                 <span className="font-semibold">💻 Tech Wakes, Market Naps:</span> S&P 500 stays flat as Big Tech quietly adds $150 billion in value.
@@ -110,9 +110,9 @@ const Explore = () => {
 
         {/* Bottom Row - Alternate Investments & Harvest gains */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Card className="border-success/28 bg-success/30">
+          <Card className="border-[hsl(var(--card-violet))]/30 bg-[hsl(var(--card-violet))]/10">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-success mb-4">🌍 Alternate Investments</CardTitle>
+              <CardTitle className="text-2xl text-[hsl(var(--card-violet))] mb-4">🌍 Alternate Investments</CardTitle>
               <p className="text-sm text-foreground mb-3">
                 Ever thought about diversifying beyond U.S. equity markets?
               </p>
@@ -123,9 +123,9 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-success/40 bg-success/25">
+          <Card className="border-[hsl(var(--card-rose))]/30 bg-[hsl(var(--card-rose))]/10">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-success mb-4">🎯 Harvest your gains</CardTitle>
+              <CardTitle className="text-2xl text-[hsl(var(--card-rose))] mb-4">🎯 Harvest your gains</CardTitle>
               <p className="text-sm text-foreground">
                 💸 Taxes and investing always dance together; learn a bit of tax harvesting now, and you'll keep more of what you earn later.
               </p>

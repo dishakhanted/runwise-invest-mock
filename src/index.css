@@ -51,6 +51,13 @@ All colors MUST be HSL.
     --icon-blue: 210 80% 60%;
     --icon-cyan: 190 80% 55%;
     --icon-orange: 42 55% 55%;
+
+    /* Card variants for Explore page */
+    --card-teal: 175 65% 45%;
+    --card-amber: 38 90% 55%;
+    --card-rose: 345 75% 65%;
+    --card-sky: 200 85% 60%;
+    --card-violet: 265 70% 65%;
   }
 }
 
