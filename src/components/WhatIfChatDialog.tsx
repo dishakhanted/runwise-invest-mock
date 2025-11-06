@@ -173,7 +173,7 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
         ...prev,
         {
           role: "assistant" as const,
-          content: `Perfect! I've created your Car purchase goal with a target of $12,000${targetAge ? ` by age ${targetAge}` : ' in 4 years'}. I've allocated an initial $${initialAmount} from your savings and stocks. Your allocation strategy is 70% savings, 20% stocks, and 10% bonds. You can track this goal in your Goals page.`,
+          content: "Perfect! I've created your Car purchase goal with a target of $12,000 in 4 years. I've allocated an initial $600 from your savings and stocks. Your allocation strategy is 70% savings, 20% stocks, and 10% bonds. You can track this goal in your Goals page.",
         },
       ]);
     } catch (error) {
