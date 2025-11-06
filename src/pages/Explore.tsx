@@ -1,113 +1,9 @@
-import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
-import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
-import { SuggestionDetailDialog } from "@/components/SuggestionDetailDialog";
-
-interface Suggestion {
-  id: string;
-  title: string;
-  description: string;
-  emoji: string;
-  color: string;
-  expectedReturn?: string;
-  riskLevel?: string;
-  timeHorizon?: string;
-}
-
-const suggestions: Suggestion[] = [
-  {
-    id: "1",
-    title: "Index Fund Portfolio",
-    description: "Diversified low-cost index funds tracking major market indices",
-    emoji: "📊",
-    color: "bg-blue-500",
-    expectedReturn: "7-10% annually",
-    riskLevel: "Medium",
-    timeHorizon: "5+ years",
-  },
-  {
-    id: "2",
-    title: "Emergency Fund Builder",
-    description: "High-yield savings for 3-6 months of expenses",
-    emoji: "🏦",
-    color: "bg-green-500",
-    expectedReturn: "4-5% annually",
-    riskLevel: "Low",
-    timeHorizon: "Immediate",
-  },
-  {
-    id: "3",
-    title: "Tech Growth ETF",
-    description: "Technology sector focused exchange-traded funds",
-    emoji: "💻",
-    color: "bg-purple-500",
-    expectedReturn: "12-15% annually",
-    riskLevel: "High",
-    timeHorizon: "7+ years",
-  },
-  {
-    id: "4",
-    title: "Retirement 401(k) Max",
-    description: "Maximize employer match contributions",
-    emoji: "🎯",
-    color: "bg-orange-500",
-    expectedReturn: "100% instant return on match",
-    riskLevel: "Low",
-    timeHorizon: "Long-term",
-  },
-  {
-    id: "5",
-    title: "Dividend Aristocrats",
-    description: "Stocks with 25+ years of dividend growth",
-    emoji: "💰",
-    color: "bg-yellow-500",
-    expectedReturn: "6-8% + dividends",
-    riskLevel: "Medium",
-    timeHorizon: "10+ years",
-  },
-  {
-    id: "6",
-    title: "Bond Ladder Strategy",
-    description: "Staggered maturity bonds for steady income",
-    emoji: "🪜",
-    color: "bg-indigo-500",
-    expectedReturn: "4-6% annually",
-    riskLevel: "Low",
-    timeHorizon: "3-5 years",
-  },
-  {
-    id: "7",
-    title: "Real Estate REIT",
-    description: "Real estate investment trusts for property exposure",
-    emoji: "🏠",
-    color: "bg-red-500",
-    expectedReturn: "8-12% annually",
-    riskLevel: "Medium-High",
-    timeHorizon: "5+ years",
-  },
-  {
-    id: "8",
-    title: "International Diversification",
-    description: "Emerging and developed market exposure",
-    emoji: "🌍",
-    color: "bg-teal-500",
-    expectedReturn: "8-11% annually",
-    riskLevel: "Medium-High",
-    timeHorizon: "7+ years",
-  },
-];
 
 const Explore = () => {
-  const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const handleSuggestionClick = (suggestion: Suggestion) => {
-    setSelectedSuggestion(suggestion);
-    setIsDialogOpen(true);
-  };
-
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
@@ -117,48 +13,79 @@ const Explore = () => {
           <Logo className="h-10 w-10" />
         </div>
 
-        {/* Suggestions Grid - Masonry Style */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4">Investment Suggestions</h2>
-          <div className="grid grid-cols-2 gap-4 auto-rows-auto">
-            {suggestions.map((suggestion, index) => {
-              const isLarge = index === 0 || index === 4;
-              return (
-                <Card
-                  key={suggestion.id}
-                  className={`cursor-pointer hover:shadow-lg transition-all border-border/50 ${
-                    isLarge ? "row-span-2" : ""
-                  }`}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                >
-                  <CardContent className="p-4 h-full flex flex-col">
-                    <div className={`w-12 h-12 rounded-full ${suggestion.color} flex items-center justify-center text-2xl mb-3`}>
-                      {suggestion.emoji}
-                    </div>
-                    <CardTitle className="text-sm mb-2">{suggestion.title}</CardTitle>
-                    <CardDescription className="text-xs line-clamp-3 flex-1">
-                      {suggestion.description}
-                    </CardDescription>
-                    {suggestion.expectedReturn && (
-                      <div className="mt-3 pt-3 border-t border-border/50">
-                        <p className="text-xs text-muted-foreground">
-                          <span className="font-semibold text-foreground">{suggestion.expectedReturn}</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">{suggestion.riskLevel} Risk</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+        {/* Top Row - Love Equity & What if */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <CardTitle className="text-lg text-primary mb-4">Love Equity?</CardTitle>
+              <ul className="space-y-3 text-sm text-foreground">
+                <li>
+                  <span className="font-semibold">S&P 500 up 1.2% this week</span> — Tech and Energy lead gains, defensive sectors flat.
+                </li>
+                <li>
+                  <span className="font-semibold">Upcoming IPOs to watch:</span> Stripe (re-filed), Databricks, and Reddit (AI-data push).
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <CardTitle className="text-lg text-primary mb-4">What if?</CardTitle>
+              <ul className="space-y-3 text-sm text-foreground">
+                <li>
+                  <span className="font-semibold">What if you plan to buy a car soon?</span> San Francisco life gets much easier with your own wheels — especially once you're balancing work, errands, or weekend drives outside the city.
+                </li>
+                <li>
+                  <span className="font-semibold">What if you plan to start a family at 35?</span> A wife and kid changes two things: income stability and housing needs.
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
         </div>
 
-        <SuggestionDetailDialog
-          suggestion={selectedSuggestion}
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-        />
+        {/* Fin-shorts Section */}
+        <Card className="mb-4 border-border/50">
+          <CardContent className="p-4">
+            <CardTitle className="text-lg text-primary mb-4">Fin-shorts</CardTitle>
+            <ul className="space-y-3 text-sm text-foreground">
+              <li>
+                <span className="font-semibold">Tech Wakes, Market Naps:</span> S&P 500 stays flat as Big Tech quietly adds $150 billion in value.
+              </li>
+              <li>
+                <span className="font-semibold">Red Sea Ripples Hit Oil:</span> Tensions push Brent above $88, shaking airlines and transport stocks.
+              </li>
+              <li>
+                <span className="font-semibold">AI ETFs Print Gold:</span> $2 billion pours into AI funds — investors chase the new digital rush.
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        {/* Bottom Row - Alternate Investments & Harvest gains */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <CardTitle className="text-lg text-primary mb-4">Alternate Investments</CardTitle>
+              <p className="text-sm text-foreground mb-3">
+                Ever thought about diversifying beyond U.S. equity markets?
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-foreground">
+                <li>Diversify beyond U.S. markets — add a touch of Gold & Global ETFs.</li>
+                <li>Make your portfolio future-proof with 5% in emerging markets.</li>
+              </ol>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <CardTitle className="text-lg text-primary mb-4">Harvest your gains</CardTitle>
+              <p className="text-sm text-foreground">
+                Taxes and investing always dance together; learn a bit of tax harvesting now, and you'll keep more of what you earn later.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         <DisclosureFooter />
       </div>
