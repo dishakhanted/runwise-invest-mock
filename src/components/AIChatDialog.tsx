@@ -89,14 +89,14 @@ export const AIChatDialog = ({
       return [
         {
           id: 'suggestion-1',
-          title: 'Diversify Investments',
-          description: 'Consider diversifying your portfolio with international stocks for better returns.',
+          title: 'Activate Small-Cap Growth Exposure',
+          description: "Hello, your portfolio's steady, but we can add some growth power.\n If we move 5% of your investments (about $1,200) into a small-cap ETF like Vanguard Small-Cap (VB), you'll capture higher long-term returns while keeping risk balanced. I'll rebalance your portfolio automatically, so you stay diversified.",
           status: 'pending' as const
         },
         {
           id: 'suggestion-2',
-          title: 'High-Yield Savings',
-          description: 'Move some cash to a high-yield savings account earning 4.5% APY.',
+          title: 'Put Idle Cash to Work',
+          description: "You've got $200 sitting idle in your savings account each month.\n Let's make it earn for you — I can move it to a liquid fund (Schwab Value Advantage – SWVXX) that's low-risk, withdrawable anytime, and earns 4–5% annually instead of 0%. Small steps, steady gains.",
           status: 'pending' as const
         }
       ];
