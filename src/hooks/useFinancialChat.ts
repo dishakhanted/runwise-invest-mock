@@ -216,6 +216,8 @@ export const useFinancialChat = ({
       // Get auth token (optional - works without auth for testing)
       const { data: { session } } = await supabase.auth.getSession();
 
+      console.log('Sending to edge function:', { contextType, contextData });
+
       // Call edge function with streaming
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/financial-chat`,
@@ -234,8 +236,12 @@ export const useFinancialChat = ({
         }
       );
 
+      console.log('Response status:', response.status);
+      console.log('Response content-type:', response.headers.get('content-type'));
+
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        console.error('Error response:', errorData);
         throw new Error(errorData.error || "Failed to get response");
       }
 
@@ -243,6 +249,7 @@ export const useFinancialChat = ({
       const contentType = response.headers.get('content-type');
       if (contentType?.includes('application/json')) {
         const data = await response.json();
+        console.log('Received JSON response:', data);
         const assistantMessage = data.message;
         
         setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
