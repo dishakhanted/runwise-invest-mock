@@ -55,9 +55,13 @@ export const useFinancialChat = ({
   }, [initialMessage, initialSuggestions]);
 
   const handleSuggestionAction = useCallback((messageIndex: number, suggestionId: string, action: 'approved' | 'denied' | 'know_more') => {
+    console.log('handleSuggestionAction called:', { messageIndex, suggestionId, action });
+    
     // Find the suggestion title
     const message = messages[messageIndex];
     const suggestion = message.suggestions?.find(s => s.id === suggestionId);
+    
+    console.log('Found suggestion:', suggestion);
     
     if (action === 'know_more') {
       // Add user message asking for more info
@@ -85,20 +89,24 @@ export const useFinancialChat = ({
       return msg;
     }));
     
+    console.log('About to set timeout for response');
+    
     // Add AI response based on action
     setTimeout(() => {
+      console.log('Timeout fired, adding response message');
       if (action === 'approved' && suggestion) {
         const response = `okay great, on it!`;
-        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+        console.log('Adding approved response:', response);
+        setMessages(prev => {
+          console.log('Current messages:', prev);
+          return [...prev, { role: 'assistant', content: response }];
+        });
       } else if (action === 'denied' && suggestion) {
         const response = `Understood. I've noted that you declined "${suggestion.title}". Would you like me to suggest alternative approaches or explain why this recommendation might not fit your situation?`;
         setMessages(prev => [...prev, { role: 'assistant', content: response }]);
       }
     }, 300);
-
-    // Inline chat response only; toast removed per UX preference
-
-  }, [messages, toast]);
+  }, [messages]);
 
   const generateTitle = (firstUserMessage: string) => {
     // Generate a concise title from the first user message
