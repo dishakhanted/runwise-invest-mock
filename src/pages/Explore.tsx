@@ -55,7 +55,7 @@ const Explore = () => {
 
         {/* Top Row - Love Equity & What if */}
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <Card className="border-success/40 bg-success/25">
+          <Card className="border-success/40 bg-success/15">
             <CardContent className="p-4">
               <CardTitle className="text-lg text-success mb-4">💰 Love Equity?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
