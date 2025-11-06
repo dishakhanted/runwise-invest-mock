@@ -53,7 +53,7 @@ export const AIChatDialog = ({
   };
 
   const getInitialSuggestions = () => {
-    if (showFinancialSummary) {
+    if (showFinancialSummary && viewMode === "net-worth") {
       return [
         {
           id: 'suggestion-1',
