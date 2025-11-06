@@ -50,7 +50,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     },
     {
       field: "employmentType",
-      prompt: "What are your main financial goals? (e.g., retirement planning, buying a home, paying off debt)",
+      prompt: "Thank you connecting your accounts and giving these details, before we start, what brings you here today?",
     },
   ];
 
