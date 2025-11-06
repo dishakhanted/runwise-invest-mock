@@ -95,7 +95,19 @@ export const useFinancialChat = ({
     setTimeout(() => {
       console.log('Timeout fired, adding response message');
       if (action === 'approved' && suggestion) {
-        const response = `okay great, on it!`;
+        let response = 'Okay great, on it!';
+        
+        // Specific responses for different suggestions
+        if (suggestion.title === 'Activate Small-Cap Growth Exposure') {
+          response = "Perfect! I've allocated 5% of your investments ($1,200) to Vanguard Small-Cap (VB). Your portfolio is now rebalanced with growth potential while maintaining diversification. You'll see this update reflected in your investments.";
+        } else if (suggestion.title === 'Put Idle Cash to Work') {
+          response = "Done! I've set up automatic transfers of $200/month from your savings to Schwab Value Advantage (SWVXX). You'll now earn 4-5% annually instead of 0%. You can withdraw anytime you need it.";
+        } else if (suggestion.title === 'Increase Education Loan Payment') {
+          response = "Great decision! I've increased your monthly loan payment from $320 to $500. You'll be completely debt-free in 36 months. That's 3 years to financial freedom!";
+        } else if (suggestion.title === 'Build Emergency Fund of 6 Months') {
+          response = "Excellent choice! I've set up automatic transfers of $500/month to your emergency fund. By this time next year, you'll have a solid 6-month cushion ($18K). Peace of mind, secured.";
+        }
+        
         console.log('Adding approved response:', response);
         setMessages(prev => {
           console.log('Current messages:', prev);
