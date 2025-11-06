@@ -201,8 +201,8 @@ const Chat = () => {
         </ScrollArea>
 
         {/* Fixed Input at Bottom - Above Bottom Nav */}
-        <div className="fixed bottom-20 left-0 right-0 bg-background border-t border-border">
-          <div className="max-w-lg mx-auto px-6 py-4">
+        <div className="absolute bottom-20 left-0 right-0 bg-background border-t border-border">
+          <div className="px-6 py-4">
             <div className="flex gap-2">
               <Input
                 placeholder="Ask me anything about your finances..."
