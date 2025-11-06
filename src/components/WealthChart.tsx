@@ -120,13 +120,17 @@ export const WealthChart = ({
             return { goal, x, y, originalX: x };
           });
 
-          // Adjust positions to prevent overlapping
+          // Adjust positions to prevent overlapping and recalculate y to stay on line
           for (let i = 1; i < positions.length; i++) {
             const prev = positions[i - 1];
             const curr = positions[i];
             
             if (curr.x - prev.x < minSpacing) {
               curr.x = prev.x + minSpacing;
+              // Recalculate y to keep point on the diagonal line
+              // Line goes from (40, 160) to (380, 30)
+              const lineProgress = (curr.x - 40) / (380 - 40);
+              curr.y = 160 - ((160 - 30) * lineProgress);
             }
           }
 
