@@ -69,7 +69,7 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-success/25 bg-success/8">
+          <Card className="border-success/25 bg-success/18">
             <CardContent className="p-4">
               <CardTitle className="text-lg text-success mb-4">🤔 What if?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
@@ -91,7 +91,7 @@ const Explore = () => {
         </div>
 
         {/* Fin-shorts Section */}
-        <Card className="mb-4 border-success/30 bg-success/12">
+        <Card className="mb-4 border-success/30 bg-success/22">
           <CardContent className="p-4">
             <CardTitle className="text-lg text-success mb-4">⚡ Fin-shorts</CardTitle>
             <ul className="space-y-3 text-sm text-foreground">
@@ -110,7 +110,7 @@ const Explore = () => {
 
         {/* Bottom Row - Alternate Investments & Harvest gains */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Card className="border-success/28 bg-success/10">
+          <Card className="border-success/28 bg-success/30">
             <CardContent className="p-4">
               <CardTitle className="text-lg text-success mb-4">🌍 Alternate Investments</CardTitle>
               <p className="text-sm text-foreground mb-3">
