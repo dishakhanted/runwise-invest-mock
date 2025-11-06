@@ -79,11 +79,13 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
               content: scenario.goalTemplate!.description,
             },
           ]);
+          // Show action buttons after the predefined response
           setShowActions(true);
           setIsLoading(false);
         }, 500); // Small delay to simulate thinking
       } else {
-        // For follow-up questions, call the AI
+        // For follow-up questions, call the AI and hide action buttons
+        setShowActions(false);
         const { data, error } = await supabase.functions.invoke("financial-chat", {
           body: {
             messages: updatedMessages,
