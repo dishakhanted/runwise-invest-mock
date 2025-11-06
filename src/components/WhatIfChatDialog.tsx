@@ -68,24 +68,40 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("financial-chat", {
-        body: {
-          messages: updatedMessages,
-        },
-      });
+      // For What If scenarios with goalTemplate, use the predefined response for the first user message
+      if (scenario?.goalTemplate && updatedMessages.length === 2) {
+        // This is the first user response after the intro
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant" as const,
+              content: scenario.goalTemplate!.description,
+            },
+          ]);
+          setShowActions(true);
+          setIsLoading(false);
+        }, 500); // Small delay to simulate thinking
+      } else {
+        // For follow-up questions, call the AI
+        const { data, error } = await supabase.functions.invoke("financial-chat", {
+          body: {
+            messages: updatedMessages,
+          },
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant" as const,
-          content: data.message,
-        },
-      ]);
-      
-      // Show action buttons after the first AI response
-      setShowActions(true);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant" as const,
+            content: data.message,
+          },
+        ]);
+        
+        setIsLoading(false);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
