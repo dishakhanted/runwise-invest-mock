@@ -310,6 +310,16 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           allocation_stocks: 60,
           allocation_bonds: 20,
           user_id: authData.user.id
+        },
+        {
+          name: 'Home Goal',
+          target_amount: 10000,
+          target_age: currentAge + 6,
+          current_amount: 2400, // $400 from savings + $2000 from stocks
+          allocation_savings: 40,
+          allocation_stocks: 50,
+          allocation_bonds: 10,
+          user_id: authData.user.id
         }
       ];
 
