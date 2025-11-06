@@ -15,6 +15,7 @@ interface AIChatDialogProps {
   liabilitiesTotal: number;
   cashTotal: number;
   investmentsTotal: number;
+  showFinancialSummary?: boolean;
 }
 
 export const AIChatDialog = ({ 
@@ -25,7 +26,8 @@ export const AIChatDialog = ({
   assetsTotal, 
   liabilitiesTotal,
   cashTotal,
-  investmentsTotal
+  investmentsTotal,
+  showFinancialSummary = false
 }: AIChatDialogProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -37,6 +39,16 @@ export const AIChatDialog = ({
   };
 
   const getInitialMessage = () => {
+    if (showFinancialSummary) {
+      return `You are in decent shape for your age!
+
+I have good news! You can get debt neutral in 3 years, Yes No more loans.
+
+Oh no, you have only 2 months of expenses as a safety net, it's a pickle.
+
+With your $5,200 monthly income, here's the simple game plan — about $3,700 covers your living costs, and the remaining $1,500 works for you: $500 goes to your loan, $500 builds your emergency fund in liquid investments, and $500 grows in medium-risk retirement and home funds — every dollar has a job this year.`;
+    }
+    
     if (viewMode === "net-worth") {
       return `Hi! I'm your financial assistant. Your current net worth is ${formatCurrency(netWorth)}. You have ${formatCurrency(assetsTotal)} in assets and ${formatCurrency(liabilitiesTotal)} in liabilities. Here are some suggestions to optimize your financial strategy:`;
     } else if (viewMode === "assets") {
@@ -47,6 +59,23 @@ export const AIChatDialog = ({
   };
 
   const getInitialSuggestions = () => {
+    if (showFinancialSummary) {
+      return [
+        {
+          id: 'suggestion-1',
+          title: 'Increase Education Loan Payment',
+          description: "Hey, Right now, you're paying $320 a month on your student loan. If you bump that to $500, you'll be completely debt-free in 36 months. That's an extra $180 a month, roughly what you spend on takeout and Ubers. Should I do it for you?",
+          status: 'pending' as const
+        },
+        {
+          id: 'suggestion-2',
+          title: 'Build Emergency Fund of 6 Months',
+          description: "You've got $5,800 saved, about two months of expenses. Let's make that six months ($18K). To do that, shall I auto transfer $500 a month into it. By this time next year, you'll have a real cushion.",
+          status: 'pending' as const
+        }
+      ];
+    }
+    
     if (viewMode === "net-worth") {
       return [
         {

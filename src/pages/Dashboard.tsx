@@ -6,7 +6,6 @@ import { WealthChart } from "@/components/WealthChart";
 import { Logo } from "@/components/Logo";
 import { AIChatDialog } from "@/components/AIChatDialog";
 import { LinkAccountDialog } from "@/components/LinkAccountDialog";
-import { FinancialSuggestionsDialog } from "@/components/FinancialSuggestionsDialog";
 import {
   Wallet,
   Umbrella,
@@ -50,7 +49,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLinkAccountOpen, setIsLinkAccountOpen] = useState(false);
-  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const [showFinancialSummary, setShowFinancialSummary] = useState(false);
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
 
@@ -219,7 +218,10 @@ const Dashboard = () => {
         {/* AI Summary Box */}
         <Card 
           className="mt-6 cursor-pointer hover:shadow-lg transition-shadow border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
-          onClick={() => setIsSuggestionsOpen(true)}
+          onClick={() => {
+            setShowFinancialSummary(true);
+            setIsChatOpen(true);
+          }}
         >
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -333,21 +335,21 @@ const Dashboard = () => {
       <BottomNav />
       <AIChatDialog 
         isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)}
+        onClose={() => {
+          setIsChatOpen(false);
+          setShowFinancialSummary(false);
+        }}
         viewMode={viewMode}
         netWorth={netWorth}
         assetsTotal={assetsTotal}
         liabilitiesTotal={liabilitiesTotal}
         cashTotal={cashTotal}
         investmentsTotal={investmentsTotal}
+        showFinancialSummary={showFinancialSummary}
       />
       <LinkAccountDialog 
         isOpen={isLinkAccountOpen}
         onClose={() => setIsLinkAccountOpen(false)}
-      />
-      <FinancialSuggestionsDialog
-        isOpen={isSuggestionsOpen}
-        onClose={() => setIsSuggestionsOpen(false)}
       />
     </div>
   );
