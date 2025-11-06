@@ -31,6 +31,10 @@ const Goals = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [selectedGoalId, setSelectedGoalId] = useState<string>("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isNewGoalOpen, setIsNewGoalOpen] = useState(false);
+
   useEffect(() => {
     loadGoals();
   }, []);
@@ -64,6 +68,11 @@ const Goals = () => {
       }));
 
       setGoals(formattedGoals);
+      
+      // Set first goal as selected by default
+      if (formattedGoals.length > 0 && !selectedGoalId) {
+        setSelectedGoalId(formattedGoals[0].id);
+      }
     } catch (error) {
       console.error('Error loading goals:', error);
       toast({
@@ -76,9 +85,6 @@ const Goals = () => {
     }
   };
 
-  const [selectedGoalId, setSelectedGoalId] = useState(goals[0]?.id || "");
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isNewGoalOpen, setIsNewGoalOpen] = useState(false);
 
   const handleCreateGoal = async (newGoal: Omit<Goal, "id">) => {
     try {
