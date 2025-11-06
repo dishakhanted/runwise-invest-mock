@@ -55,9 +55,9 @@ const Explore = () => {
 
         {/* Top Row - Love Equity & What if */}
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5">
+          <Card className="border-success/40 bg-gradient-to-br from-success/15 to-success/5">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-primary mb-4">💰 Love Equity?</CardTitle>
+              <CardTitle className="text-lg text-success mb-4">💰 Love Equity?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
                 <li>
                   <span className="font-semibold">📈 S&P 500 up 1.2% this week</span> — Tech and Energy lead gains, defensive sectors flat.
@@ -91,9 +91,9 @@ const Explore = () => {
         </div>
 
         {/* Fin-shorts Section */}
-        <Card className="mb-4 border-accent/30 bg-gradient-to-br from-accent/10 to-accent/5">
+        <Card className="mb-4 border-success/35 bg-gradient-to-br from-success/12 to-success/5">
           <CardContent className="p-4">
-            <CardTitle className="text-lg text-accent-foreground mb-4">⚡ Fin-shorts</CardTitle>
+            <CardTitle className="text-lg text-success mb-4">⚡ Fin-shorts</CardTitle>
             <ul className="space-y-3 text-sm text-foreground">
               <li>
                 <span className="font-semibold">💻 Tech Wakes, Market Naps:</span> S&P 500 stays flat as Big Tech quietly adds $150 billion in value.
@@ -110,9 +110,9 @@ const Explore = () => {
 
         {/* Bottom Row - Alternate Investments & Harvest gains */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Card className="border-warning/30 bg-gradient-to-br from-warning/10 to-warning/5">
+          <Card className="border-success/25 bg-gradient-to-br from-success/8 to-success/3">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-warning mb-4">🌍 Alternate Investments</CardTitle>
+              <CardTitle className="text-lg text-success mb-4">🌍 Alternate Investments</CardTitle>
               <p className="text-sm text-foreground mb-3">
                 Ever thought about diversifying beyond U.S. equity markets?
               </p>
@@ -123,9 +123,9 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-info/30 bg-gradient-to-br from-info/10 to-info/5">
+          <Card className="border-success/20 bg-gradient-to-br from-success/6 to-success/2">
             <CardContent className="p-4">
-              <CardTitle className="text-lg text-info mb-4">🎯 Harvest your gains</CardTitle>
+              <CardTitle className="text-lg text-success mb-4">🎯 Harvest your gains</CardTitle>
               <p className="text-sm text-foreground">
                 💸 Taxes and investing always dance together; learn a bit of tax harvesting now, and you'll keep more of what you earn later.
               </p>
