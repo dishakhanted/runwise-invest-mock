@@ -8,6 +8,7 @@ import { Bot, Send, User, Inbox, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
 import { supabase } from "@/integrations/supabase/client";
+import ReactMarkdown from "react-markdown";
 
 const Chat = () => {
   const navigate = useNavigate();
@@ -116,7 +117,9 @@ const Chat = () => {
                       : "bg-muted"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <div className="text-sm prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2">
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
                   
                   {/* Suggestions */}
                   {message.suggestions && message.suggestions.length > 0 && (
