@@ -209,6 +209,31 @@ export const useFinancialChat = ({
         throw new Error(errorData.error || "Failed to get response");
       }
 
+      // Check if response is JSON (goal update) or streaming
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        const data = await response.json();
+        const assistantMessage = data.message;
+        
+        setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+        
+        // Save assistant message
+        if (convId && assistantMessage) {
+          await saveMessage(convId, 'assistant', assistantMessage);
+        }
+        
+        // Show success toast if goal was updated
+        if (data.goalUpdated) {
+          toast({
+            title: "Goal Updated",
+            description: "Your goal has been successfully updated!",
+          });
+        }
+        
+        setIsLoading(false);
+        return;
+      }
+
       // Handle streaming response
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();

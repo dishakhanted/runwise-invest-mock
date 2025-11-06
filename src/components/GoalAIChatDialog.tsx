@@ -82,7 +82,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
 
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: 'goal',
-    contextData: goal,
+    contextData: goal ? { ...goal, id: goal.id } : null,
     initialMessage: getInitialMessage(),
     initialSuggestions: getInitialSuggestions(),
     onClose

@@ -25,6 +25,80 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
+    // Check if this is a goal update request
+    let goalUpdateDetected = false;
+    let goalUpdateSummary = '';
+    
+    if (contextType === 'goal' && contextData?.id) {
+      const lastUserMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
+      
+      // Detect goal update intent
+      const updateKeywords = ['increase', 'change', 'update', 'modify', 'raise', 'set'];
+      const targetKeywords = ['target', 'goal', 'amount'];
+      
+      if (updateKeywords.some(kw => lastUserMessage.includes(kw))) {
+        // Extract number (looking for amounts like 125000, $125,000, etc.)
+        const numberMatch = lastUserMessage.match(/\$?(\d{1,3}(?:,?\d{3})*(?:\.\d{2})?)/);
+        
+        if (numberMatch && targetKeywords.some(kw => lastUserMessage.includes(kw))) {
+          const newTargetAmount = parseFloat(numberMatch[1].replace(/,/g, ''));
+          
+          // Calculate new target age based on 8 years
+          const authHeader = req.headers.get('Authorization');
+          const token = authHeader?.replace('Bearer ', '');
+          const { data: { user } } = await supabase.auth.getUser(token);
+          
+          if (user && newTargetAmount > 0) {
+            // Get current user's profile for age calculation
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('date_of_birth')
+              .eq('user_id', user.id)
+              .single();
+            
+            let newTargetAge = null;
+            if (profile?.date_of_birth) {
+              const today = new Date();
+              const birthDate = new Date(profile.date_of_birth);
+              const currentAge = today.getFullYear() - birthDate.getFullYear();
+              newTargetAge = currentAge + 8; // 8 years from now
+            }
+            
+            // Update the goal
+            const { error } = await supabase
+              .from('goals')
+              .update({
+                target_amount: newTargetAmount,
+                ...(newTargetAge && { target_age: newTargetAge }),
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', contextData.id)
+              .eq('user_id', user.id);
+            
+            if (!error) {
+              goalUpdateDetected = true;
+              goalUpdateSummary = `✅ Goal Updated Successfully!\n\n` +
+                `📊 New Target: $${newTargetAmount.toLocaleString()}\n` +
+                `⏰ Timeline: 8 years${newTargetAge ? ` (by age ${newTargetAge})` : ''}\n` +
+                `💰 Current Progress: $${contextData.currentAmount?.toLocaleString() || 0}\n` +
+                `📈 Amount Needed: $${(newTargetAmount - (contextData.currentAmount || 0)).toLocaleString()}\n\n` +
+                `With this new goal, you'll need to save approximately $${Math.round((newTargetAmount - (contextData.currentAmount || 0)) / (8 * 12)).toLocaleString()} per month over the next 8 years.`;
+            }
+          }
+        }
+      }
+    }
+    
+    // If goal was updated, return the summary directly
+    if (goalUpdateDetected) {
+      return new Response(
+        JSON.stringify({ message: goalUpdateSummary, goalUpdated: true }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Build system prompt based on context
     let systemPrompt = "You are a knowledgeable financial assistant helping users manage their finances, investments, and financial goals. Provide clear, actionable advice. Be concise but thorough.";
     

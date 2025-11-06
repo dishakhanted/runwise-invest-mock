@@ -320,7 +320,10 @@ const Goals = () => {
       <BottomNav />
       <GoalAIChatDialog 
         isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)}
+        onClose={() => {
+          setIsChatOpen(false);
+          loadGoals(); // Refresh goals after closing dialog
+        }}
         goal={selectedGoal || null}
       />
       <NewGoalDialog 
