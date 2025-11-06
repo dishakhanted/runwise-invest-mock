@@ -55,7 +55,7 @@ const Explore = () => {
 
         {/* Top Row - Love Equity & What if */}
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <Card className="border-success/40 bg-gradient-to-br from-success/15 to-success/5">
+          <Card className="border-success/40 bg-success/20">
             <CardContent className="p-4">
               <CardTitle className="text-lg text-success mb-4">💰 Love Equity?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
@@ -69,7 +69,7 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-success/30 bg-gradient-to-br from-success/10 to-success/5">
+          <Card className="border-success/35 bg-success/18">
             <CardContent className="p-4">
               <CardTitle className="text-lg text-success mb-4">🤔 What if?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
@@ -91,7 +91,7 @@ const Explore = () => {
         </div>
 
         {/* Fin-shorts Section */}
-        <Card className="mb-4 border-success/35 bg-gradient-to-br from-success/12 to-success/5">
+        <Card className="mb-4 border-success/30 bg-success/16">
           <CardContent className="p-4">
             <CardTitle className="text-lg text-success mb-4">⚡ Fin-shorts</CardTitle>
             <ul className="space-y-3 text-sm text-foreground">
@@ -110,7 +110,7 @@ const Explore = () => {
 
         {/* Bottom Row - Alternate Investments & Harvest gains */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Card className="border-success/25 bg-gradient-to-br from-success/8 to-success/3">
+          <Card className="border-success/25 bg-success/14">
             <CardContent className="p-4">
               <CardTitle className="text-lg text-success mb-4">🌍 Alternate Investments</CardTitle>
               <p className="text-sm text-foreground mb-3">
@@ -123,7 +123,7 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-success/20 bg-gradient-to-br from-success/6 to-success/2">
+          <Card className="border-success/20 bg-success/12">
             <CardContent className="p-4">
               <CardTitle className="text-lg text-success mb-4">🎯 Harvest your gains</CardTitle>
               <p className="text-sm text-foreground">
