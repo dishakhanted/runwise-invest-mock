@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -41,6 +41,18 @@ export const useFinancialChat = ({
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Reset messages when initial message or suggestions change
+  useEffect(() => {
+    setMessages([
+      { 
+        role: "assistant", 
+        content: initialMessage,
+        suggestions: initialSuggestions 
+      }
+    ]);
+    setConversationId(null);
+  }, [initialMessage, initialSuggestions]);
 
   const handleSuggestionAction = useCallback((messageIndex: number, suggestionId: string, action: 'approved' | 'denied' | 'know_more') => {
     // Find the suggestion title
