@@ -69,7 +69,7 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-success/25 bg-success/18">
+          <Card className="border-success/25 bg-success/25">
             <CardContent className="p-4">
               <CardTitle className="text-lg text-success mb-4">🤔 What if?</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
@@ -91,9 +91,9 @@ const Explore = () => {
         </div>
 
         {/* Fin-shorts Section */}
-        <Card className="mb-4 border-success/30 bg-success/22">
+        <Card className="mb-4 border-border/50 bg-card">
           <CardContent className="p-4">
-            <CardTitle className="text-lg text-success mb-4">⚡ Fin-shorts</CardTitle>
+            <CardTitle className="text-lg text-primary mb-4">⚡ Fin-shorts</CardTitle>
             <ul className="space-y-3 text-sm text-foreground">
               <li>
                 <span className="font-semibold">💻 Tech Wakes, Market Naps:</span> S&P 500 stays flat as Big Tech quietly adds $150 billion in value.
