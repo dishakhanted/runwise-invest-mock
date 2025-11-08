@@ -106,6 +106,8 @@ export const useFinancialChat = ({
           response = "Great decision! I've increased your monthly loan payment from $320 to $500. You'll be completely debt-free in 36 months. That's 3 years to financial freedom!";
         } else if (suggestion.title === 'Build Emergency Fund of 6 Months') {
           response = "Excellent choice! I've set up automatic transfers of $500/month to your emergency fund. By this time next year, you'll have a solid 6-month cushion ($18K). Peace of mind, secured.";
+        } else if (suggestion.title === 'Increase Target to $125,000') {
+          response = "Perfect! I've updated your target to $125,000. This will give you a much better position in the San Francisco housing market. Let's adjust your monthly contributions to reach this new goal!";
         }
         
         console.log('Adding approved response:', response);
@@ -345,6 +347,10 @@ export const useFinancialChat = ({
     }
   }, [onClose]);
 
+  const addHardcodedMessages = useCallback((newMessages: Message[]) => {
+    setMessages(prev => [...prev, ...newMessages]);
+  }, []);
+
   return {
     messages,
     input,
@@ -352,6 +358,7 @@ export const useFinancialChat = ({
     isLoading,
     sendMessage,
     handleClose,
-    handleSuggestionAction
+    handleSuggestionAction,
+    addHardcodedMessages
   };
 };

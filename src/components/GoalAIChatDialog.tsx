@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User, Check, X } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
 import { useMemo } from "react";
+import React from "react";
 
 interface Goal {
   id: string;
@@ -37,8 +38,16 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     }).format(amount);
   };
 
+  const isHouseGoal = goal?.name.toLowerCase().includes('house') || 
+                      goal?.name.toLowerCase().includes('home') || 
+                      goal?.name.toLowerCase().includes('down payment');
+
   const getInitialMessage = () => {
     if (!goal) return "Hi! I'm your financial assistant. How can I help you today?";
+    
+    if (isHouseGoal) {
+      return `Hi! I'm your financial assistant. You're working toward "${goal.name}" with a target of ${formatCurrency(goal.targetAmount)}. I'm here to help you with your housing goals!`;
+    }
     
     const progress = ((goal.currentAmount / goal.targetAmount) * 100).toFixed(0);
     const remaining = goal.targetAmount - goal.currentAmount;
@@ -62,6 +71,10 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
   const getInitialSuggestions = () => {
     if (!goal) return [];
     
+    if (isHouseGoal) {
+      return [];
+    }
+    
     const monthsRemaining = 24; // Calculate based on goal timeline
     const monthlyNeeded = (goal.targetAmount - goal.currentAmount) / monthsRemaining;
     
@@ -84,13 +97,51 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
   const initialMessageMemo = useMemo(() => getInitialMessage(), [goal]);
   const initialSuggestionsMemo = useMemo(() => getInitialSuggestions(), [goal]);
 
-  const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
+  const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction, addHardcodedMessages } = useFinancialChat({
     contextType: 'goal',
     contextData: goal ? { ...goal, id: goal.id } : null,
     initialMessage: initialMessageMemo,
     initialSuggestions: initialSuggestionsMemo,
     onClose
   });
+
+  // Handle hardcoded conversation for house goals
+  const handleHardcodedConversation = () => {
+    if (!isHouseGoal) return;
+    
+    // Simulate user asking about San Francisco housing
+    setTimeout(() => {
+      addHardcodedMessages([
+        {
+          role: 'user',
+          content: 'Is the target enough for San Francisco housing?'
+        },
+        {
+          role: 'assistant',
+          content: 'Do you want to live in the city or the suburbs?'
+        },
+        {
+          role: 'assistant',
+          content: 'No, the prices are up. I recommend increasing your target to $125,000 for a comfortable down payment.',
+          suggestions: [
+            {
+              id: 'increase-target',
+              title: 'Increase Target to $125,000',
+              description: 'Adjust your goal target to $125,000 to match current San Francisco housing market prices.',
+              status: 'pending' as const
+            }
+          ]
+        }
+      ]);
+    }, 1000);
+  };
+
+  // Trigger hardcoded conversation when dialog opens for house goals
+  React.useEffect(() => {
+    if (isOpen && isHouseGoal && messages.length === 1) {
+      handleHardcodedConversation();
+    }
+  }, [isOpen, isHouseGoal]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLoading) {
