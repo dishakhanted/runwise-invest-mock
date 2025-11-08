@@ -105,47 +105,59 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     onClose
   });
 
-  // Handle hardcoded conversation for house goals
-  const handleHardcodedConversation = () => {
-    if (!isHouseGoal) return;
+  const [conversationStep, setConversationStep] = React.useState<'initial' | 'asked-location' | 'waiting-for-approval'>('initial');
+
+  // Handle custom message sending for house goals
+  const handleHouseGoalMessage = (userInput: string) => {
+    const lowerInput = userInput.toLowerCase();
     
-    // Simulate user asking about San Francisco housing
-    setTimeout(() => {
+    // Step 1: User asks about tech stack
+    if (conversationStep === 'initial' && (lowerInput.includes('tech stack') || lowerInput.includes('technology'))) {
       addHardcodedMessages([
-        {
-          role: 'user',
-          content: 'Is the target enough for San Francisco housing?'
-        },
+        { role: 'user', content: userInput },
+        { role: 'assistant', content: 'That depends, do you know if you want to live in the vicinity or the suburbs?' }
+      ]);
+      setConversationStep('asked-location');
+      setInput('');
+      return true;
+    }
+    
+    // Step 2: User responds about suburbs/city
+    if (conversationStep === 'asked-location') {
+      const preferSuburbs = lowerInput.includes('suburb') || lowerInput.includes('family');
+      addHardcodedMessages([
+        { role: 'user', content: userInput },
         {
           role: 'assistant',
-          content: 'Do you want to live in the city or the suburbs?'
-        },
-        {
-          role: 'assistant',
-          content: 'No, the prices are up. I recommend increasing your target to $125,000 for a comfortable down payment.',
+          content: 'Okay then, based on this - it will cost more.',
           suggestions: [
             {
               id: 'increase-target',
               title: 'Increase Target to $125,000',
-              description: 'Adjust your goal target to $125,000 to match current San Francisco housing market prices.',
+              description: 'Adjust your goal target to $125,000 to match current San Francisco housing market prices for suburban areas.',
               status: 'pending' as const
             }
           ]
         }
       ]);
-    }, 1000);
+      setConversationStep('waiting-for-approval');
+      setInput('');
+      return true;
+    }
+    
+    return false;
   };
 
-  // Trigger hardcoded conversation when dialog opens for house goals
-  React.useEffect(() => {
-    if (isOpen && isHouseGoal && messages.length === 1) {
-      handleHardcodedConversation();
+  const handleSendMessage = () => {
+    if (isHouseGoal && handleHouseGoalMessage(input)) {
+      return;
     }
-  }, [isOpen, isHouseGoal]);
+    sendMessage();
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLoading) {
-      sendMessage();
+      handleSendMessage();
     }
   };
 
@@ -273,7 +285,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
             className="flex-1"
             disabled={isLoading}
           />
-          <Button onClick={sendMessage} size="icon" disabled={isLoading || !input.trim()}>
+          <Button onClick={handleSendMessage} size="icon" disabled={isLoading || !input.trim()}>
             <Send className="h-4 w-4" />
           </Button>
         </div>

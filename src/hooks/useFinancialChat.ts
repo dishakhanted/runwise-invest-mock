@@ -107,7 +107,7 @@ export const useFinancialChat = ({
         } else if (suggestion.title === 'Build Emergency Fund of 6 Months') {
           response = "Excellent choice! I've set up automatic transfers of $500/month to your emergency fund. By this time next year, you'll have a solid 6-month cushion ($18K). Peace of mind, secured.";
         } else if (suggestion.title === 'Increase Target to $125,000') {
-          response = "Perfect! I've updated your target to $125,000. This will give you a much better position in the San Francisco housing market. Let's adjust your monthly contributions to reach this new goal!";
+          response = "Target adjusted. Your goal is now set to $125,000.";
         }
         
         console.log('Adding approved response:', response);
