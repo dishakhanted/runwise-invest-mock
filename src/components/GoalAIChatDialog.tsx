@@ -46,7 +46,12 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     if (!goal) return "Hi! I'm your financial assistant. How can I help you today?";
     
     if (isHouseGoal) {
-      return `Hi! I'm your financial assistant. You're working toward "${goal.name}" with a target of ${formatCurrency(goal.targetAmount)}. I'm here to help you with your housing goals!`;
+      return `It's great you're working towards your "${goal.name}"! To determine if your target of ${formatCurrency(goal.targetAmount)} is enough, we need more information.
+
+**Please consider the following:**
+
+1. **What type of home are you aiming for?** (e.g., down payment for a house, full cost of a small condo, land purchase, renovations, etc.)
+2. **Where are you looking to buy/build?** (Real estate costs vary wildly by location.)`;
     }
     
     const progress = ((goal.currentAmount / goal.targetAmount) * 100).toFixed(0);
