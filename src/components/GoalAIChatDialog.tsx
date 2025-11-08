@@ -46,12 +46,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     if (!goal) return "Hi! I'm your financial assistant. How can I help you today?";
     
     if (isHouseGoal) {
-      return `It's great you're working towards your "${goal.name}"! To determine if your target of ${formatCurrency(goal.targetAmount)} is enough, we need more information.
-
-**Please consider the following:**
-
-1. **What type of home are you aiming for?** (e.g., down payment for a house, full cost of a small condo, land purchase, renovations, etc.)
-2. **Where are you looking to buy/build?** (Real estate costs vary wildly by location.)`;
+      return `Hi! I'm your financial assistant. You're working toward "${goal.name}" with a target of ${formatCurrency(goal.targetAmount)}. I'm here to help you with your housing goals!`;
     }
     
     const progress = ((goal.currentAmount / goal.targetAmount) * 100).toFixed(0);
@@ -116,30 +111,37 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
   const handleHouseGoalMessage = (userInput: string) => {
     const lowerInput = userInput.toLowerCase();
     
-    // Step 1: User asks about tech stack
-    if (conversationStep === 'initial' && (lowerInput.includes('tech stack') || lowerInput.includes('technology'))) {
+    // Step 1: User asks if target is enough
+    if (conversationStep === 'initial' && (lowerInput.includes('target enough') || lowerInput.includes('is the target') || lowerInput.includes('enough for'))) {
       addHardcodedMessages([
         { role: 'user', content: userInput },
-        { role: 'assistant', content: 'That depends, do you know if you want to live in the vicinity or the suburbs?' }
+        { 
+          role: 'assistant', 
+          content: `It's great you're working towards your "${goal?.name}"! To determine if your target of ${formatCurrency(goal?.targetAmount || 0)} is enough, we need more information.
+
+**Please consider the following:**
+
+1. **What type of home are you aiming for?** (e.g., down payment for a house, full cost of a small condo, land purchase, renovations, etc.)
+2. **Where are you looking to buy/build?** (Real estate costs vary wildly by location.)` 
+        }
       ]);
       setConversationStep('asked-location');
       setInput('');
       return true;
     }
     
-    // Step 2: User responds about suburbs/city
+    // Step 2: User responds about location/type
     if (conversationStep === 'asked-location') {
-      const preferSuburbs = lowerInput.includes('suburb') || lowerInput.includes('family');
       addHardcodedMessages([
         { role: 'user', content: userInput },
         {
           role: 'assistant',
-          content: 'Okay then, based on this - it will cost more.',
+          content: 'Based on your preferences, the current market prices are higher than your target.',
           suggestions: [
             {
               id: 'increase-target',
               title: 'Increase Target to $125,000',
-              description: 'Adjust your goal target to $125,000 to match current San Francisco housing market prices for suburban areas.',
+              description: 'Adjust your goal target to $125,000 to match current market prices for your desired home type and location.',
               status: 'pending' as const
             }
           ]
