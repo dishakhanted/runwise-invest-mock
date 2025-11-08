@@ -119,10 +119,10 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
           role: 'assistant', 
           content: `It's great you're working towards your "${goal?.name}"! To determine if your target of ${formatCurrency(goal?.targetAmount || 0)} is enough, we need more information.
 
-**Please consider the following:**
+Please consider the following:
 
-1. **What type of home are you aiming for?** (e.g., down payment for a house, full cost of a small condo, land purchase, renovations, etc.)
-2. **Where are you looking to buy/build?** (Real estate costs vary wildly by location.)` 
+1. **What type of home are you aiming for?**  Is it down payment for a house or small condo ?
+2. **Are you Looking to stay in downtown san francisco or the suburban bay area ?
         }
       ]);
       setConversationStep('asked-location');
