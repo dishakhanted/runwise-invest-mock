@@ -1,16 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Bot } from "lucide-react";
+import { useFinancialChat } from "@/hooks/useFinancialChat";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
 
 interface WhatIfScenario {
   title: string;
@@ -29,97 +25,34 @@ interface WhatIfChatDialogProps {
 }
 
 export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialogProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showActions, setShowActions] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  const { messages, input, setInput, isLoading, sendMessage, handleClose } = useFinancialChat({
+    contextType: 'general',
+    contextData: { ...scenario, exploreContext: 'what-if' },
+    initialMessage: "",
+    initialSuggestions: [],
+    onClose,
+  });
 
-  useEffect(() => {
-    if (isOpen && scenario) {
-      // Initialize with the assistant's intro message
-      setMessages([
-        {
-          role: "assistant",
-          content: scenario.introMessage,
-        },
-      ]);
-      // Make sure actions are hidden initially
-      setShowActions(false);
-    } else {
-      setMessages([]);
-      setShowActions(false);
-    }
-  }, [isOpen, scenario]);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const scrollContainer = scrollRef.current.querySelector("[data-radix-scroll-area-viewport]");
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
   }, [messages]);
 
-
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setInput("");
-    const updatedMessages: Message[] = [...messages, { role: "user" as const, content: userMessage }];
-    setMessages(updatedMessages);
-    setIsLoading(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("financial-chat", {
-        body: {
-          messages: updatedMessages,
-          contextType: "what-if",
-          contextData: scenario,
-        },
-      });
-
-      if (error) throw error;
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant" as const,
-          content: data.message,
-        },
-      ]);
-      
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleApprove = async () => {
     if (!scenario?.goalTemplate) return;
-
-    // Hide action buttons
-    setShowActions(false);
-
-    // Add user's approval as a message
-    setMessages((prev) => [
-      ...prev,
-      { role: "user" as const, content: "Approve" },
-    ]);
-
-    setIsLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Get user's current age from profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('date_of_birth')
@@ -131,130 +64,67 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
         const today = new Date();
         const birthDate = new Date(profile.date_of_birth);
         const currentAge = today.getFullYear() - birthDate.getFullYear();
-        targetAge = currentAge + 4; // 4 years from now
+        targetAge = currentAge + 4;
       }
 
-      // Initial allocation: $400 from savings + $200 from stocks
-      const initialAmount = 600;
-
-      const { error } = await supabase.from("goals").insert({
+      const { error } = await supabase.from('goals').insert({
         user_id: user.id,
-        name: "Car",
-        target_amount: 12000,
-        current_amount: initialAmount,
+        name: scenario.goalTemplate.name,
+        target_amount: scenario.goalTemplate.targetAmount,
         description: scenario.goalTemplate.description,
-        allocation_savings: 70,
-        allocation_stocks: 20,
+        current_amount: 0,
+        target_age: targetAge,
+        allocation_savings: 60,
+        allocation_stocks: 30,
         allocation_bonds: 10,
-        ...(targetAge && { target_age: targetAge }),
       });
 
       if (error) throw error;
 
-      // Add assistant confirmation message
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant" as const,
-          content: "Perfect! I've created your Car purchase goal with a target of $12,000 in 4 years. I've allocated an initial $600 from your savings and stocks. Your allocation strategy is 70% savings, 20% stocks, and 10% bonds. You can track this goal in your Goals page.",
-        },
-      ]);
+      toast({
+        title: "Success",
+        description: "Goal created successfully!",
+      });
+
+      onClose();
     } catch (error) {
       console.error("Error creating goal:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant" as const,
-          content: "I apologize, but there was an error creating your goal. Please try again.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeny = () => {
-    // Hide action buttons
-    setShowActions(false);
-
-    // Add user's denial as a message
-    setMessages((prev) => [
-      ...prev,
-      { role: "user" as const, content: "Deny" },
-    ]);
-
-    // Add assistant acknowledgment
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant" as const,
-        content: "No problem! If you change your mind or want to explore other financial goals, just let me know. Is there anything else I can help you with?",
-      },
-    ]);
-  };
-
-  const sendMessage = async (messagesToSend: Message[]) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("financial-chat", {
-        body: {
-          messages: messagesToSend,
-        },
-      });
-
-      if (error) throw error;
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant" as const,
-          content: data.message,
-        },
-      ]);
-    } catch (error) {
-      console.error("Error sending message:", error);
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: "Failed to create goal. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleKnowMore = () => {
-    setShowActions(false);
-    setInput("Tell me more about this plan");
-    // Trigger send immediately
-    setTimeout(() => {
-      const knowMoreMessage: Message[] = [...messages, { role: "user" as const, content: "Tell me more about this plan" }];
-      setMessages(knowMoreMessage);
-      sendMessage(knowMoreMessage);
-    }, 0);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isLoading) {
+      sendMessage();
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>{scenario?.title}</DialogTitle>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] max-h-[85vh] h-[600px] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <DialogTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            {scenario?.title || "What-If Scenario"}
+          </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea ref={scrollRef} className="flex-1 pr-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 px-6" ref={scrollRef}>
+          <div className="space-y-4 pr-4">
             {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+              <div key={index} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                {message.role === "assistant" && (
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -262,46 +132,42 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
               </div>
             ))}
             {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-muted rounded-lg p-3">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <div className="rounded-lg px-4 py-2 bg-muted">
+                  <p className="text-sm">Thinking...</p>
                 </div>
               </div>
             )}
           </div>
         </ScrollArea>
 
-        {showActions && scenario?.goalTemplate && (
-          <div className="flex gap-2 py-3 border-t">
-            <Button onClick={handleApprove} className="flex-1">
-              Approve
-            </Button>
-            <Button onClick={handleDeny} variant="outline" className="flex-1">
-              Deny
-            </Button>
-            <Button onClick={handleKnowMore} variant="ghost" className="flex-1">
-              Know more
+        <div className="p-4 border-t space-y-2">
+          {scenario?.goalTemplate && (
+            <div className="flex gap-2">
+              <Button onClick={handleApprove} variant="default" className="flex-1">
+                Create Goal
+              </Button>
+              <Button onClick={onClose} variant="outline" className="flex-1">
+                Maybe Later
+              </Button>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask a question..."
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <Button onClick={sendMessage} disabled={isLoading || !input.trim()} size="icon">
+              <Send className="h-4 w-4" />
             </Button>
           </div>
-        )}
-
-        <div className="flex gap-2 pt-2">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Type your message..."
-            className="min-h-[60px] resize-none"
-            disabled={isLoading}
-          />
-          <Button onClick={handleSend} disabled={isLoading || !input.trim()} size="icon">
-            <Send className="h-4 w-4" />
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

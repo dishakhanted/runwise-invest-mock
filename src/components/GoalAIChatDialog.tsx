@@ -43,38 +43,8 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     goal?.name.toLowerCase().includes("home") ||
     goal?.name.toLowerCase().includes("down payment");
 
-  const getInitialMessage = () => {
-    if (!goal) return "Hi! I'm your financial assistant. How can I help you today?";
-
-    if (isHouseGoal) {
-      return `Hi! I'm your financial assistant. You're working toward "${goal.name}" with a target of ${formatCurrency(goal.targetAmount)}. I'm here to help you with your housing goals!`;
-    }
-
-    const progress = ((goal.currentAmount / goal.targetAmount) * 100).toFixed(0);
-    const remaining = goal.targetAmount - goal.currentAmount;
-
-    let allocationMessage = "";
-    if (goal.allocation.savings > 0) {
-      allocationMessage += `${goal.allocation.savings}% in savings`;
-    }
-    if (goal.allocation.stocks > 0) {
-      if (allocationMessage) allocationMessage += ", ";
-      allocationMessage += `${goal.allocation.stocks}% in stocks`;
-    }
-    if (goal.allocation.bonds > 0) {
-      if (allocationMessage) allocationMessage += ", ";
-      allocationMessage += `${goal.allocation.bonds}% in bonds`;
-    }
-
-    return `Hi! I'm your financial assistant. You're working toward "${goal.name}" with a target of ${formatCurrency(goal.targetAmount)}. You've saved ${formatCurrency(goal.currentAmount)} so far (${progress}% complete). Here are some strategies to help you reach your goal:`;
-  };
-
-  const getInitialSuggestions = () => {
-    return [];
-  };
-
-  const initialMessageMemo = useMemo(() => getInitialMessage(), [goal]);
-  const initialSuggestionsMemo = useMemo(() => getInitialSuggestions(), [goal]);
+  const initialMessageMemo = useMemo(() => "", [goal]);
+  const initialSuggestionsMemo = useMemo(() => [], [goal]);
 
   const {
     messages,

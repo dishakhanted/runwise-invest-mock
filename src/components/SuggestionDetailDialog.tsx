@@ -2,14 +2,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
-import { Send, CheckCircle, X } from "lucide-react";
-import { useState, useEffect } from "react";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+import { Send, Bot, CheckCircle } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useFinancialChat } from "@/hooks/useFinancialChat";
 
 interface Suggestion {
   id: string;
@@ -29,67 +24,43 @@ interface SuggestionDetailDialogProps {
 }
 
 export const SuggestionDetailDialog = ({ suggestion, isOpen, onClose }: SuggestionDetailDialogProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
+  const { messages, input, setInput, isLoading, sendMessage, handleClose } = useFinancialChat({
+    contextType: 'general',
+    contextData: {
+      suggestion,
+      exploreContext: 'suggestion-detail'
+    },
+    initialMessage: "",
+    initialSuggestions: [],
+    onClose,
+  });
+
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen && suggestion) {
-      const initialMessage: Message = {
-        role: "assistant",
-        content: `I can help you with "${suggestion.title}". ${suggestion.description}\n\n${
-          suggestion.expectedReturn ? `Expected Return: ${suggestion.expectedReturn}\n` : ""
-        }${suggestion.riskLevel ? `Risk Level: ${suggestion.riskLevel}\n` : ""}${
-          suggestion.timeHorizon ? `Time Horizon: ${suggestion.timeHorizon}\n` : ""
-        }\n\nWould you like to proceed with this investment, or do you have any questions?`,
-      };
-      setMessages([initialMessage]);
+    if (scrollRef.current) {
+      const scrollContainer = scrollRef.current.querySelector("[data-radix-scroll-area-viewport]");
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
-  }, [isOpen, suggestion]);
+  }, [messages]);
 
   const handleExecute = () => {
-    const confirmMessage: Message = {
-      role: "assistant",
-      content: `Great! I'll help you set up "${suggestion?.title}". This will be added to your portfolio. You can track its performance in your dashboard.`,
-    };
-    setMessages([...messages, confirmMessage]);
-    setTimeout(() => {
-      onClose();
-    }, 2000);
-  };
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = { role: "user", content: input };
-    setMessages([...messages, userMessage]);
-
-    setTimeout(() => {
-      const aiResponses = [
-        "That's a great question! This investment option is designed for long-term growth with balanced risk.",
-        "Based on your portfolio, this could help diversify your holdings and reduce overall risk.",
-        "This strategy typically works well when combined with regular contributions over time.",
-        "The expected returns are based on historical performance, though past results don't guarantee future outcomes.",
-      ];
-      const aiMessage: Message = {
-        role: "assistant",
-        content: aiResponses[Math.floor(Math.random() * aiResponses.length)],
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 500);
-
-    setInput("");
+    setInput(`I want to proceed with "${suggestion?.title}"`);
+    setTimeout(() => sendMessage(), 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSend();
+    if (e.key === "Enter" && !isLoading) {
+      sendMessage();
     }
   };
 
   if (!suggestion) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <div className="flex items-center gap-3">
@@ -103,39 +74,55 @@ export const SuggestionDetailDialog = ({ suggestion, isOpen, onClose }: Suggesti
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6" ref={scrollRef}>
           <div className="space-y-3 py-4">
             {messages.map((message, index) => (
-              <Card key={index} className={message.role === "user" ? "ml-4 sm:ml-8 bg-primary text-primary-foreground" : "mr-4 sm:mr-8"}>
-                <CardContent className="p-2.5 sm:p-3">
-                  <p className="text-xs sm:text-sm">{message.content}</p>
-                </CardContent>
-              </Card>
+              <div key={index} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                {message.role === "assistant" && (
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
+                <div
+                  className={`rounded-lg px-4 py-2 max-w-[85%] ${
+                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                </div>
+              </div>
             ))}
+            {isLoading && (
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <div className="rounded-lg px-4 py-2 bg-muted">
+                  <p className="text-sm">Thinking...</p>
+                </div>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 px-6 py-3 border-t flex-shrink-0">
-          <Button onClick={handleExecute} className="flex-1" size="default">
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Execute
+        <div className="px-6 pb-6 pt-3 border-t space-y-2">
+          <Button onClick={handleExecute} className="w-full" variant="default">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Execute This Strategy
           </Button>
-          <Button onClick={onClose} variant="outline" size="icon">
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="flex gap-2 px-6 pb-6 flex-shrink-0">
-          <Input
-            placeholder="Ask me anything..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="flex-1 text-sm"
-          />
-          <Button onClick={handleSend} size="icon">
-            <Send className="w-4 h-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask about this suggestion..."
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <Button onClick={sendMessage} disabled={isLoading || !input.trim()} size="icon">
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
