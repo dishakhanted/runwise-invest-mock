@@ -44,17 +44,14 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     }
   }, [messages]);
 
-  // Auto-start the onboarding conversation when component mounts or if still idle
+  // Auto-start the onboarding conversation when component mounts
   const hasStarted = useRef(false);
   useEffect(() => {
     if (hasStarted.current) return;
     if (!isLoading && messages.length === 0) {
       hasStarted.current = true;
-      setInput("Start onboarding");
-      // Defer to next tick to let state propagate
-      setTimeout(() => {
-        sendMessage();
-      }, 0);
+      console.log('Auto-starting onboarding conversation');
+      sendMessage('Begin onboarding', { silentUser: true });
     }
   }, [messages.length, isLoading, sendMessage]);
 

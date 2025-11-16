@@ -164,7 +164,7 @@ export const WhatIfChatDialog = ({ isOpen, onClose, scenario }: WhatIfChatDialog
               disabled={isLoading}
               className="flex-1"
             />
-            <Button onClick={sendMessage} disabled={isLoading || !input.trim()} size="icon">
+            <Button onClick={() => sendMessage()} disabled={isLoading || !input.trim()} size="icon">
               <Send className="h-4 w-4" />
             </Button>
           </div>

@@ -324,19 +324,6 @@ export const useFinancialChat = ({
       setIsLoading(false);
     }
   }, [input, messages, isLoading, contextType, contextData, conversationId, saveConversation, saveMessage, toast]);
-    } catch (error: any) {
-      console.error("Error sending message:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send message",
-        variant: "destructive",
-      });
-      // Remove the failed user message
-      setMessages(messages);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [input, messages, isLoading, contextType, contextData, conversationId, saveConversation, saveMessage, toast]);
 
   const handleClose = useCallback(() => {
     if (onClose) {

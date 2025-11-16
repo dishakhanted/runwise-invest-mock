@@ -215,7 +215,7 @@ const Chat = () => {
                 className="flex-1"
                 disabled={isLoading}
               />
-              <Button onClick={sendMessage} size="icon" disabled={isLoading || !input.trim()}>
+              <Button onClick={() => sendMessage()} size="icon" disabled={isLoading || !input.trim()}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
