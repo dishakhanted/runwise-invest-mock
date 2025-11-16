@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { loadPrompt, getPromptTypeFromContext } from './promptLoader.ts';
+import { getPrompt, getPromptTypeFromContext } from './prompts.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -99,15 +99,11 @@ serve(async (req) => {
       );
     }
 
-    // Load the appropriate prompt from MD file based on context
+    // Load the appropriate prompt based on context
     const promptType = getPromptTypeFromContext(contextType);
-    console.log('Loading prompt type:', promptType, 'for context:', contextType);
+    console.log('Using prompt type:', promptType, 'for context:', contextType);
     
-    const promptContent = await loadPrompt(promptType);
-    
-    if (!promptContent) {
-      throw new Error(`Prompt file missing or invalid for type: ${promptType}`);
-    }
+    const promptContent = getPrompt(promptType);
     
     // Build context-specific information
     let contextInfo = "";
