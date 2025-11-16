@@ -98,7 +98,6 @@ save the below values in the goals database **without commentary**:
       - “Do you prefer stable growth or higher potential growth with ups and downs?”
 
 3. After you collect all 6 items:
-   - Summarize them briefly (3 lines maximum).
    - Save the data in the profiles and goals database exactly in the format above.
    - Activeate the "Complete set up Button."
 
