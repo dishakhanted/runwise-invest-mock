@@ -99,34 +99,40 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: Goal
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
 
-                  {/* Suggestions with bracket-style buttons */}
+                  {/* Suggestions with styled buttons */}
                   {message.suggestions && message.suggestions.length > 0 && (
                     <div className="mt-3 space-y-3">
                       {message.suggestions.map((suggestion) => (
                         <div key={suggestion.id} className="bg-background/50 rounded-lg p-3 border border-border">
                           <p className="text-sm font-medium mb-1">{suggestion.title}</p>
-                          <p className="text-xs text-muted-foreground mb-2">{suggestion.description}</p>
+                          <p className="text-xs text-muted-foreground mb-3">{suggestion.description}</p>
 
                           {suggestion.status === "pending" && (
-                            <div className="flex gap-1 text-sm flex-wrap items-center">
-                              <button
-                                className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+                            <div className="flex gap-2 items-center flex-wrap">
+                              <Button
+                                size="sm"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
                                 onClick={() => handleSuggestionAction(index, suggestion.id, "approved")}
                               >
-                                [Approve]
-                              </button>
-                              <button
-                                className="text-foreground hover:text-primary font-medium transition-colors"
+                                <Check className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => handleSuggestionAction(index, suggestion.id, "denied")}
                               >
-                                [Deny]
-                              </button>
-                              <button
-                                className="text-primary hover:text-primary/80 font-medium transition-colors"
+                                <X className="h-3 w-3 mr-1" />
+                                Deny
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-primary hover:text-primary/80"
                                 onClick={() => handleSuggestionAction(index, suggestion.id, "know_more")}
                               >
-                                [Know more]
-                              </button>
+                                Know more
+                              </Button>
                             </div>
                           )}
 
