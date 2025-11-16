@@ -82,8 +82,4 @@ FINAL TASK
 Generate 0–2 alternative-asset recommendations only if appropriate.
 If none qualify, output the healthy summary message above.
 Use EXACT formatting rules.
-Output only the final formatted text.# Alternate Investments AI Chatbot
-
-## Functional Purpose
-
-Gold, commodities, outside USA
+Output only the final formatted text.
