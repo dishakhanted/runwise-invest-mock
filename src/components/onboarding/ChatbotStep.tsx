@@ -44,22 +44,19 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     }
   }, [messages]);
 
-  // Auto-start the onboarding conversation when component mounts
+  // Auto-start the onboarding conversation when component mounts or if still idle
   const hasStarted = useRef(false);
   useEffect(() => {
-    if (!hasStarted.current && messages.length === 0 && !isLoading) {
+    if (hasStarted.current) return;
+    if (!isLoading && messages.length === 0) {
       hasStarted.current = true;
-      // Trigger AI to start onboarding by sending a greeting
-      const triggerMessage = async () => {
-        setInput("Hello");
-        // Wait for state to update, then send
-        setTimeout(() => {
-          sendMessage();
-        }, 100);
-      };
-      triggerMessage();
+      setInput("Start onboarding");
+      // Defer to next tick to let state propagate
+      setTimeout(() => {
+        sendMessage();
+      }, 0);
     }
-  }, []);
+  }, [messages.length, isLoading, sendMessage]);
 
   // Check if onboarding is complete by detecting JSON in the last assistant message
   useEffect(() => {
