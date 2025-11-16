@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.3.11";
-import { PromptTemplate } from "https://esm.sh/@langchain/core@0.3.18/prompts";
+import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.3.16";
+import { PromptTemplate } from "https://esm.sh/@langchain/core@0.3.20/prompts";
 import { loadPrompt, getPromptTypeFromContext } from './promptLoader.ts';
 
 const corsHeaders = {
