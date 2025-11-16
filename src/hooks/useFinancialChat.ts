@@ -16,9 +16,9 @@ interface Suggestion {
 }
 
 interface UseFinancialChatProps {
-  contextType: 'dashboard' | 'goal' | 'general';
+  contextType: 'dashboard' | 'goal' | 'general' | 'onboarding';
   contextData?: any;
-  initialMessage: string;
+  initialMessage?: string;
   initialSuggestions?: Suggestion[];
   onClose?: () => void;
 }
@@ -26,17 +26,19 @@ interface UseFinancialChatProps {
 export const useFinancialChat = ({
   contextType,
   contextData,
-  initialMessage,
+  initialMessage = "",
   initialSuggestions,
   onClose
 }: UseFinancialChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      role: "assistant", 
-      content: initialMessage,
-      suggestions: initialSuggestions 
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(
+    initialMessage ? [
+      { 
+        role: "assistant", 
+        content: initialMessage,
+        suggestions: initialSuggestions 
+      }
+    ] : []
+  );
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -45,13 +47,15 @@ export const useFinancialChat = ({
   // Reset messages when initial message or suggestions change only if no active conversation
   useEffect(() => {
     if (conversationId) return; // preserve ongoing chats when context changes (e.g., goal updates)
-    setMessages([
-      { 
-        role: "assistant", 
-        content: initialMessage,
-        suggestions: initialSuggestions 
-      }
-    ]);
+    setMessages(
+      initialMessage ? [
+        { 
+          role: "assistant", 
+          content: initialMessage,
+          suggestions: initialSuggestions 
+        }
+      ] : []
+    );
   }, [initialMessage, initialSuggestions, conversationId]);
 
   const handleSuggestionAction = useCallback((messageIndex: number, suggestionId: string, action: 'approved' | 'denied' | 'know_more') => {

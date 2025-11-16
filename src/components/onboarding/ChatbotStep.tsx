@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useFinancialChat } from "@/hooks/useFinancialChat";
 
 interface ChatbotStepProps {
   data: OnboardingData;
@@ -14,62 +15,28 @@ interface ChatbotStepProps {
   onBack: () => void;
 }
 
-interface Message {
-  role: "assistant" | "user";
-  content: string;
-}
-
 export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content:
-        "Welcome! I'm here to help you get started. Let me ask you a few questions to personalize your experience. What is your annual pretax income?",
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [currentQuestion, setCurrentQuestion] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [collectedData, setCollectedData] = useState({
     income: "",
     employmentType: "",
     goals: "",
-    vision30: "",
-    vision35: "",
-    vision60: "",
-    goalsDetails: [] as Array<{ name: string; targetAmount: number; targetAge?: number }>,
   });
-  const [isCollectingGoalDetails, setIsCollectingGoalDetails] = useState(false);
-  const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
-  const [goalDetailStep, setGoalDetailStep] = useState<"amount" | "age">("amount");
-  const [parsedGoals, setParsedGoals] = useState<string[]>([]);
 
-  const questions = [
-    {
-      field: "income",
-      prompt: "What is your employment type? (e.g., Full-time, Part-time, Self-employed, Retired)",
-    },
-    {
-      field: "employmentType",
-      prompt:
-        "Thank you connecting your accounts and giving these details, before we start, what brings you here today?",
-    },
-    {
-      field: "goals",
-      prompt: "Great! Imagine yourself at 30 — what would make you feel like you're doing well?",
-    },
-    {
-      field: "vision30",
-      prompt: "And by 35?",
-    },
-    {
-      field: "vision35",
-      prompt: "And when you're 60? Still working? Traveling?",
-    },
-  ];
+  // Use the AI chat hook for onboarding
+  const {
+    messages,
+    input,
+    setInput,
+    isLoading,
+    sendMessage,
+  } = useFinancialChat({
+    contextType: 'onboarding',
+    contextData: data,
+  });
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -77,171 +44,48 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     }
   }, [messages]);
 
-  const parseGoals = (goalsText: string): string[] => {
-    const goals = [];
-    const text = goalsText.toLowerCase();
-
-    if (text.includes("retirement") || text.includes("retire")) {
-      goals.push("Retirement Planning");
-    }
-    if (text.includes("house") || text.includes("home") || text.includes("property")) {
-      goals.push("House Down Payment");
-    }
-    if (text.includes("emergency") || text.includes("fund")) {
-      goals.push("Emergency Fund");
-    }
-    if (text.includes("debt") || text.includes("loan") || text.includes("pay off")) {
-      goals.push("Pay Off Debt");
-    }
-    if (text.includes("education") || text.includes("college") || text.includes("school")) {
-      goals.push("Education Fund");
-    }
-    if (text.includes("vacation") || text.includes("travel")) {
-      goals.push("Vacation Fund");
-    }
-
-    return goals.length > 0 ? goals : ["General Savings"];
-  };
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
-
-    const currentInput = input;
-    setInput("");
-
-    // Handle goal detail collection
-    if (isCollectingGoalDetails) {
-      setTimeout(() => {
-        const currentGoal = parsedGoals[currentGoalIndex];
-
-        if (goalDetailStep === "amount") {
-          const amount = parseFloat(currentInput.replace(/[^0-9.]/g, ""));
-          if (isNaN(amount)) {
-            const assistantMessage: Message = {
-              role: "assistant",
-              content: "Please enter a valid number for the target amount.",
-            };
-            setMessages((prev) => [...prev, assistantMessage]);
-            return;
-          }
-
-          setCollectedData((prev) => ({
-            ...prev,
-            goalsDetails: [...prev.goalsDetails, { name: currentGoal, targetAmount: amount }],
-          }));
-
-          // Always ask for target age for all goals
-          setGoalDetailStep("age");
-          const agePrompt =
-            currentGoal === "Retirement Planning"
-              ? "At what age would you like to retire?"
-              : `At what age would you like to achieve this goal?`;
-          const assistantMessage: Message = {
-            role: "assistant",
-            content: agePrompt,
-          };
-          setMessages((prev) => [...prev, assistantMessage]);
-        } else if (goalDetailStep === "age") {
-          const age = parseInt(currentInput.replace(/[^0-9]/g, ""));
-          if (isNaN(age) || age < 18 || age > 100) {
-            const assistantMessage: Message = {
-              role: "assistant",
-              content: "Please enter a valid retirement age (between 18 and 100).",
-            };
-            setMessages((prev) => [...prev, assistantMessage]);
-            return;
-          }
-
-          // Update the last goal with target age
-          setCollectedData((prev) => ({
-            ...prev,
-            goalsDetails: prev.goalsDetails.map((g, idx) =>
-              idx === prev.goalsDetails.length - 1 ? { ...g, targetAge: age } : g,
-            ),
-          }));
-
-          // Move to next goal or finish
-          if (currentGoalIndex < parsedGoals.length - 1) {
-            setCurrentGoalIndex((prev) => prev + 1);
-            setGoalDetailStep("amount");
-            const assistantMessage: Message = {
-              role: "assistant",
-              content: `Great! Now let's talk about your "${parsedGoals[currentGoalIndex + 1]}" goal. What's your target amount for this goal?`,
-            };
-            setMessages((prev) => [...prev, assistantMessage]);
-          } else {
-            // All goals collected
-            setIsCollectingGoalDetails(false);
-            const assistantMessage: Message = {
-              role: "assistant",
-              content:
-                "Perfect! I have everything I need. Based on your income, employment type, and goals, we'll create a personalized financial plan for you. Click 'Complete Setup' to get started!",
-            };
-            setMessages((prev) => [...prev, assistantMessage]);
-          }
+  // Check if onboarding is complete by detecting JSON in the last assistant message
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role === 'assistant' && lastMessage.content.includes('{')) {
+      // Try to extract JSON from the message
+      try {
+        const jsonMatch = lastMessage.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const onboardingResult = JSON.parse(jsonMatch[0]);
+          // Store the collected data and complete onboarding
+          handleOnboardingComplete(onboardingResult);
         }
-      }, 800);
-      return;
-    }
-
-    // Handle regular questions
-    if (currentQuestion === 0) {
-      setCollectedData((prev) => ({ ...prev, income: currentInput }));
-    } else if (currentQuestion === 1) {
-      setCollectedData((prev) => ({ ...prev, employmentType: currentInput }));
-    } else if (currentQuestion === 2) {
-      setCollectedData((prev) => ({ ...prev, goals: currentInput }));
-    } else if (currentQuestion === 3) {
-      setCollectedData((prev) => ({ ...prev, vision30: currentInput }));
-    } else if (currentQuestion === 4) {
-      setCollectedData((prev) => ({ ...prev, vision35: currentInput }));
-    } else if (currentQuestion === 5) {
-      // Last question - store vision60 and show final message
-      setCollectedData((prev) => ({ ...prev, vision60: currentInput }));
-
-      setTimeout(() => {
-        const assistantMessage: Message = {
-          role: "assistant",
-          content:
-            "Perfect! Based on your responses, I'll help you set up two important goals: paying off your $27,800 student loan in 5 years, home down payment and planning for a comfortable retirement. We'll automatically allocate funds from your savings and investment accounts to help you achieve these goals. Click 'Complete Setup' to get started!",
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-        setCurrentQuestion((prev) => prev + 1);
-      }, 800);
-      return;
-    }
-
-    // Simulate assistant response for regular questions
-    setTimeout(() => {
-      if (currentQuestion < questions.length) {
-        const assistantMessage: Message = {
-          role: "assistant",
-          content: questions[currentQuestion].prompt,
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-        setCurrentQuestion((prev) => prev + 1);
+      } catch (error) {
+        console.error('Error parsing onboarding JSON:', error);
       }
-    }, 800);
+    }
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+    await sendMessage();
   };
 
-  const handleComplete = async () => {
+  const handleOnboardingComplete = async (onboardingResult: any) => {
+    if (isCreatingAccount) return; // Prevent duplicate submissions
+    
     setIsCreatingAccount(true);
-
+    
     try {
-      // Create the account
-      if (!data.email || !data.password) {
-        throw new Error("Email and password are required");
-      }
+      // Store the collected data from AI
+      setCollectedData({
+        income: onboardingResult.salary || "",
+        employmentType: onboardingResult.work_type || "",
+        goals: Array.isArray(onboardingResult.goals) 
+          ? onboardingResult.goals.join(", ") 
+          : onboardingResult.goals || "",
+      });
 
+      // Create auth account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
+        email: data.email!,
+        password: data.password!,
       });
 
       if (signUpError) throw signUpError;
@@ -262,11 +106,13 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           city: data.city,
           state: data.state,
           zip_code: data.zipCode,
-          ssn_encrypted: data.ssn, // Note: Should be encrypted in production
+          ssn_encrypted: data.ssn,
           credit_check_consent: data.creditCheckConsent || false,
-          income: collectedData.income,
-          employment_type: collectedData.employmentType,
-          goals: collectedData.goals,
+          income: onboardingResult.salary || "",
+          employment_type: onboardingResult.work_type || "",
+          goals: Array.isArray(onboardingResult.goals) 
+            ? onboardingResult.goals.join(", ") 
+            : onboardingResult.goals || "",
           onboarding_completed: true,
         })
         .eq("user_id", authData.user.id);
@@ -285,16 +131,17 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
         if (accountsError) console.error("Error creating linked accounts:", accountsError);
       }
 
-      // Create default goals: Student Loan Payoff and Retirement
-      const currentYear = new Date().getFullYear();
-      const currentAge = data.dateOfBirth ? new Date().getFullYear() - new Date(data.dateOfBirth).getFullYear() : 25;
+      // Create default goals
+      const currentAge = data.dateOfBirth 
+        ? new Date().getFullYear() - new Date(data.dateOfBirth).getFullYear() 
+        : 25;
 
       const defaultGoals = [
         {
           name: "Pay Off Student Loan",
           target_amount: 27800,
           target_age: currentAge + 5,
-          current_amount: 3500, // $500 from savings + $3000 from stocks
+          current_amount: 3500,
           allocation_savings: 50,
           allocation_stocks: 30,
           allocation_bonds: 20,
@@ -304,7 +151,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           name: "Retirement Planning",
           target_amount: 1000000,
           target_age: 65,
-          current_amount: 5300, // $300 from savings + $5000 from stocks
+          current_amount: 5300,
           allocation_savings: 20,
           allocation_stocks: 60,
           allocation_bonds: 20,
@@ -314,7 +161,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           name: "Home Goal",
           target_amount: 10000,
           target_age: currentAge + 6,
-          current_amount: 2400, // $400 from savings + $2000 from stocks
+          current_amount: 2400,
           allocation_savings: 40,
           allocation_stocks: 50,
           allocation_bonds: 10,
@@ -346,8 +193,6 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     }
   };
 
-  const isComplete = !isCollectingGoalDetails && currentQuestion > questions.length;
-
   return (
     <div className="flex-1 flex flex-col h-full">
       <Button variant="ghost" onClick={onBack} className="w-fit -ml-2 mb-6">
@@ -355,47 +200,58 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
         Back
       </Button>
 
-      <h1 className="text-3xl font-bold mb-2">Tell us about yourself</h1>
-      <p className="text-muted-foreground mb-6">Answer a few questions to help us personalize your experience.</p>
+      <h2 className="text-2xl font-semibold mb-2 text-foreground">
+        Let's get to know you
+      </h2>
+      <p className="text-muted-foreground mb-6">
+        Answer a few questions so we can personalize your experience
+      </p>
 
-      <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollRef}>
+      <ScrollArea ref={scrollRef} className="flex-1 pr-4 -mr-4">
         <div className="space-y-4 pb-4">
           {messages.map((message, index) => (
-            <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              key={index}
+              className={`flex ${
+                message.role === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground"
                 }`}
               >
-                <p className="text-sm">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
               </div>
             </div>
           ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-muted text-foreground rounded-2xl px-4 py-3">
+                <p className="text-sm">Thinking...</p>
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
-      <div className="mt-6 space-y-3">
-        {!isComplete && (
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Type your answer..."
-              className="h-14"
-            />
-            <Button onClick={handleSend} size="icon" className="h-14 w-14 shrink-0 rounded-2xl">
-              <Send className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
+      <div className="mt-6 flex gap-2">
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={(e) => e.key === "Enter" && handleSend()}
+          placeholder="Type your answer..."
+          className="flex-1"
+          disabled={isLoading || isCreatingAccount}
+        />
         <Button
-          onClick={handleComplete}
-          className="w-full h-14 text-lg rounded-2xl"
-          variant={isComplete ? "default" : "outline"}
-          disabled={isCreatingAccount}
+          onClick={handleSend}
+          size="icon"
+          disabled={!input.trim() || isLoading || isCreatingAccount}
         >
-          {isCreatingAccount ? "Creating Account..." : "Complete Setup"}
+          <Send className="h-4 w-4" />
         </Button>
       </div>
     </div>
