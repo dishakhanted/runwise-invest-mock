@@ -114,7 +114,7 @@ This will activate the "Complete Setup" button for the user.
         OR
       - "Do you prefer stable growth or higher potential growth with ups and downs?"
 
-3. After you collect all 6 items, output the completion message and JSON as specified in the OUTPUT FORMAT section above. This will show the "Complete Setup" button.
+3. After you collect all 6 items, output the completion message. This will show the "Complete Setup" button.
 
 ---
 
