@@ -28,9 +28,13 @@ interface GoalAIChatDialogProps {
   onClose: () => void;
   goal: Goal | null;
   initialSummary?: string;
+  initialRecommendations?: Array<{
+    headline: string;
+    explanation: string;
+  }>;
 }
 
-export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: GoalAIChatDialogProps) => {
+export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary, initialRecommendations }: GoalAIChatDialogProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -46,7 +50,15 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: Goal
     goal?.name.toLowerCase().includes("down payment");
 
   const initialMessageMemo = useMemo(() => initialSummary || "", [initialSummary]);
-  const initialSuggestionsMemo = useMemo(() => [], [goal]);
+  const initialSuggestionsMemo = useMemo(() => {
+    if (!initialRecommendations || initialRecommendations.length === 0) return [];
+    
+    return initialRecommendations.map((rec, idx) => ({
+      id: `recommendation-${idx}`,
+      title: rec.headline,
+      description: rec.explanation,
+    }));
+  }, [initialRecommendations]);
 
   const {
     messages,
