@@ -13,7 +13,8 @@ import {
   FINSHORTS_PROMPT,
   ALTERNATE_INVESTMENTS_PROMPT,
   EXPLORE_PROMPT,
-  TAX_LOSS_HARVESTING_PROMPT
+  TAX_LOSS_HARVESTING_PROMPT,
+  SUGGESTIONS_PROMPT
 } from './prompts.ts';
 
 export type PromptType = 
@@ -28,7 +29,8 @@ export type PromptType =
   | 'finshorts'
   | 'alternate-investments'
   | 'explore'
-  | 'tax-loss-harvesting';
+  | 'tax-loss-harvesting'
+  | 'suggestions';
 
 function loadPrompt(promptType: PromptType): string {
   const prompts: Record<PromptType, string> = {
@@ -44,6 +46,7 @@ function loadPrompt(promptType: PromptType): string {
     'alternate-investments': ALTERNATE_INVESTMENTS_PROMPT,
     'explore': EXPLORE_PROMPT,
     'tax-loss-harvesting': TAX_LOSS_HARVESTING_PROMPT,
+    'suggestions': SUGGESTIONS_PROMPT,
   };
   
   return prompts[promptType] || CENTER_CHAT_PROMPT;
