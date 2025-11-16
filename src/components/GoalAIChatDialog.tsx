@@ -112,6 +112,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: Goal
                               <div className="flex items-center gap-2 flex-wrap">
                                 <Button
                                   size="sm"
+                                  variant="success"
                                   className="rounded-full px-4 h-8"
                                   onClick={() => handleSuggestionAction(index, suggestion.id, "approved")}
                                 >
@@ -142,7 +143,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: Goal
                           )}
 
                           {suggestion.status === "approved" && (
-                            <div className="flex items-center gap-1 text-xs text-green-600">
+                            <div className="flex items-center gap-1 text-xs text-success">
                               <Check className="h-3 w-3" />
                               Approved
                             </div>
