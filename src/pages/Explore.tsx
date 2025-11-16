@@ -4,7 +4,7 @@ import { Logo } from "@/components/Logo";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { WhatIfChatDialog } from "@/components/WhatIfChatDialog";
-import { AIChatDialog } from "@/components/AIChatDialog";
+import { ExploreChatDialog } from "@/components/ExploreChatDialog";
 import { useExploreContent } from "@/hooks/useExploreContent";
 import { Badge } from "@/components/ui/badge";
 
@@ -143,7 +143,7 @@ const Explore = () => {
         scenario={selectedScenario}
       />
 
-      <AIChatDialog
+      <ExploreChatDialog
         isOpen={activeChatContext !== null}
         onClose={handleChatClose}
         contextType={activeChatContext || 'center-chat'}
