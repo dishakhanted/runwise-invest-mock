@@ -321,13 +321,7 @@ const Goals = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold mb-1">Goal Summary & Insights</h3>
                     <p className="text-sm text-muted-foreground">
-                      {selectedGoal.description || (
-                        <>
-                          You're {Math.round(getProgress(selectedGoal.currentAmount, selectedGoal.targetAmount))}% of the way to your {selectedGoal.name} goal. 
-                          You need {formatCurrency(selectedGoal.targetAmount - selectedGoal.currentAmount)} more to reach your target. 
-                          Click to chat with GrowW AI for personalized strategies to reach this goal faster.
-                        </>
-                      )}
+                      {selectedGoal.description || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
                     </p>
                   </div>
                 </div>

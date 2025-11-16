@@ -231,26 +231,7 @@ const Dashboard = () => {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Financial Summary</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {viewMode === "assets" ? (
-                    <>
-                      Earn up to 2–3% higher returns — add a dash of Small-Cap Growth.<br />
-                      Your idle cash can earn 4–5% — let's put it to work.<br /><br />
-                      Click to chat with GrowW AI and tweak for better returns.
-                    </>
-                  ) : viewMode === "liabilities" ? (
-                    <>
-                      You currently owe $27,800 — mainly from your education loan.<br />
-                      It's well-managed and shrinking fast, but it still keeps your net worth slightly negative for now.<br /><br />
-                      We can discuss whether increasing your EMI a bit could help close it sooner or how it'll affect your investing pace going forward.
-                    </>
-                  ) : (
-                    <>
-                      You are in decent shape for your age!<br /><br />
-                      I have good news! You can get debt neutral in 3 years, Yes No more loans.<br />
-                      Oh no, you have only 2 months of expenses as a safety net, it's a pickle.<br /><br />
-                      Click to chat with GrowW AI for personalized insights
-                    </>
-                  )}
+                  Click to chat with GrowW AI for a personalized financial summary and insights.
                 </p>
               </div>
             </div>
