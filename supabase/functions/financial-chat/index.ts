@@ -102,43 +102,46 @@ serve(async (req) => {
 
     // Load the appropriate prompt from MD file based on context
     const promptType = getPromptTypeFromContext(contextType);
+    console.log('Loading prompt type:', promptType, 'for context:', contextType);
+    
     const promptContent = await loadPrompt(promptType);
+    
+    if (!promptContent) {
+      throw new Error(`Prompt file missing or invalid for type: ${promptType}`);
+    }
     
     // Build context-specific information
     let contextInfo = "";
     if (contextType === 'dashboard' && contextData) {
-      contextInfo = `\n\nCurrent user's financial snapshot:\n`;
-      contextInfo += `- Net Worth: $${contextData.netWorth?.toLocaleString() || 0}\n`;
-      contextInfo += `- Assets: $${contextData.assetsTotal?.toLocaleString() || 0}\n`;
-      contextInfo += `- Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}\n`;
-      contextInfo += `- Cash: $${contextData.cashTotal?.toLocaleString() || 0}\n`;
-      contextInfo += `- Investments: $${contextData.investmentsTotal?.toLocaleString() || 0}`;
+      contextInfo = `\n\n## User Financial Data\n`;
+      contextInfo += `Net Worth: $${contextData.netWorth?.toLocaleString() || 0}\n`;
+      contextInfo += `Assets: $${contextData.assetsTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `Cash: $${contextData.cashTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `Investments: $${contextData.investmentsTotal?.toLocaleString() || 0}`;
     } else if (contextType === 'goal' && contextData) {
-      contextInfo = `\n\nUser is working on their financial goal: "${contextData.name}"\n`;
-      contextInfo += `- Target Amount: $${contextData.targetAmount?.toLocaleString() || 0}\n`;
-      contextInfo += `- Current Amount: $${contextData.currentAmount?.toLocaleString() || 0}\n`;
-      contextInfo += `- Progress: ${((contextData.currentAmount / contextData.targetAmount) * 100).toFixed(1)}%\n`;
-      contextInfo += `- Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds\n`;
+      contextInfo = `\n\n## User Goal Data\n`;
+      contextInfo += `Goal Name: "${contextData.name}"\n`;
+      contextInfo += `Target Amount: $${contextData.targetAmount?.toLocaleString() || 0}\n`;
+      contextInfo += `Current Amount: $${contextData.currentAmount?.toLocaleString() || 0}\n`;
+      contextInfo += `Progress: ${((contextData.currentAmount / contextData.targetAmount) * 100).toFixed(1)}%\n`;
+      contextInfo += `Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds\n`;
       if (contextData.description) {
-        contextInfo += `\nGoal Strategy & Insights:\n${contextData.description}`;
+        contextInfo += `\nGoal Details: ${contextData.description}`;
       }
+    } else if (contextData) {
+      contextInfo = `\n\n## Additional Context\n${JSON.stringify(contextData, null, 2)}`;
     }
 
-    // Create LangChain prompt template
+    // Create LangChain prompt template - markdown prompt is the root of truth
     const promptTemplate = PromptTemplate.fromTemplate(`${promptContent}
-
 ${contextInfo}
-
-## System Instructions
-You are a knowledgeable financial assistant helping users manage their finances, investments, and financial goals. Provide clear, actionable advice. Be concise but thorough.
 
 ## Conversation History
 {conversationHistory}
 
 ## Current User Message
-{currentMessage}
-
-Please respond to the user's message based on the above context and your role as a financial assistant.`);
+{currentMessage}`);
 
     // Format conversation history
     const conversationHistory = messages
