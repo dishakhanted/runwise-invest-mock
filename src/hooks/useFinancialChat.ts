@@ -64,15 +64,11 @@ export const useFinancialChat = ({
     console.log('Found suggestion:', suggestion);
     
     if (action === 'know_more') {
-      // Add user message asking for more info
+      // Add user message asking for more info and let AI respond
       const userMessage = `Tell me more about "${suggestion?.title}"`;
-      setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-      
-      // Trigger AI response about the suggestion
-      setTimeout(() => {
-        const response = `Let me explain more about "${suggestion?.title}":\n\n${suggestion?.description}\n\nThis suggestion can help you by:\n- Optimizing your financial strategy\n- Reducing unnecessary expenses\n- Improving your long-term financial health\n\nWould you like me to create a detailed action plan for implementing this?`;
-        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-      }, 500);
+      setInput(userMessage);
+      // Trigger send after a brief moment
+      setTimeout(() => sendMessage(), 100);
       return;
     }
 
@@ -89,37 +85,18 @@ export const useFinancialChat = ({
       return msg;
     }));
     
-    console.log('About to set timeout for response');
+    console.log('About to trigger AI response for action');
     
-    // Add AI response based on action
-    setTimeout(() => {
-      console.log('Timeout fired, adding response message');
-      if (action === 'approved' && suggestion) {
-        let response = 'Okay great, on it!';
-        
-        // Specific responses for different suggestions
-        if (suggestion.title === 'Activate Small-Cap Growth Exposure') {
-          response = "Perfect! I've allocated 5% of your investments ($1,200) to Vanguard Small-Cap (VB). Your portfolio is now rebalanced with growth potential while maintaining diversification. You'll see this update reflected in your investments.";
-        } else if (suggestion.title === 'Put Idle Cash to Work') {
-          response = "Done! I've set up automatic transfers of $200/month from your savings to Schwab Value Advantage (SWVXX). You'll now earn 4-5% annually instead of 0%. You can withdraw anytime you need it.";
-        } else if (suggestion.title === 'Increase Education Loan Payment') {
-          response = "Great decision! I've increased your monthly loan payment from $320 to $500. You'll be completely debt-free in 36 months. That's 3 years to financial freedom!";
-        } else if (suggestion.title === 'Build Emergency Fund of 6 Months') {
-          response = "Excellent choice! I've set up automatic transfers of $500/month to your emergency fund. By this time next year, you'll have a solid 6-month cushion ($18K). Peace of mind, secured.";
-        } else if (suggestion.title === 'Increase Target to $125,000') {
-          response = "Target adjusted. Your goal is now set to $125,000.";
-        }
-        
-        console.log('Adding approved response:', response);
-        setMessages(prev => {
-          console.log('Current messages:', prev);
-          return [...prev, { role: 'assistant', content: response }];
-        });
-      } else if (action === 'denied' && suggestion) {
-        const response = `Understood. I've noted that you declined "${suggestion.title}". Would you like me to suggest alternative approaches or explain why this recommendation might not fit your situation?`;
-        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-      }
-    }, 300);
+    // Let AI handle the response for approve/deny actions
+    if (action === 'approved' && suggestion) {
+      const userMessage = `I approve the suggestion: "${suggestion.title}"`;
+      setInput(userMessage);
+      setTimeout(() => sendMessage(), 100);
+    } else if (action === 'denied' && suggestion) {
+      const userMessage = `I decline the suggestion: "${suggestion.title}"`;
+      setInput(userMessage);
+      setTimeout(() => sendMessage(), 100);
+    }
   }, [messages]);
 
   const generateTitle = (firstUserMessage: string) => {
