@@ -1,4 +1,5 @@
 # Finshorts AI Chatbot
 
 ## Functional Purpose
-Finance news
+
+Finance news - Coming Soon !
