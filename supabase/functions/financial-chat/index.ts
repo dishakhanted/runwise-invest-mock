@@ -1,7 +1,6 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.3.16";
-import { PromptTemplate } from "https://esm.sh/@langchain/core@0.3.20/prompts";
 import { loadPrompt, getPromptTypeFromContext } from './promptLoader.ts';
 
 const corsHeaders = {
@@ -18,12 +17,12 @@ serve(async (req) => {
     const { messages, conversationId, contextType, contextData } = await req.json();
     console.log('Received request:', { messagesLength: messages?.length, conversationId, contextType });
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
@@ -133,56 +132,69 @@ serve(async (req) => {
       contextInfo = `\n\n## Additional Context\n${JSON.stringify(contextData, null, 2)}`;
     }
 
-    // Create LangChain prompt template - markdown prompt is the root of truth
-    const promptTemplate = PromptTemplate.fromTemplate(`${promptContent}
-${contextInfo}
+    // Build the system prompt with context
+    const systemPrompt = `${promptContent}${contextInfo}`;
 
-## Conversation History
-{conversationHistory}
+    // Format messages for Lovable AI
+    const aiMessages = [
+      { role: "system", content: systemPrompt },
+      ...messages.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content
+      }))
+    ];
 
-## Current User Message
-{currentMessage}`);
+    console.log('Calling Lovable AI with prompt type:', promptType);
 
-    // Format conversation history
-    const conversationHistory = messages
-      .slice(0, -1)
-      .map((msg: any) => `${msg.role}: ${msg.content}`)
-      .join('\n');
-    
-    const currentMessage = messages[messages.length - 1]?.content || '';
-
-    console.log('Using LangChain with prompt type:', promptType);
-
-    // Initialize LangChain LLM
-    const llm = new ChatOpenAI({
-      openAIApiKey: OPENAI_API_KEY,
-      modelName: "gpt-4o-mini",
-      temperature: 0.7,
+    // Call Lovable AI Gateway
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: aiMessages,
+        stream: false,
+      }),
     });
 
-    try {
-      // Format the prompt with the conversation data
-      const formattedPrompt = await promptTemplate.format({
-        conversationHistory,
-        currentMessage,
-      });
-
-      // Invoke the LLM
-      const response = await llm.invoke(formattedPrompt);
-      const message = response.content || "I apologize, but I couldn't generate a response.";
-
-      console.log('LangChain response generated successfully');
-
-      return new Response(
-        JSON.stringify({ message }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    } catch (llmError) {
-      console.error("LangChain LLM error:", llmError);
-      throw new Error(`Failed to generate response: ${llmError instanceof Error ? llmError.message : "Unknown error"}`);
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace." }),
+          {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      const errorText = await response.text();
+      console.error("AI gateway error:", response.status, errorText);
+      throw new Error("AI gateway error");
     }
+
+    const data = await response.json();
+    const message = data.choices?.[0]?.message?.content || "I apologize, but I couldn't generate a response.";
+
+    console.log('Lovable AI response generated successfully');
+
+    return new Response(
+      JSON.stringify({ message }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
 
   } catch (error) {
     console.error("Error in financial-chat:", error);
