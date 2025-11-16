@@ -222,11 +222,13 @@ const Goals = () => {
       const summaryText = data?.message || 
                          "Click to chat with GrowW AI for personalized strategies to reach your goal.";
       
-      setGoalSummary(summaryText);
-      
       // Parse recommendations from the summary
       const recs = parseRecommendations(summaryText);
       setParsedRecommendations(recs);
+      
+      // Remove recommendation sections from summary for display
+      const cleanSummary = summaryText.split(/\*\*Recommendation \d+:/)[0].trim();
+      setGoalSummary(cleanSummary);
     } catch (error) {
       console.error('Error generating goal summary:', error);
       setGoalSummary("Click to chat with GrowW AI for personalized strategies to reach your goal.");
@@ -394,7 +396,7 @@ const Goals = () => {
                       <div className="space-y-2">
                         {/* Display summary text only */}
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {goalSummary.split('**')[0] || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
+                          {goalSummary || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
                         </p>
                         
                         {/* Show clickable text if there are recommendations */}
