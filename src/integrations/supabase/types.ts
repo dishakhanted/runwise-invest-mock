@@ -177,6 +177,7 @@ export type Database = {
           onboarding_completed: boolean | null
           phone: string | null
           preferred_first_name: string | null
+          risk_inferred: string | null
           ssn_encrypted: string | null
           state: string | null
           suffix: string | null
@@ -200,6 +201,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           phone?: string | null
           preferred_first_name?: string | null
+          risk_inferred?: string | null
           ssn_encrypted?: string | null
           state?: string | null
           suffix?: string | null
@@ -223,6 +225,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           phone?: string | null
           preferred_first_name?: string | null
+          risk_inferred?: string | null
           ssn_encrypted?: string | null
           state?: string | null
           suffix?: string | null
