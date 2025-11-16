@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 import { GoalAIChatDialog } from "@/components/GoalAIChatDialog";
 import { NewGoalDialog } from "@/components/NewGoalDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare } from "lucide-react";
+import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare, Check, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -407,12 +407,13 @@ const Goals = () => {
                                 <div className="flex gap-2">
                                   <Button 
                                     size="sm" 
-                                    variant="default"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       toast({ title: "Approved", description: `You approved: ${rec.headline}` });
                                     }}
                                   >
+                                    <Check className="h-4 w-4 mr-1" />
                                     Approve
                                   </Button>
                                   <Button 
@@ -423,17 +424,19 @@ const Goals = () => {
                                       toast({ title: "Denied", description: `You denied: ${rec.headline}` });
                                     }}
                                   >
+                                    <X className="h-4 w-4 mr-1" />
                                     Deny
                                   </Button>
                                   <Button 
                                     size="sm" 
                                     variant="ghost"
+                                    className="text-primary hover:text-primary"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setIsChatOpen(true);
                                     }}
                                   >
-                                    Know More
+                                    Know more
                                   </Button>
                                 </div>
                               </div>
