@@ -66,28 +66,6 @@ When onboarding is complete:
 
 1. Say: "Thanks! I'm ready to personalize your plan."
 
-2. Then output ONLY this JSON block in a code fence (no other text after it):
-
-```json
-{
-  "onboarding_complete": true,
-  "occupation": "[user's occupation]",
-  "income": "[annual or monthly income as stated]",
-  "work_type": "[full-time/part-time/contract]",
-  "risk_inferred": "[low/medium/high]",
-  "goals": [
-    {
-      "name": "[goal 1 name]",
-      "target_age": [age number]
-    },
-    {
-      "name": "[goal 2 name]",
-      "target_age": [age number]
-    }
-  ]
-}
-```
-
 This will activate the "Complete Setup" button for the user.
 
 ---
