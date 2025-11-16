@@ -26,9 +26,10 @@ interface GoalAIChatDialogProps {
   isOpen: boolean;
   onClose: () => void;
   goal: Goal | null;
+  initialSummary?: string;
 }
 
-export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProps) => {
+export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: GoalAIChatDialogProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -43,7 +44,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     goal?.name.toLowerCase().includes("home") ||
     goal?.name.toLowerCase().includes("down payment");
 
-  const initialMessageMemo = useMemo(() => "", [goal]);
+  const initialMessageMemo = useMemo(() => initialSummary || "", [initialSummary]);
   const initialSuggestionsMemo = useMemo(() => [], [goal]);
 
   const {

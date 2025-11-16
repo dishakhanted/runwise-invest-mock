@@ -36,6 +36,10 @@ const Goals = () => {
   const [isNewGoalOpen, setIsNewGoalOpen] = useState(false);
   const [goalSummary, setGoalSummary] = useState<string>("");
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [parsedRecommendations, setParsedRecommendations] = useState<Array<{
+    headline: string;
+    explanation: string;
+  }>>([]);
 
   useEffect(() => {
     loadGoals();
@@ -176,6 +180,26 @@ const Goals = () => {
     return (current / target) * 100;
   };
 
+  const parseRecommendations = (summary: string) => {
+    const recommendations: Array<{ headline: string; explanation: string }> = [];
+    
+    // Split by [Approve] markers to find recommendations
+    const parts = summary.split(/\*\*([^\*]+)\*\*/);
+    
+    for (let i = 1; i < parts.length; i += 2) {
+      if (parts[i] && parts[i + 1]) {
+        const headline = parts[i].trim();
+        const explanation = parts[i + 1].split('[Approve]')[0].trim();
+        
+        if (headline && explanation) {
+          recommendations.push({ headline, explanation });
+        }
+      }
+    }
+    
+    return recommendations;
+  };
+
   const generateGoalSummary = async (goal: Goal) => {
     setLoadingSummary(true);
     try {
@@ -199,6 +223,10 @@ const Goals = () => {
                          "Click to chat with GrowW AI for personalized strategies to reach your goal.";
       
       setGoalSummary(summaryText);
+      
+      // Parse recommendations from the summary
+      const recs = parseRecommendations(summaryText);
+      setParsedRecommendations(recs);
     } catch (error) {
       console.error('Error generating goal summary:', error);
       setGoalSummary("Click to chat with GrowW AI for personalized strategies to reach your goal.");
@@ -363,9 +391,56 @@ const Goals = () => {
                     {loadingSummary ? (
                       <p className="text-sm text-muted-foreground">Generating insights...</p>
                     ) : (
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {goalSummary || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
-                      </p>
+                      <div className="space-y-4">
+                        {/* Display summary text (first part before recommendations) */}
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {goalSummary.split('**')[0] || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
+                        </p>
+                        
+                        {/* Display recommendations with buttons */}
+                        {parsedRecommendations.length > 0 && (
+                          <div className="space-y-3">
+                            {parsedRecommendations.map((rec, idx) => (
+                              <div key={idx} className="bg-background/50 rounded-lg p-3 border border-border">
+                                <p className="font-medium text-sm mb-2">{rec.headline}</p>
+                                <p className="text-xs text-muted-foreground mb-3">{rec.explanation}</p>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    size="sm" 
+                                    variant="default"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toast({ title: "Approved", description: `You approved: ${rec.headline}` });
+                                    }}
+                                  >
+                                    Approve
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toast({ title: "Denied", description: `You denied: ${rec.headline}` });
+                                    }}
+                                  >
+                                    Deny
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setIsChatOpen(true);
+                                    }}
+                                  >
+                                    Know More
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -384,6 +459,7 @@ const Goals = () => {
           loadGoals(); // Refresh goals after closing dialog
         }}
         goal={selectedGoal || null}
+        initialSummary={goalSummary}
       />
       <NewGoalDialog 
         isOpen={isNewGoalOpen}
