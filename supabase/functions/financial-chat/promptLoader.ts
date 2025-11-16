@@ -11,7 +11,8 @@ export type PromptType =
   | 'market-insights'
   | 'what-if'
   | 'finshorts'
-  | 'alternate-investments';
+  | 'alternate-investments'
+  | 'explore';
 
 /**
  * Loads a prompt from the prompts directory
@@ -50,6 +51,8 @@ export function getPromptTypeFromContext(contextType?: string): PromptType {
       return 'finshorts';
     case 'alternate-investments':
       return 'alternate-investments';
+    case 'explore':
+      return 'explore';
     default:
       return 'center-chat';
   }
