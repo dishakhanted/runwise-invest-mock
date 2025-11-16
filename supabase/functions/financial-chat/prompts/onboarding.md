@@ -63,13 +63,15 @@ Instead:
 
 ---
 
-When onboarding is complete, save the below values in the database **without commentary**:
+When onboarding is complete, save the below values in the profiles database **without commentary**:
 
 "occupation": ""
 "income": ""
 "work_type": ""
-"goals": {id:"" , name:"", target-duration:""}
 "risk_inferred": ""
+
+save the below values in the goals database **without commentary**:
+"goals": {id:"" , name:"", target-age:""}
 
 ## Then activate the "complete setup" button so the user can proceed.
 
@@ -97,7 +99,7 @@ When onboarding is complete, save the below values in the database **without com
 
 3. After you collect all 6 items:
    - Summarize them briefly (3 lines maximum).
-   - Save the data in the profiles database exactly in the format above.
+   - Save the data in the profiles and goals database exactly in the format above.
    - Activeate the "Complete set up Button."
 
 4. End with:
