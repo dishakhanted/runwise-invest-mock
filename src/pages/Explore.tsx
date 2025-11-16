@@ -138,9 +138,16 @@ const Explore = () => {
       </div>
 
       <WhatIfChatDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        isOpen={isWhatIfDialogOpen}
+        onClose={() => setIsWhatIfDialogOpen(false)}
         scenario={selectedScenario}
+      />
+
+      <AIChatDialog
+        isOpen={activeChatContext !== null}
+        onClose={handleChatClose}
+        contextType={activeChatContext || 'center-chat'}
+        contextData={{}}
       />
 
       <BottomNav />
