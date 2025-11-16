@@ -195,8 +195,7 @@ const Goals = () => {
       if (error) throw error;
 
       // Extract the text from the response
-      const summaryText = data?.choices?.[0]?.message?.content || 
-                         data?.content || 
+      const summaryText = data?.message || 
                          "Click to chat with GrowW AI for personalized strategies to reach your goal.";
       
       setGoalSummary(summaryText);
