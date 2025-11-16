@@ -68,9 +68,8 @@ When onboarding is complete, save the below values in the database **without com
 "occupation": ""
 "income": ""
 "work_type": ""
-"goals": [ id:"" , name:"", target-duration:""],
+"goals": {id:"" , name:"", target-duration:""}
 "risk_inferred": ""
-}
 
 ## Then activate the "complete setup" button so the user can proceed.
 
