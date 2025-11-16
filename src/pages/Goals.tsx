@@ -391,57 +391,17 @@ const Goals = () => {
                     {loadingSummary ? (
                       <p className="text-sm text-muted-foreground">Generating insights...</p>
                     ) : (
-                      <div className="space-y-4">
-                        {/* Display summary text (first part before recommendations) */}
+                      <div className="space-y-2">
+                        {/* Display summary text only */}
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                           {goalSummary.split('**')[0] || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
                         </p>
                         
-                        {/* Display recommendations with buttons */}
+                        {/* Show clickable text if there are recommendations */}
                         {parsedRecommendations.length > 0 && (
-                          <div className="space-y-3">
-                            {parsedRecommendations.map((rec, idx) => (
-                              <div key={idx} className="bg-background/50 rounded-lg p-3 border border-border">
-                                <p className="font-medium text-sm mb-2">{rec.headline}</p>
-                                <p className="text-xs text-muted-foreground mb-3">{rec.explanation}</p>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toast({ title: "Approved", description: `You approved: ${rec.headline}` });
-                                    }}
-                                  >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toast({ title: "Denied", description: `You denied: ${rec.headline}` });
-                                    }}
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Deny
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    className="text-primary hover:text-primary"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setIsChatOpen(true);
-                                    }}
-                                  >
-                                    Know more
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                          <p className="text-sm text-primary font-medium">
+                            Click to see more insights and suggestions →
+                          </p>
                         )}
                       </div>
                     )}
@@ -463,6 +423,7 @@ const Goals = () => {
         }}
         goal={selectedGoal || null}
         initialSummary={goalSummary}
+        initialRecommendations={parsedRecommendations}
       />
       <NewGoalDialog 
         isOpen={isNewGoalOpen}
