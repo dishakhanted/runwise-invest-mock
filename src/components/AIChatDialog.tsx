@@ -109,7 +109,7 @@ export const AIChatDialog = ({
                     message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">{message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}</p>
 
                   {/* Suggestions */}
                   {message.suggestions && message.suggestions.length > 0 && (
@@ -120,12 +120,12 @@ export const AIChatDialog = ({
                           <p className="text-xs text-muted-foreground mb-2">{suggestion.description}</p>
 
                           {suggestion.status === "pending" && (
-                            <div className="flex flex-col gap-2">
-                              <div className="flex gap-2">
+                            <>
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Button
                                   size="sm"
-                                  variant="default"
-                                  className="flex-1 h-8"
+                                  variant="success"
+                                  className="rounded-full px-4 h-8"
                                   onClick={() => handleSuggestionAction(index, suggestion.id, "approved")}
                                 >
                                   <Check className="h-3 w-3 mr-1" />
@@ -134,33 +134,35 @@ export const AIChatDialog = ({
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="flex-1 h-8"
+                                  className="rounded-full px-4 h-8"
                                   onClick={() => handleSuggestionAction(index, suggestion.id, "denied")}
                                 >
                                   <X className="h-3 w-3 mr-1" />
                                   Deny
                                 </Button>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="w-full h-8"
-                                onClick={() => handleSuggestionAction(index, suggestion.id, "know_more")}
-                              >
-                                Know more
-                              </Button>
-                            </div>
+                              <div className="mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="link"
+                                  className="p-0 h-auto"
+                                  onClick={() => handleSuggestionAction(index, suggestion.id, "know_more")}
+                                >
+                                  Know more
+                                </Button>
+                              </div>
+                            </>
                           )}
 
                           {suggestion.status === "approved" && (
-                            <div className="flex items-center gap-1 text-xs text-green-600">
+                            <div className="flex items-center gap-1 text-xs text-success">
                               <Check className="h-3 w-3" />
                               Approved
                             </div>
                           )}
 
                           {suggestion.status === "denied" && (
-                            <div className="flex items-center gap-1 text-xs text-red-600">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <X className="h-3 w-3" />
                               Denied
                             </div>
