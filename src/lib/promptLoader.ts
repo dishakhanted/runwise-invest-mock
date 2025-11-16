@@ -11,7 +11,8 @@ export type PromptType =
   | 'what-if'
   | 'finshorts'
   | 'alternate-investments'
-  | 'explore';
+  | 'explore'
+  | 'tax-loss-harvesting';
 
 export async function loadPrompt(promptType: PromptType): Promise<string> {
   try {

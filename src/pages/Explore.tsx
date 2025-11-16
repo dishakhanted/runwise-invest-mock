@@ -4,6 +4,7 @@ import { Logo } from "@/components/Logo";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { WhatIfChatDialog } from "@/components/WhatIfChatDialog";
+import { AIChatDialog } from "@/components/AIChatDialog";
 import { useExploreContent } from "@/hooks/useExploreContent";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,11 +21,20 @@ interface WhatIfScenario {
 const Explore = () => {
   const { content, isMock } = useExploreContent();
   const [selectedScenario, setSelectedScenario] = useState<WhatIfScenario | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isWhatIfDialogOpen, setIsWhatIfDialogOpen] = useState(false);
+  const [activeChatContext, setActiveChatContext] = useState<string | null>(null);
 
   const handleWhatIfClick = (index: number) => {
     setSelectedScenario(content.whatIfScenarios[index]);
-    setIsDialogOpen(true);
+    setIsWhatIfDialogOpen(true);
+  };
+
+  const handleChatOpen = (contextType: string) => {
+    setActiveChatContext(contextType);
+  };
+
+  const handleChatClose = () => {
+    setActiveChatContext(null);
   };
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -45,7 +55,10 @@ const Explore = () => {
 
         {/* Top Row - Market Insights & What if */}
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <Card className="border-[hsl(var(--card-teal))]/30 bg-[hsl(var(--card-teal))]/10">
+          <Card 
+            className="border-[hsl(var(--card-teal))]/30 bg-[hsl(var(--card-teal))]/10 cursor-pointer hover:bg-[hsl(var(--card-teal))]/20 transition-colors"
+            onClick={() => handleChatOpen('market-insights')}
+          >
             <CardContent className="p-4">
               <CardTitle className="text-2xl text-[hsl(var(--card-teal))] mb-4">{content.marketInsights.title}</CardTitle>
               <ul className="space-y-3 text-sm text-foreground">
@@ -75,7 +88,10 @@ const Explore = () => {
         </div>
 
         {/* Fin-shorts Section */}
-        <Card className="mb-4 border-[hsl(var(--card-sky))]/30 bg-[hsl(var(--card-sky))]/10">
+        <Card 
+          className="mb-4 border-[hsl(var(--card-sky))]/30 bg-[hsl(var(--card-sky))]/10 cursor-pointer hover:bg-[hsl(var(--card-sky))]/20 transition-colors"
+          onClick={() => handleChatOpen('finshorts')}
+        >
           <CardContent className="p-4">
             <CardTitle className="text-2xl text-[hsl(var(--card-sky))] mb-4">{content.finShorts.title}</CardTitle>
             <ul className="space-y-3 text-sm text-foreground">
@@ -88,7 +104,10 @@ const Explore = () => {
 
         {/* Bottom Row - Alternate Investments & Harvest gains */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Card className="border-[hsl(var(--card-violet))]/30 bg-[hsl(var(--card-violet))]/10">
+          <Card 
+            className="border-[hsl(var(--card-violet))]/30 bg-[hsl(var(--card-violet))]/10 cursor-pointer hover:bg-[hsl(var(--card-violet))]/20 transition-colors"
+            onClick={() => handleChatOpen('alternate-investments')}
+          >
             <CardContent className="p-4">
               <CardTitle className="text-2xl text-[hsl(var(--card-violet))] mb-4">{content.alternateInvestments.title}</CardTitle>
               <p className="text-sm text-foreground mb-3">
@@ -102,7 +121,10 @@ const Explore = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-[hsl(var(--card-rose))]/30 bg-[hsl(var(--card-rose))]/10">
+          <Card 
+            className="border-[hsl(var(--card-rose))]/30 bg-[hsl(var(--card-rose))]/10 cursor-pointer hover:bg-[hsl(var(--card-rose))]/20 transition-colors"
+            onClick={() => handleChatOpen('tax-loss-harvesting')}
+          >
             <CardContent className="p-4">
               <CardTitle className="text-2xl text-[hsl(var(--card-rose))] mb-4">{content.harvestGains.title}</CardTitle>
               <p className="text-sm text-foreground">
