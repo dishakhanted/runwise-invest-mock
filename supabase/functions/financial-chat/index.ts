@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { getPrompt, type PromptType } from './prompts.ts';
+import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.3.11";
+import { PromptTemplate } from "https://esm.sh/@langchain/core@0.3.18/prompts";
+import { loadPrompt, getPromptTypeFromContext } from './promptLoader.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,12 +18,12 @@ serve(async (req) => {
     const { messages, conversationId, contextType, contextData } = await req.json();
     console.log('Received request:', { messagesLength: messages?.length, conversationId, contextType });
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
@@ -98,74 +100,86 @@ serve(async (req) => {
       );
     }
 
-    // Build system prompt based on context
-    let systemPrompt = "You are a knowledgeable financial assistant helping users manage their finances, investments, and financial goals. Provide clear, actionable advice. Be concise but thorough.";
+    // Load the appropriate prompt from MD file based on context
+    const promptType = getPromptTypeFromContext(contextType);
+    const promptContent = await loadPrompt(promptType);
     
+    // Build context-specific information
+    let contextInfo = "";
     if (contextType === 'dashboard' && contextData) {
-      systemPrompt += `\n\nCurrent user's financial snapshot:\n`;
-      systemPrompt += `- Net Worth: $${contextData.netWorth?.toLocaleString() || 0}\n`;
-      systemPrompt += `- Assets: $${contextData.assetsTotal?.toLocaleString() || 0}\n`;
-      systemPrompt += `- Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}\n`;
-      systemPrompt += `- Cash: $${contextData.cashTotal?.toLocaleString() || 0}\n`;
-      systemPrompt += `- Investments: $${contextData.investmentsTotal?.toLocaleString() || 0}`;
+      contextInfo = `\n\nCurrent user's financial snapshot:\n`;
+      contextInfo += `- Net Worth: $${contextData.netWorth?.toLocaleString() || 0}\n`;
+      contextInfo += `- Assets: $${contextData.assetsTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `- Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `- Cash: $${contextData.cashTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `- Investments: $${contextData.investmentsTotal?.toLocaleString() || 0}`;
     } else if (contextType === 'goal' && contextData) {
-      systemPrompt += `\n\nUser is working on their financial goal: "${contextData.name}"\n`;
-      systemPrompt += `- Target Amount: $${contextData.targetAmount?.toLocaleString() || 0}\n`;
-      systemPrompt += `- Current Amount: $${contextData.currentAmount?.toLocaleString() || 0}\n`;
-      systemPrompt += `- Progress: ${((contextData.currentAmount / contextData.targetAmount) * 100).toFixed(1)}%\n`;
-      systemPrompt += `- Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds\n`;
+      contextInfo = `\n\nUser is working on their financial goal: "${contextData.name}"\n`;
+      contextInfo += `- Target Amount: $${contextData.targetAmount?.toLocaleString() || 0}\n`;
+      contextInfo += `- Current Amount: $${contextData.currentAmount?.toLocaleString() || 0}\n`;
+      contextInfo += `- Progress: ${((contextData.currentAmount / contextData.targetAmount) * 100).toFixed(1)}%\n`;
+      contextInfo += `- Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds\n`;
       if (contextData.description) {
-        systemPrompt += `\nGoal Strategy & Insights:\n${contextData.description}`;
+        contextInfo += `\nGoal Strategy & Insights:\n${contextData.description}`;
       }
     }
 
-    console.log('Calling Lovable AI with system prompt:', systemPrompt);
+    // Create LangChain prompt template
+    const promptTemplate = PromptTemplate.fromTemplate(`${promptContent}
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        stream: false,
-      }),
+${contextInfo}
+
+## System Instructions
+You are a knowledgeable financial assistant helping users manage their finances, investments, and financial goals. Provide clear, actionable advice. Be concise but thorough.
+
+## Conversation History
+{conversationHistory}
+
+## Current User Message
+{currentMessage}
+
+Please respond to the user's message based on the above context and your role as a financial assistant.`);
+
+    // Format conversation history
+    const conversationHistory = messages
+      .slice(0, -1)
+      .map((msg: any) => `${msg.role}: ${msg.content}`)
+      .join('\n');
+    
+    const currentMessage = messages[messages.length - 1]?.content || '';
+
+    console.log('Using LangChain with prompt type:', promptType);
+
+    // Initialize LangChain LLM
+    const llm = new ChatOpenAI({
+      openAIApiKey: OPENAI_API_KEY,
+      modelName: "gpt-4o-mini",
+      temperature: 0.7,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429,
+    try {
+      // Format the prompt with the conversation data
+      const formattedPrompt = await promptTemplate.format({
+        conversationHistory,
+        currentMessage,
+      });
+
+      // Invoke the LLM
+      const response = await llm.invoke(formattedPrompt);
+      const message = response.content || "I apologize, but I couldn't generate a response.";
+
+      console.log('LangChain response generated successfully');
+
+      return new Response(
+        JSON.stringify({ message }),
+        {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      
-      throw new Error(`AI gateway error: ${response.status}`);
+        }
+      );
+    } catch (llmError) {
+      console.error("LangChain LLM error:", llmError);
+      throw new Error(`Failed to generate response: ${llmError instanceof Error ? llmError.message : "Unknown error"}`);
     }
-
-    const data = await response.json();
-    const message = data.choices[0]?.message?.content || "I apologize, but I couldn't generate a response.";
-
-    return new Response(
-      JSON.stringify({ message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
 
   } catch (error) {
     console.error("Error in financial-chat:", error);
