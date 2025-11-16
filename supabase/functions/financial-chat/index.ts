@@ -1,6 +1,20 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import {
+  ONBOARDING_PROMPT,
+  NETWORTH_PROMPT,
+  ASSETS_PROMPT,
+  LIABILITIES_PROMPT,
+  GOALS_PROMPT,
+  CENTER_CHAT_PROMPT,
+  MARKET_INSIGHTS_PROMPT,
+  WHAT_IF_PROMPT,
+  FINSHORTS_PROMPT,
+  ALTERNATE_INVESTMENTS_PROMPT,
+  EXPLORE_PROMPT,
+  TAX_LOSS_HARVESTING_PROMPT
+} from './prompts.ts';
 
 export type PromptType = 
   | 'onboarding'
@@ -16,21 +30,23 @@ export type PromptType =
   | 'explore'
   | 'tax-loss-harvesting';
 
-async function loadPrompt(promptType: PromptType): Promise<string> {
-  try {
-    const path = new URL(`./prompts/${promptType}.md`, import.meta.url);
-    const content = await Deno.readTextFile(path);
-    
-    if (!content || content.trim().length === 0) {
-      console.error(`Prompt file ${promptType}.md is empty`);
-      return `You are GrowWise AI, a helpful financial assistant.`;
-    }
-    
-    return content;
-  } catch (error) {
-    console.error(`Error loading prompt ${promptType}:`, error);
-    return `You are GrowWise AI, a helpful financial assistant.`;
-  }
+function loadPrompt(promptType: PromptType): string {
+  const prompts: Record<PromptType, string> = {
+    'onboarding': ONBOARDING_PROMPT,
+    'networth': NETWORTH_PROMPT,
+    'assets': ASSETS_PROMPT,
+    'liabilities': LIABILITIES_PROMPT,
+    'goals': GOALS_PROMPT,
+    'center-chat': CENTER_CHAT_PROMPT,
+    'market-insights': MARKET_INSIGHTS_PROMPT,
+    'what-if': WHAT_IF_PROMPT,
+    'finshorts': FINSHORTS_PROMPT,
+    'alternate-investments': ALTERNATE_INVESTMENTS_PROMPT,
+    'explore': EXPLORE_PROMPT,
+    'tax-loss-harvesting': TAX_LOSS_HARVESTING_PROMPT,
+  };
+  
+  return prompts[promptType] || CENTER_CHAT_PROMPT;
 }
 
 function getPromptTypeFromContext(contextType?: string): PromptType {
@@ -155,7 +171,7 @@ serve(async (req) => {
     const promptType = getPromptTypeFromContext(contextType);
     console.log('Loading prompt type:', promptType, 'for context:', contextType);
     
-    const promptContent = await loadPrompt(promptType);
+    const promptContent = loadPrompt(promptType);
     console.log('Prompt loaded successfully, length:', promptContent.length);
     
     // Build context-specific information
