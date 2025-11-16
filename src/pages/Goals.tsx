@@ -208,7 +208,7 @@ const Goals = () => {
           messages: [
             {
               role: 'user',
-              content: `Generate a concise summary for my goal. Focus on progress, timeline, and key recommendations.`
+              content: `[SUMMARY_MODE] Generate a concise 1-2 line summary for my goal using the provided data. Do not include any recommendations. After the summary, output exactly: Click to see more insights and suggestions`
             }
           ],
           contextType: 'goal',
@@ -399,12 +399,6 @@ const Goals = () => {
                           {goalSummary || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
                         </p>
                         
-                        {/* Show clickable text if there are recommendations */}
-                        {parsedRecommendations.length > 0 && (
-                          <p className="text-sm text-primary font-medium">
-                            Click to see more insights and suggestions →
-                          </p>
-                        )}
                       </div>
                     )}
                   </div>
