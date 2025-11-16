@@ -70,29 +70,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
   };
 
   const getInitialSuggestions = () => {
-    if (!goal) return [];
-
-    if (isHouseGoal) {
-      return [];
-    }
-
-    const monthsRemaining = 24; // Calculate based on goal timeline
-    const monthlyNeeded = (goal.targetAmount - goal.currentAmount) / monthsRemaining;
-
-    return [
-      {
-        id: "suggestion-1",
-        title: "Increase Monthly Contribution",
-        description: `Add $${Math.round(monthlyNeeded * 0.2)} to your monthly savings to reach your goal 4 months earlier.`,
-        status: "pending" as const,
-      },
-      {
-        id: "suggestion-2",
-        title: "Optimize Asset Allocation",
-        description: `Shift 10% from savings to stocks for potential higher returns while maintaining your risk level.`,
-        status: "pending" as const,
-      },
-    ];
+    return [];
   };
 
   const initialMessageMemo = useMemo(() => getInitialMessage(), [goal]);
@@ -106,7 +84,6 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     sendMessage,
     handleClose,
     handleSuggestionAction,
-    addHardcodedMessages,
   } = useFinancialChat({
     contextType: "goal",
     contextData: goal ? { ...goal, id: goal.id } : null,
@@ -115,67 +92,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     onClose,
   });
 
-  const [conversationStep, setConversationStep] = React.useState<"initial" | "asked-location" | "waiting-for-approval">(
-    "initial",
-  );
-
-  // Handle custom message sending for house goals
-  const handleHouseGoalMessage = (userInput: string) => {
-    const lowerInput = userInput.toLowerCase();
-
-    // Step 1: User asks if target is enough
-    if (
-      conversationStep === "initial" &&
-      (lowerInput.includes("target enough") ||
-        lowerInput.includes("is the target") ||
-        lowerInput.includes("enough for"))
-    ) {
-      addHardcodedMessages([
-        { role: "user", content: userInput },
-        {
-          role: "assistant",
-          content: `It's great you're working towards your "${goal?.name}"! To determine if your target of ${formatCurrency(goal?.targetAmount || 0)} is enough, we need more information.
-
-**Please consider the following:**
-
-1. **What type of home are you aiming for?**  Is it down payment for a house or small condo ?2. **Are you looking to be in the city or the suburban bay area ?**`,
-        },
-      ]);
-      setConversationStep("asked-location");
-      setInput("");
-      return true;
-    }
-
-    // Step 2: User responds about location/type
-    if (conversationStep === "asked-location") {
-      addHardcodedMessages([
-        { role: "user", content: userInput },
-        {
-          role: "assistant",
-          content: "Based on your preferences, the current market prices are higher than your target.",
-          suggestions: [
-            {
-              id: "increase-target",
-              title: "Increase Target to $125,000",
-              description:
-                "Adjust your goal target to $125,000 to match current market prices for your desired home type and location.",
-              status: "pending" as const,
-            },
-          ],
-        },
-      ]);
-      setConversationStep("waiting-for-approval");
-      setInput("");
-      return true;
-    }
-
-    return false;
-  };
-
   const handleSendMessage = () => {
-    if (isHouseGoal && handleHouseGoalMessage(input)) {
-      return;
-    }
     sendMessage();
   };
 
