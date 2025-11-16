@@ -1,7 +1,59 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { getPrompt, getPromptTypeFromContext } from './prompts.ts';
+
+export type PromptType = 
+  | 'onboarding'
+  | 'networth'
+  | 'assets'
+  | 'liabilities'
+  | 'goals'
+  | 'center-chat'
+  | 'market-insights'
+  | 'what-if'
+  | 'finshorts'
+  | 'alternate-investments'
+  | 'explore'
+  | 'tax-loss-harvesting';
+
+async function loadPrompt(promptType: PromptType): Promise<string> {
+  try {
+    const path = new URL(`./prompts/${promptType}.md`, import.meta.url);
+    const content = await Deno.readTextFile(path);
+    
+    if (!content || content.trim().length === 0) {
+      console.error(`Prompt file ${promptType}.md is empty`);
+      return `You are GrowWise AI, a helpful financial assistant.`;
+    }
+    
+    return content;
+  } catch (error) {
+    console.error(`Error loading prompt ${promptType}:`, error);
+    return `You are GrowWise AI, a helpful financial assistant.`;
+  }
+}
+
+function getPromptTypeFromContext(contextType?: string): PromptType {
+  const mapping: Record<string, PromptType> = {
+    'onboarding': 'onboarding',
+    'dashboard': 'networth',
+    'net-worth': 'networth',
+    'assets': 'assets',
+    'liabilities': 'liabilities',
+    'goal': 'goals',
+    'goals': 'goals',
+    'center-chat': 'center-chat',
+    'what-if': 'what-if',
+    'market-insights': 'market-insights',
+    'alternative-investments': 'alternate-investments',
+    'alternate-investments': 'alternate-investments',
+    'finshorts': 'finshorts',
+    'explore': 'explore',
+    'tax-loss-harvesting': 'tax-loss-harvesting',
+  };
+
+  return mapping[contextType || ''] || 'center-chat';
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -99,11 +151,12 @@ serve(async (req) => {
       );
     }
 
-    // Load the appropriate prompt based on context
+    // Load the appropriate prompt from markdown file
     const promptType = getPromptTypeFromContext(contextType);
-    console.log('Using prompt type:', promptType, 'for context:', contextType);
+    console.log('Loading prompt type:', promptType, 'for context:', contextType);
     
-    const promptContent = getPrompt(promptType);
+    const promptContent = await loadPrompt(promptType);
+    console.log('Prompt loaded successfully, length:', promptContent.length);
     
     // Build context-specific information
     let contextInfo = "";
