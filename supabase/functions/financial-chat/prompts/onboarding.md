@@ -100,7 +100,7 @@ When onboarding is complete, save the below values in the database **without com
 
 3. After you collect all 6 items:
    - Summarize them briefly (3 lines maximum).
-   - Save the JSON in the database exactly in the format above.
+   - Save the JSON in the profiles database exactly in the format above.
    - Activeate the "Complete set up Button."
 
 4. End with:
