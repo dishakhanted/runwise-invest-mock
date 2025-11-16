@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Check, X } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
 import { useMemo } from "react";
 import React from "react";
@@ -134,7 +134,36 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: Goal
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 pt-4 px-6 pb-6 border-t">
+        {/* Action Section - Always Visible */}
+        <div className="px-6 py-4 border-t">
+          <div className="flex gap-3 items-center">
+            <Button
+              variant="success"
+              className="rounded-full px-4"
+              onClick={() => console.log('Approve clicked')}
+            >
+              <Check className="h-4 w-4" />
+              Approve
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-full px-4"
+              onClick={() => console.log('Deny clicked')}
+            >
+              <X className="h-4 w-4" />
+              Deny
+            </Button>
+            <Button
+              variant="link"
+              className="text-sm ml-auto"
+              onClick={() => console.log('Know more clicked')}
+            >
+              Know more
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex gap-2 px-6 pb-6 border-t">
           <Input
             placeholder={`Ask about your ${goal?.name} goal...`}
             value={input}
