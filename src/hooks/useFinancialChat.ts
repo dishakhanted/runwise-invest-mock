@@ -347,10 +347,6 @@ export const useFinancialChat = ({
     }
   }, [onClose]);
 
-  const addHardcodedMessages = useCallback((newMessages: Message[]) => {
-    setMessages(prev => [...prev, ...newMessages]);
-  }, []);
-
   return {
     messages,
     input,
@@ -359,6 +355,5 @@ export const useFinancialChat = ({
     sendMessage,
     handleClose,
     handleSuggestionAction,
-    addHardcodedMessages
   };
 };
