@@ -66,7 +66,7 @@ When onboarding is complete:
 
 1. Say: "Thanks! I'm ready to personalize your plan."
 
-This will activate the "Complete Setup" button for the user. Do not output any JSON or data
+This will activate the "Complete Setup" button for the user. DO NOT output any JSON or data
 
 ---
 
