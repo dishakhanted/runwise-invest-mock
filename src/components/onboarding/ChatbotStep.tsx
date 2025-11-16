@@ -19,12 +19,9 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [showCompleteButton, setShowCompleteButton] = useState(false);
+  const [onboardingData, setOnboardingData] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [collectedData, setCollectedData] = useState({
-    income: "",
-    employmentType: "",
-    goals: "",
-  });
 
   // Use the AI chat hook for onboarding
   const {
@@ -58,14 +55,16 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
   // Check if onboarding is complete by detecting JSON in the last assistant message
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role === 'assistant' && lastMessage.content.includes('{')) {
-      // Try to extract JSON from the message
+    if (lastMessage?.role === 'assistant' && lastMessage.content.includes('```json')) {
+      // Try to extract JSON from code block
       try {
-        const jsonMatch = lastMessage.content.match(/\{[\s\S]*\}/);
+        const jsonMatch = lastMessage.content.match(/```json\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
-          const onboardingResult = JSON.parse(jsonMatch[0]);
-          // Store the collected data and complete onboarding
-          handleOnboardingComplete(onboardingResult);
+          const onboardingResult = JSON.parse(jsonMatch[1]);
+          if (onboardingResult.onboarding_complete) {
+            setOnboardingData(onboardingResult);
+            setShowCompleteButton(true);
+          }
         }
       } catch (error) {
         console.error('Error parsing onboarding JSON:', error);
@@ -78,20 +77,12 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     await sendMessage();
   };
 
-  const handleOnboardingComplete = async (onboardingResult: any) => {
-    if (isCreatingAccount) return; // Prevent duplicate submissions
+  const handleOnboardingComplete = async () => {
+    if (isCreatingAccount || !onboardingData) return; // Prevent duplicate submissions
     
     setIsCreatingAccount(true);
     
     try {
-      // Store the collected data from AI
-      setCollectedData({
-        income: onboardingResult.salary || "",
-        employmentType: onboardingResult.work_type || "",
-        goals: Array.isArray(onboardingResult.goals) 
-          ? onboardingResult.goals.join(", ") 
-          : onboardingResult.goals || "",
-      });
 
       // Create auth account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -119,11 +110,9 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
           zip_code: data.zipCode,
           ssn_encrypted: data.ssn,
           credit_check_consent: data.creditCheckConsent || false,
-          income: onboardingResult.salary || "",
-          employment_type: onboardingResult.work_type || "",
-          goals: Array.isArray(onboardingResult.goals) 
-            ? onboardingResult.goals.join(", ") 
-            : onboardingResult.goals || "",
+          income: onboardingData.income || "",
+          employment_type: onboardingData.work_type || "",
+          risk_inferred: onboardingData.risk_inferred || "",
           onboarding_completed: true,
         })
         .eq("user_id", authData.user.id);
@@ -142,47 +131,22 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
         if (accountsError) console.error("Error creating linked accounts:", accountsError);
       }
 
-      // Create default goals
-      const currentAge = data.dateOfBirth 
-        ? new Date().getFullYear() - new Date(data.dateOfBirth).getFullYear() 
-        : 25;
+      // Create goals from AI conversation
+      const aiGoals = (onboardingData.goals || []).map((goal: any) => ({
+        name: goal.name,
+        target_amount: 100000, // Default amount, can be updated later
+        target_age: goal.target_age,
+        current_amount: 0,
+        allocation_savings: 30,
+        allocation_stocks: 50,
+        allocation_bonds: 20,
+        user_id: authData.user.id,
+      }));
 
-      const defaultGoals = [
-        {
-          name: "Pay Off Student Loan",
-          target_amount: 27800,
-          target_age: currentAge + 5,
-          current_amount: 3500,
-          allocation_savings: 50,
-          allocation_stocks: 30,
-          allocation_bonds: 20,
-          user_id: authData.user.id,
-        },
-        {
-          name: "Retirement Planning",
-          target_amount: 1000000,
-          target_age: 65,
-          current_amount: 5300,
-          allocation_savings: 20,
-          allocation_stocks: 60,
-          allocation_bonds: 20,
-          user_id: authData.user.id,
-        },
-        {
-          name: "Home Goal",
-          target_amount: 10000,
-          target_age: currentAge + 6,
-          current_amount: 2400,
-          allocation_savings: 40,
-          allocation_stocks: 50,
-          allocation_bonds: 10,
-          user_id: authData.user.id,
-        },
-      ];
-
-      const { error: goalsError } = await supabase.from("goals").insert(defaultGoals);
-
-      if (goalsError) console.error("Error creating goals:", goalsError);
+      if (aiGoals.length > 0) {
+        const { error: goalsError } = await supabase.from("goals").insert(aiGoals);
+        if (goalsError) console.error("Error creating goals:", goalsError);
+      }
 
       toast({
         title: "Account created!",
@@ -248,23 +212,36 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
         </div>
       </ScrollArea>
 
-      <div className="mt-6 flex gap-2">
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Type your answer..."
-          className="flex-1"
-          disabled={isLoading || isCreatingAccount}
-        />
-        <Button
-          onClick={handleSend}
-          size="icon"
-          disabled={!input.trim() || isLoading || isCreatingAccount}
-        >
-          <Send className="h-4 w-4" />
-        </Button>
-      </div>
+      {showCompleteButton ? (
+        <div className="mt-6">
+          <Button
+            onClick={handleOnboardingComplete}
+            disabled={isCreatingAccount}
+            className="w-full"
+            size="lg"
+          >
+            {isCreatingAccount ? "Creating your account..." : "Complete Setup"}
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-6 flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleSend()}
+            placeholder="Type your answer..."
+            className="flex-1"
+            disabled={isLoading || isCreatingAccount}
+          />
+          <Button
+            onClick={handleSend}
+            size="icon"
+            disabled={!input.trim() || isLoading || isCreatingAccount}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
