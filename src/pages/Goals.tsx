@@ -34,6 +34,8 @@ const Goals = () => {
   const [selectedGoalId, setSelectedGoalId] = useState<string>("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isNewGoalOpen, setIsNewGoalOpen] = useState(false);
+  const [goalSummary, setGoalSummary] = useState<string>("");
+  const [loadingSummary, setLoadingSummary] = useState(false);
 
   useEffect(() => {
     loadGoals();
@@ -174,7 +176,46 @@ const Goals = () => {
     return (current / target) * 100;
   };
 
+  const generateGoalSummary = async (goal: Goal) => {
+    setLoadingSummary(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('financial-chat', {
+        body: {
+          messages: [
+            {
+              role: 'user',
+              content: `Generate a concise summary for my goal. Focus on progress, timeline, and key recommendations.`
+            }
+          ],
+          contextType: 'goal',
+          contextData: goal
+        }
+      });
+
+      if (error) throw error;
+
+      // Extract the text from the response
+      const summaryText = data?.choices?.[0]?.message?.content || 
+                         data?.content || 
+                         "Click to chat with GrowW AI for personalized strategies to reach your goal.";
+      
+      setGoalSummary(summaryText);
+    } catch (error) {
+      console.error('Error generating goal summary:', error);
+      setGoalSummary("Click to chat with GrowW AI for personalized strategies to reach your goal.");
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
   const selectedGoal = goals.find((g) => g.id === selectedGoalId);
+  
+  // Generate summary when selected goal changes
+  useEffect(() => {
+    if (selectedGoal) {
+      generateGoalSummary(selectedGoal);
+    }
+  }, [selectedGoalId]);
   const totalGoalAmount = selectedGoal?.currentAmount || 0;
 
   return (
@@ -320,9 +361,13 @@ const Goals = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold mb-1">Goal Summary & Insights</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedGoal.description || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
-                    </p>
+                    {loadingSummary ? (
+                      <p className="text-sm text-muted-foreground">Generating insights...</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {goalSummary || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
