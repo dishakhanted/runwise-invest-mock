@@ -65,12 +65,10 @@ Instead:
 
 When onboarding is complete, save the below values in the database **without commentary**:
 
-{
-"occupation": "",
-"income": "",
-"work_type": "",
-"goals": [],
-"goal_horizon": "",
+"occupation": ""
+"income": ""
+"work_type": ""
+"goals": [ id:"" , name:"", target-duration:""],
 "risk_inferred": ""
 }
 
