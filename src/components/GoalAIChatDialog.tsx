@@ -97,7 +97,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: Goal
                     message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">{message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}</p>
 
                   {/* Suggestions with styled buttons */}
                   {message.suggestions && message.suggestions.length > 0 && (
@@ -108,32 +108,37 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary }: Goal
                           <p className="text-xs text-muted-foreground mb-3">{suggestion.description}</p>
 
                           {suggestion.status === "pending" && (
-                            <div className="flex gap-2 items-center flex-wrap">
-                              <Button
-                                size="sm"
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                                onClick={() => handleSuggestionAction(index, suggestion.id, "approved")}
-                              >
-                                <Check className="h-3 w-3 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSuggestionAction(index, suggestion.id, "denied")}
-                              >
-                                <X className="h-3 w-3 mr-1" />
-                                Deny
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-primary hover:text-primary/80"
-                                onClick={() => handleSuggestionAction(index, suggestion.id, "know_more")}
-                              >
-                                Know more
-                              </Button>
-                            </div>
+                            <>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Button
+                                  size="sm"
+                                  className="rounded-full px-4 h-8"
+                                  onClick={() => handleSuggestionAction(index, suggestion.id, "approved")}
+                                >
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="rounded-full px-4 h-8"
+                                  onClick={() => handleSuggestionAction(index, suggestion.id, "denied")}
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  Deny
+                                </Button>
+                              </div>
+                              <div className="mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="link"
+                                  className="p-0 h-auto"
+                                  onClick={() => handleSuggestionAction(index, suggestion.id, "know_more")}
+                                >
+                                  Know more
+                                </Button>
+                              </div>
+                            </>
                           )}
 
                           {suggestion.status === "approved" && (
