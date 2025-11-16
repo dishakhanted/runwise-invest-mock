@@ -3,8 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User, Check, X } from "lucide-react";
+import { Send, Bot, User } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
+import { SuggestionActions } from "@/components/SuggestionActions";
 
 interface AIChatDialogProps {
   isOpen: boolean;
@@ -113,61 +114,14 @@ export const AIChatDialog = ({
 
                   {/* Suggestions */}
                   {message.suggestions && message.suggestions.length > 0 && (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 space-y-3">
                       {message.suggestions.map((suggestion) => (
-                        <div key={suggestion.id} className="bg-background/50 rounded-lg p-3 border border-border">
-                          <p className="text-sm font-medium mb-1">{suggestion.title}</p>
-                          <p className="text-xs text-muted-foreground mb-2">{suggestion.description}</p>
-
-                          {suggestion.status === "pending" && (
-                            <>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Button
-                                  size="sm"
-                                  variant="success"
-                                  className="rounded-full px-4 h-8"
-                                  onClick={() => handleSuggestionAction(index, suggestion.id, "approved")}
-                                >
-                                  <Check className="h-3 w-3 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="rounded-full px-4 h-8"
-                                  onClick={() => handleSuggestionAction(index, suggestion.id, "denied")}
-                                >
-                                  <X className="h-3 w-3 mr-1" />
-                                  Deny
-                                </Button>
-                              </div>
-                              <div className="mt-2">
-                                <Button
-                                  size="sm"
-                                  variant="link"
-                                  className="p-0 h-auto"
-                                  onClick={() => handleSuggestionAction(index, suggestion.id, "know_more")}
-                                >
-                                  Know more
-                                </Button>
-                              </div>
-                            </>
-                          )}
-
-                          {suggestion.status === "approved" && (
-                            <div className="flex items-center gap-1 text-xs text-success">
-                              <Check className="h-3 w-3" />
-                              Approved
-                            </div>
-                          )}
-
-                          {suggestion.status === "denied" && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <X className="h-3 w-3" />
-                              Denied
-                            </div>
-                          )}
-                        </div>
+                        <SuggestionActions
+                          key={suggestion.id}
+                          suggestion={suggestion}
+                          messageIndex={index}
+                          onAction={handleSuggestionAction}
+                        />
                       ))}
                     </div>
                   )}
