@@ -44,6 +44,17 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
     }
   }, [messages]);
 
+  // Auto-start the onboarding conversation by sending a kickoff message once
+  const startedRef = useRef(false);
+  useEffect(() => {
+    if (startedRef.current) return;
+    if (messages.length === 0 && !isLoading) {
+      startedRef.current = true;
+      setInput("Start onboarding");
+      setTimeout(() => sendMessage(), 0);
+    }
+  }, [messages.length, isLoading]);
+
   // Check if onboarding is complete by detecting JSON in the last assistant message
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
