@@ -46,9 +46,8 @@ export const useFinancialChat = ({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Reset messages when context type, initial message, or suggestions change only if no active conversation
+  // Reset messages and conversation whenever contextType changes
   useEffect(() => {
-    if (conversationId) return; // preserve ongoing chats when context changes (e.g., goal updates)
     setMessages(
       initialMessage
         ? [
@@ -60,7 +59,7 @@ export const useFinancialChat = ({
           ]
         : [],
     );
-    // Clear conversation ID when context changes to start fresh
+    // Force a new conversation for each context
     setConversationId(null);
   }, [contextType, initialMessage, initialSuggestions]);
 

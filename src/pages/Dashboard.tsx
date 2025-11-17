@@ -411,6 +411,7 @@ const Dashboard = () => {
 
       <BottomNav />
       <AIChatDialog 
+        key={viewMode}
         isOpen={isChatOpen} 
         onClose={() => {
           setIsChatOpen(false);
