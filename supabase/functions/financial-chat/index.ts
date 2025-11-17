@@ -74,6 +74,50 @@ function getPromptTypeFromContext(contextType?: string): PromptType {
   return mapping[contextType || ''] || 'center-chat';
 }
 
+type ParsedDecision = {
+  isDecision: boolean;
+  suggestionTitle?: string;
+  decision?: 'approved' | 'denied' | 'know_more';
+};
+
+const parseDecisionFromMessage = (content: string): ParsedDecision => {
+  const trimmed = content.trim();
+
+  // Pattern: I approve the suggestion: "Increase Education Loan Payment"
+  const approvalRegex = /^I approve the suggestion:\s*[""](.+?)[""]/i;
+  const denialRegex = /^I deny the suggestion:\s*[""](.+?)[""]/i;
+  const knowMoreRegex = /^I want to know more about the suggestion:\s*[""](.+?)[""]/i;
+
+  let match = trimmed.match(approvalRegex);
+  if (match && match[1]) {
+    return {
+      isDecision: true,
+      suggestionTitle: match[1].trim(),
+      decision: 'approved',
+    };
+  }
+
+  match = trimmed.match(denialRegex);
+  if (match && match[1]) {
+    return {
+      isDecision: true,
+      suggestionTitle: match[1].trim(),
+      decision: 'denied',
+    };
+  }
+
+  match = trimmed.match(knowMoreRegex);
+  if (match && match[1]) {
+    return {
+      isDecision: true,
+      suggestionTitle: match[1].trim(),
+      decision: 'know_more',
+    };
+  }
+
+  return { isDecision: false };
+};
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -97,6 +141,70 @@ serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
+    // Check if this is a suggestion decision (approve/deny/know more)
+    const lastMessage = messages[messages.length - 1];
+    const lastContent: string = lastMessage?.content ?? "";
+    const isGoalContext = contextType === "goal";
+
+    let decision: ParsedDecision | null = null;
+    if (isGoalContext && lastMessage?.role === "user") {
+      const parsed = parseDecisionFromMessage(lastContent);
+      if (parsed.isDecision) {
+        decision = parsed;
+      }
+    }
+
+    // If this is a decision for a goal, store it and return a custom response
+    if (decision && isGoalContext) {
+      // Get auth user from the request
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+
+        const goalId = contextData?.id;
+
+        if (user && goalId) {
+          // Insert a row into goal_recommendations
+          const { error: insertError } = await supabase
+            .from("goal_recommendations")
+            .insert({
+              user_id: user.id,
+              goal_id: goalId,
+              suggestion_title: decision.suggestionTitle,
+              suggestion_note: lastContent,
+              decision: decision.decision,
+            });
+
+          if (insertError) {
+            console.error("Error inserting goal_recommendation:", insertError);
+          } else {
+            console.log(`Stored ${decision.decision} decision for suggestion: ${decision.suggestionTitle}`);
+          }
+        }
+      }
+
+      // Return appropriate confirmation message based on decision type
+      let confirmationMessage = '';
+      if (decision.decision === 'approved') {
+        confirmationMessage = `Great! I've noted your approval to "${decision.suggestionTitle}". This will help you reach your goal faster.`;
+      } else if (decision.decision === 'denied') {
+        confirmationMessage = `Understood. Let me know if you'd like to explore other options for your goal.`;
+      } else if (decision.decision === 'know_more') {
+        confirmationMessage = `This feature coming soon`;
+      }
+
+      return new Response(
+        JSON.stringify({
+          message: confirmationMessage,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
 
     // Check if this is a goal update request
     let goalUpdateDetected = false;
