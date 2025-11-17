@@ -172,6 +172,8 @@ export const useFinancialChat = ({
 
       // Detect approval/denial messages to skip auto-generating suggestions
       const isApprovalOrDenial = isApprovalOrDenialMessage(textToSend);
+      
+      console.log(`[useFinancialChat sendMessage] contextType: "${contextType}", isApprovalOrDenial: ${isApprovalOrDenial}`);
 
       const userMessage: Message = { role: "user", content: textToSend };
       const newMessages = [...messages, userMessage];
@@ -245,6 +247,12 @@ export const useFinancialChat = ({
               rawAssistantMessage,
               contextType
             );
+
+            console.log(`[useFinancialChat JSON] Parsed for ${contextType}:`, {
+              summaryLength: parsed.summary.length,
+              suggestionsCount: parsed.suggestions.length,
+              suggestions: parsed.suggestions
+            });
 
             summary = parsed.summary;
 
@@ -355,6 +363,12 @@ if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
               assistantMessage,
               contextType
             );
+
+            console.log(`[useFinancialChat streaming] Parsed for ${contextType}:`, {
+              summaryLength: parsed.summary.length,
+              suggestionsCount: parsed.suggestions.length,
+              suggestions: parsed.suggestions
+            });
 
             setMessages((prev) =>
               prev.map((m, i) =>
