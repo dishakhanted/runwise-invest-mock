@@ -4,8 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
-import { useMemo } from "react";
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { SuggestionActions } from "@/components/SuggestionActions";
 
 interface Goal {
@@ -44,28 +43,26 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
     goal?.name.toLowerCase().includes("home") ||
     goal?.name.toLowerCase().includes("down payment");
 
-  // Auto-trigger full insights when chat opens
-  const initialMessageMemo = useMemo(() => 
-    "Analyze my goal and provide insights with actionable recommendations.", 
-    []
-  );
+  // ❌ Don't seed a fake assistant message anymore.
+  // We want the REAL AI response to be the first assistant message.
+  const initialMessageMemo = useMemo(() => "", []);
   const initialSuggestionsMemo = useMemo(() => [], []);
 
-  const {
-    messages,
-    input,
-    setInput,
-    isLoading,
-    sendMessage,
-    handleClose,
-    handleSuggestionAction,
-  } = useFinancialChat({
+  const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: "goal",
     contextData: goal ? { ...goal, id: goal.id } : null,
     initialMessage: initialMessageMemo,
     initialSuggestions: initialSuggestionsMemo,
     onClose,
   });
+
+  // ✅ Auto-trigger the AI when the dialog opens for this goal
+  useEffect(() => {
+    if (isOpen && goal && messages.length === 0 && !isLoading) {
+      // Send the analysis prompt without showing a user bubble
+      sendMessage("Analyze my goal and provide insights with actionable recommendations.", { silentUser: true });
+    }
+  }, [isOpen, goal?.id, messages.length, isLoading, sendMessage]);
 
   const handleSendMessage = () => {
     sendMessage();
@@ -101,23 +98,23 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                     message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}
+                  </p>
 
                   {/* Embedded suggestion boxes with approve/deny/know more buttons */}
-                  {message.role === "assistant" &&
-                    message.suggestions &&
-                    message.suggestions.length > 0 && (
-                      <div className="mt-3 space-y-3">
-                        {message.suggestions.map((suggestion) => (
-                          <SuggestionActions
-                            key={suggestion.id}
-                            suggestion={suggestion}
-                            messageIndex={index}
-                            onAction={handleSuggestionAction}
-                          />
-                        ))}
-                      </div>
-                    )}
+                  {message.role === "assistant" && message.suggestions && message.suggestions.length > 0 && (
+                    <div className="mt-3 space-y-3">
+                      {message.suggestions.map((suggestion) => (
+                        <SuggestionActions
+                          key={suggestion.id}
+                          suggestion={suggestion}
+                          messageIndex={index}
+                          onAction={handleSuggestionAction}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {message.role === "user" && (
@@ -127,6 +124,7 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                 )}
               </div>
             ))}
+
             {isLoading && messages[messages.length - 1]?.role === "user" && (
               <div className="flex gap-3 justify-start">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
