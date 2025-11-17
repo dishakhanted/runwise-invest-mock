@@ -230,8 +230,10 @@ export const useFinancialChat = ({
         if (contentType?.includes("application/json")) {
           const data = await response.json();
           console.log("Received JSON response:", data);
+          console.log("[useFinancialChat] Current messages before update:", messages.length);
 
           const rawAssistantMessage: string = data.message ?? "";
+          console.log("[useFinancialChat] Raw assistant message length:", rawAssistantMessage.length);
 
           let summary = rawAssistantMessage;
           let suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
@@ -270,12 +272,14 @@ export const useFinancialChat = ({
               suggestions,
             },
           ]);
+          console.log("[useFinancialChat] Messages updated, new length:", messages.length + 1);
 
           // Save assistant message
           if (convId && rawAssistantMessage) {
             await saveMessage(convId, "assistant", rawAssistantMessage);
           }
 
+          console.log("[useFinancialChat] Setting isLoading to false");
           setIsLoading(false);
           return;
         }
