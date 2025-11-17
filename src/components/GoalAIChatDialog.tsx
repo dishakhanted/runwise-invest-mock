@@ -104,20 +104,26 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                   <p className="text-sm whitespace-pre-wrap">{message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}</p>
 
                   {/* Embedded suggestion boxes with approve/deny/know more buttons */}
-                  {message.suggestions && message.suggestions.length > 0 && (
-                    <div className="mt-4 space-y-3">
-                      {message.suggestions.map((suggestion) => (
-                        <div key={suggestion.id} className="border border-border rounded-lg p-4 bg-background">
-                          <SuggestionActions
-                            suggestion={suggestion}
-                            messageIndex={index}
-                            onAction={handleSuggestionAction}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+<p className="text-sm whitespace-pre-wrap">
+  {message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}
+</p>
+
+{/* Suggestion box shown inside the AI chatbot bubble */}
+{message.role === "assistant" &&
+  message.suggestions &&
+  message.suggestions.length > 0 && (
+    <div className="mt-3 space-y-3">
+      {message.suggestions.map((suggestion) => (
+        <SuggestionActions
+          key={suggestion.id}
+          suggestion={suggestion}
+          messageIndex={index}
+          onAction={handleSuggestionAction}
+        />
+      ))}
+    </div>
+  )}
+
                 {message.role === "user" && (
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
                     <User className="h-4 w-4" />
