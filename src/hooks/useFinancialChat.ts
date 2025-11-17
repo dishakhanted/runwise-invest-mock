@@ -395,7 +395,7 @@ export const useFinancialChat = ({
 
       if (action === "know_more") {
         // For "know more", send the proper pattern that backend expects
-        const userMessage = `Tell me more about "${suggestion?.title}"`;
+        const userMessage = `I want to know more about the suggestion: "${suggestion?.title}"`;
         setInput(userMessage);
         setTimeout(() => sendMessage(), 100);
         return;
