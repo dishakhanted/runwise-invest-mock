@@ -373,13 +373,21 @@ serve(async (req) => {
     
     // Build context-specific information
     let contextInfo = "";
-    if (contextType === 'dashboard' && contextData) {
+    if (contextType === 'dashboard' || contextType === 'net_worth') {
       contextInfo = `\n\n## User Financial Data\n`;
-      contextInfo += `Net Worth: $${contextData.netWorth?.toLocaleString() || 0}\n`;
-      contextInfo += `Assets: $${contextData.assetsTotal?.toLocaleString() || 0}\n`;
-      contextInfo += `Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `Net Worth: $${contextData?.netWorth?.toLocaleString() || 0}\n`;
+      contextInfo += `Total Assets: $${contextData?.assetsTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `Total Liabilities: $${contextData?.liabilitiesTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `Cash: $${contextData?.cashTotal?.toLocaleString() || 0}\n`;
+      contextInfo += `Investments: $${contextData?.investmentsTotal?.toLocaleString() || 0}`;
+    } else if (contextType === 'assets' && contextData) {
+      contextInfo = `\n\n## User Assets Data\n`;
+      contextInfo += `Total Assets: $${contextData.assetsTotal?.toLocaleString() || 0}\n`;
       contextInfo += `Cash: $${contextData.cashTotal?.toLocaleString() || 0}\n`;
       contextInfo += `Investments: $${contextData.investmentsTotal?.toLocaleString() || 0}`;
+    } else if (contextType === 'liabilities' && contextData) {
+      contextInfo = `\n\n## User Liabilities Data\n`;
+      contextInfo += `Total Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}`;
     } else if (contextType === 'goal' && contextData) {
       contextInfo = `\n\n## User Goal Data\n`;
       contextInfo += `Goal Name: "${contextData.name}"\n`;
@@ -407,6 +415,7 @@ serve(async (req) => {
     ];
 
     console.log('Calling Lovable AI with prompt type:', promptType);
+    console.log('SYSTEM PROMPT CTX:', contextType, systemPrompt.slice(0, 120));
 
     // Call Lovable AI Gateway
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

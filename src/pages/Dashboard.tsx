@@ -52,6 +52,8 @@ const Dashboard = () => {
   const [showFinancialSummary, setShowFinancialSummary] = useState(false);
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [netWorthSummary, setNetWorthSummary] = useState<string>("");
+  const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
 
   useEffect(() => {
     loadLinkedAccounts();
@@ -135,6 +137,46 @@ const Dashboard = () => {
     }).format(amount);
   };
 
+  const generateNetWorthSummary = async (snapshot: {
+    netWorth: number;
+    assetsTotal: number;
+    liabilitiesTotal: number;
+    cashTotal: number;
+    investmentsTotal: number;
+  }) => {
+    setLoadingSummary(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("financial-chat", {
+        body: {
+          messages: [
+            {
+              role: "user",
+              content:
+                "[SUMMARY_MODE] Using the net worth prompt, give me a short 1–2 sentence summary of my current net worth and key observations. Only return the summary paragraph, no suggestions.",
+            },
+          ],
+          contextType: "net_worth",
+          contextData: snapshot,
+        },
+      });
+
+      if (error) throw error;
+
+      const summaryText =
+        data?.message ||
+        "Click to chat with GrowW AI for a personalized financial summary.";
+
+      setNetWorthSummary(summaryText.trim());
+    } catch (e) {
+      console.error("Error generating net worth summary:", e);
+      setNetWorthSummary(
+        "Click to chat with GrowW AI for a personalized financial summary."
+      );
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
   const getCurrentAmount = () => {
     switch (viewMode) {
       case "net-worth":
@@ -149,6 +191,20 @@ const Dashboard = () => {
   const showCashSection = viewMode === "net-worth" || viewMode === "assets";
   const showInvestmentsSection = viewMode === "net-worth" || viewMode === "assets";
   const showLiabilitiesSection = viewMode === "net-worth" || viewMode === "liabilities";
+
+  // Generate net worth summary when financial data is available
+  useEffect(() => {
+    if (netWorth !== 0 || assetsTotal !== 0 || liabilitiesTotal !== 0) {
+      const snapshot = {
+        netWorth,
+        assetsTotal,
+        liabilitiesTotal,
+        cashTotal,
+        investmentsTotal,
+      };
+      generateNetWorthSummary(snapshot);
+    }
+  }, [netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -231,7 +287,10 @@ const Dashboard = () => {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Financial Summary</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Click to chat with GrowW AI for a personalized financial summary and insights.
+                  {loadingSummary
+                    ? "Generating your financial summary..."
+                    : netWorthSummary ||
+                      "Click to chat with GrowW AI for a personalized financial summary and insights."}
                 </p>
               </div>
             </div>
