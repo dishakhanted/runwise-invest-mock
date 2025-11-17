@@ -5,6 +5,7 @@ import {
   Suggestion,
   buildSuggestionsFromMessage,
   isApprovalOrDenialMessage,
+  parseSummaryAndSuggestionsFromMessage,
 } from "@/lib/suggestions";
 
 interface Message {
@@ -227,28 +228,23 @@ export const useFinancialChat = ({
           const data = await response.json();
           console.log("Received JSON response:", data);
 
-          const assistantMessage: string = data.message ?? "";
+          const rawAssistantMessage: string = data.message ?? "";
 
+          let summary = rawAssistantMessage;
           let suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
 
-          // For AI chat contexts like goal, net worth, assets, liabilities,
-          // auto-generate suggestions if none are provided,
-          // but SKIP this when the last message was an approval/denial.
-          const isSuggestionContext =
-            contextType === "goal" ||
-            contextType === "dashboard" ||
-            contextType === "net_worth" ||
-            contextType === "assets" ||
-            contextType === "liabilities" ||
-            contextType === "explore";
+          const isSuggestionContext = contextType === "goal";
 
-          if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
-            const autoSuggestions = buildSuggestionsFromMessage(
-              assistantMessage,
+          if (isSuggestionContext && rawAssistantMessage && !isApprovalOrDenial) {
+            const parsed = parseSummaryAndSuggestionsFromMessage(
+              rawAssistantMessage,
               contextType
             );
+
+            summary = parsed.summary;
+
             if (!suggestions || suggestions.length === 0) {
-              suggestions = autoSuggestions;
+              suggestions = parsed.suggestions;
             }
           }
 
@@ -256,14 +252,14 @@ export const useFinancialChat = ({
             ...prev,
             {
               role: "assistant",
-              content: assistantMessage,
+              content: summary,
               suggestions,
             },
           ]);
 
           // Save assistant message
-          if (convId && assistantMessage) {
-            await saveMessage(convId, "assistant", assistantMessage);
+          if (convId && rawAssistantMessage) {
+            await saveMessage(convId, "assistant", rawAssistantMessage);
           }
 
           setIsLoading(false);
@@ -342,29 +338,25 @@ export const useFinancialChat = ({
 
           // After streaming finishes, attach suggestions for AI chat contexts,
           // but don't do this for approval/denial confirmation messages.
-          const isSuggestionContext =
-            contextType === "goal" ||
-            contextType === "dashboard" ||
-            contextType === "net_worth" ||
-            contextType === "assets" ||
-            contextType === "liabilities" ||
-            contextType === "explore";
+          const isSuggestionContext = contextType === "goal";
 
           if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
-            const builtSuggestions = buildSuggestionsFromMessage(
+            const parsed = parseSummaryAndSuggestionsFromMessage(
               assistantMessage,
               contextType
             );
 
-            if (builtSuggestions.length > 0) {
-              setMessages((prev) =>
-                prev.map((m, i) =>
-                  i === prev.length - 1 && m.role === "assistant"
-                    ? { ...m, suggestions: builtSuggestions }
-                    : m,
-                ),
-              );
-            }
+            setMessages((prev) =>
+              prev.map((m, i) =>
+                i === prev.length - 1 && m.role === "assistant"
+                  ? {
+                      ...m,
+                      content: parsed.summary,
+                      suggestions: parsed.suggestions,
+                    }
+                  : m,
+              ),
+            );
           }
 
           // Save assistant message
