@@ -82,25 +82,25 @@ export function useExploreContent() {
         const newContent: ExploreContent = {
           marketInsights: {
             title: "💰 Market Insights",
-            items: marketData.data?.response ? [marketData.data.response] : ["Loading market insights..."],
+            items: marketData.data?.message ? [marketData.data.message] : ["Loading market insights..."],
           },
-          whatIfScenarios: whatIfData.data?.response ? 
+          whatIfScenarios: whatIfData.data?.message ? 
             [{
               title: "AI-Generated Scenarios",
-              introMessage: whatIfData.data.response,
+              introMessage: whatIfData.data.message,
             }] : [],
           finShorts: {
             title: "⚡ Fin-shorts",
-            items: finShortsData.data?.response ? [finShortsData.data.response] : ["Loading financial shorts..."],
+            items: finShortsData.data?.message ? [finShortsData.data.message] : ["Loading financial shorts..."],
           },
           alternateInvestments: {
             title: "🌍 Alternate Investments",
-            description: alternateData.data?.response || "Loading alternate investments...",
+            description: alternateData.data?.message || "Loading alternate investments...",
             items: [],
           },
           harvestGains: {
             title: "🎯 Harvest your gains",
-            description: harvestData.data?.response || "Loading tax harvesting info...",
+            description: harvestData.data?.message || "Loading tax harvesting info...",
           },
         };
 
