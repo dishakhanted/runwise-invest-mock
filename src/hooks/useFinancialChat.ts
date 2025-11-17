@@ -46,7 +46,7 @@ export const useFinancialChat = ({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Reset messages when initial message or suggestions change only if no active conversation
+  // Reset messages when context type, initial message, or suggestions change only if no active conversation
   useEffect(() => {
     if (conversationId) return; // preserve ongoing chats when context changes (e.g., goal updates)
     setMessages(
@@ -60,7 +60,9 @@ export const useFinancialChat = ({
           ]
         : [],
     );
-  }, [initialMessage, initialSuggestions, conversationId]);
+    // Clear conversation ID when context changes to start fresh
+    setConversationId(null);
+  }, [contextType, initialMessage, initialSuggestions]);
 
   const generateTitle = (firstUserMessage: string) => {
     // Generate a concise title from the first user message
