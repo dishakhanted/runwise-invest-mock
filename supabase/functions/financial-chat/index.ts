@@ -155,7 +155,7 @@ serve(async (req) => {
       }
     }
 
-    // If this is a decision for a goal, store it and return a custom response
+    // If this is a decision for a goal, store it and call AI with suggestions prompt
     if (decision && isGoalContext) {
       // Get auth user from the request
       const authHeader = req.headers.get('Authorization');
@@ -185,15 +185,83 @@ serve(async (req) => {
         }
       }
 
-      // Return appropriate confirmation message based on decision type
-      let confirmationMessage = '';
-      if (decision.decision === 'approved') {
-        confirmationMessage = `Great! I've noted your approval to "${decision.suggestionTitle}". This will help you reach your goal faster.`;
-      } else if (decision.decision === 'denied') {
-        confirmationMessage = `Understood. Let me know if you'd like to explore other options for your goal.`;
-      } else if (decision.decision === 'know_more') {
-        confirmationMessage = `This feature coming soon`;
+      // Use the suggestions prompt to generate appropriate response
+      const suggestionsPrompt = loadPrompt('suggestions');
+      
+      // Build goal context
+      let contextInfo = `\n\n## User Goal Data\n`;
+      contextInfo += `Goal Name: "${contextData.name}"\n`;
+      contextInfo += `Target Amount: $${contextData.targetAmount?.toLocaleString() || 0}\n`;
+      contextInfo += `Current Amount: $${contextData.currentAmount?.toLocaleString() || 0}\n`;
+      contextInfo += `Progress: ${((contextData.currentAmount / contextData.targetAmount) * 100).toFixed(1)}%\n`;
+      contextInfo += `Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds\n`;
+      if (contextData.description) {
+        contextInfo += `\nGoal Details: ${contextData.description}`;
       }
+
+      // Add decision-specific instructions
+      let decisionContext = `\n\n## User Action\n`;
+      if (decision.decision === 'approved') {
+        decisionContext += `The user APPROVED the suggestion: "${decision.suggestionTitle}"\n`;
+        decisionContext += `IMPORTANT: Follow the APPROVE rules. Provide 2-3 specific next steps. DO NOT generate any new suggestions.`;
+      } else if (decision.decision === 'denied') {
+        decisionContext += `The user DENIED the suggestion: "${decision.suggestionTitle}"\n`;
+        decisionContext += `IMPORTANT: Follow the DENY rules. Accept gracefully, ask ONE clarifying question, offer ONE alternative. DO NOT generate multiple new suggestions.`;
+      } else if (decision.decision === 'know_more') {
+        decisionContext += `The user wants to KNOW MORE about the suggestion: "${decision.suggestionTitle}"\n`;
+        decisionContext += `IMPORTANT: Follow the KNOW MORE rules. Expand on the recommendation, explain benefits and impact. End with "Would you like to proceed with this?"`;
+      }
+
+      const systemPrompt = `${suggestionsPrompt}${contextInfo}${decisionContext}`;
+
+      // Format messages for Lovable AI
+      const aiMessages = [
+        { role: "system", content: systemPrompt },
+        ...messages.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content
+        }))
+      ];
+
+      console.log('Calling AI for suggestion response with decision:', decision.decision);
+
+      // Call Lovable AI Gateway
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: aiMessages,
+          stream: false,
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        console.error("AI gateway error for suggestion response:", aiResponse.status);
+        // Fallback to simple message
+        let fallbackMessage = '';
+        if (decision.decision === 'approved') {
+          fallbackMessage = `Great! I've noted your approval. This will help you reach your goal faster.`;
+        } else if (decision.decision === 'denied') {
+          fallbackMessage = `Understood. Let me know if you'd like to explore other options.`;
+        } else {
+          fallbackMessage = `Let me provide more details about this suggestion.`;
+        }
+        
+        return new Response(
+          JSON.stringify({ message: fallbackMessage }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
+      }
+
+      const aiData = await aiResponse.json();
+      const confirmationMessage = aiData.choices?.[0]?.message?.content || "I've noted your decision.";
 
       return new Response(
         JSON.stringify({

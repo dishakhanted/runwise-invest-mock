@@ -399,8 +399,8 @@ export const useFinancialChat = ({
       console.log("Found suggestion:", suggestion);
 
       if (action === "know_more") {
-        // For "know more" it's fine to show the user question in the chat
-        const userMessage = `Tell me more about "${suggestion?.title}"`;
+        // For "know more", send the proper pattern that backend expects
+        const userMessage = `I want to know more about the suggestion: "${suggestion?.title}"`;
         setInput(userMessage);
         setTimeout(() => sendMessage(), 100);
         return;
@@ -426,7 +426,7 @@ export const useFinancialChat = ({
         const userMessage = `I approve the suggestion: "${suggestion.title}"`;
         sendMessage(userMessage, { silentUser: true });
       } else if (action === "denied" && suggestion) {
-        const userMessage = `I decline the suggestion: "${suggestion.title}"`;
+        const userMessage = `I deny the suggestion: "${suggestion.title}"`;
         sendMessage(userMessage, { silentUser: true });
       }
     },
