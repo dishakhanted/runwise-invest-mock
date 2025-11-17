@@ -418,8 +418,6 @@ const Goals = () => {
           loadGoals(); // Refresh goals after closing dialog
         }}
         goal={selectedGoal || null}
-        initialSummary={goalSummary}
-        initialRecommendations={parsedRecommendations}
       />
       <NewGoalDialog 
         isOpen={isNewGoalOpen}

@@ -27,14 +27,9 @@ interface GoalAIChatDialogProps {
   isOpen: boolean;
   onClose: () => void;
   goal: Goal | null;
-  initialSummary?: string;
-  initialRecommendations?: Array<{
-    headline: string;
-    explanation: string;
-  }>;
 }
 
-export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary, initialRecommendations }: GoalAIChatDialogProps) => {
+export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -49,16 +44,12 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary, initia
     goal?.name.toLowerCase().includes("home") ||
     goal?.name.toLowerCase().includes("down payment");
 
-  const initialMessageMemo = useMemo(() => initialSummary || "", [initialSummary]);
-  const initialSuggestionsMemo = useMemo(() => {
-    if (!initialRecommendations || initialRecommendations.length === 0) return [];
-    
-    return initialRecommendations.map((rec, idx) => ({
-      id: `recommendation-${idx}`,
-      title: rec.headline,
-      description: rec.explanation,
-    }));
-  }, [initialRecommendations]);
+  // Auto-trigger full insights when chat opens
+  const initialMessageMemo = useMemo(() => 
+    "Analyze my goal and provide insights with actionable recommendations.", 
+    []
+  );
+  const initialSuggestionsMemo = useMemo(() => [], []);
 
   const {
     messages,
@@ -112,16 +103,17 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal, initialSummary, initia
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}</p>
 
-                  {/* Suggestions with styled buttons */}
+                  {/* Embedded suggestion boxes with approve/deny/know more buttons */}
                   {message.suggestions && message.suggestions.length > 0 && (
-                    <div className="mt-3 space-y-3">
+                    <div className="mt-4 space-y-3">
                       {message.suggestions.map((suggestion) => (
-                        <SuggestionActions
-                          key={suggestion.id}
-                          suggestion={suggestion}
-                          messageIndex={index}
-                          onAction={handleSuggestionAction}
-                        />
+                        <div key={suggestion.id} className="border border-border rounded-lg p-4 bg-background">
+                          <SuggestionActions
+                            suggestion={suggestion}
+                            messageIndex={index}
+                            onAction={handleSuggestionAction}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
