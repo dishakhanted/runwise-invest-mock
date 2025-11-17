@@ -59,7 +59,7 @@ function getPromptTypeFromContext(contextType?: string): PromptType {
   const mapping: Record<string, PromptType> = {
     'onboarding': 'onboarding',
     'dashboard': 'networth',
-    'net-worth': 'networth',
+    'net_worth': 'networth',
     'assets': 'assets',
     'liabilities': 'liabilities',
     'goal': 'goals',
