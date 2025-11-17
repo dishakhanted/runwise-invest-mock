@@ -233,9 +233,14 @@ export const useFinancialChat = ({
           let summary = rawAssistantMessage;
           let suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
 
-          const isSuggestionContext = contextType === "goal";
+  const isSuggestionContext =
+    contextType === "goal" ||
+    contextType === "dashboard" ||
+    contextType === "net_worth" ||
+    contextType === "assets" ||
+    contextType === "liabilities";
 
-          if (isSuggestionContext && rawAssistantMessage && !isApprovalOrDenial) {
+  if (isSuggestionContext && rawAssistantMessage && !isApprovalOrDenial) {
             const parsed = parseSummaryAndSuggestionsFromMessage(
               rawAssistantMessage,
               contextType
@@ -338,9 +343,14 @@ export const useFinancialChat = ({
 
           // After streaming finishes, attach suggestions for AI chat contexts,
           // but don't do this for approval/denial confirmation messages.
-          const isSuggestionContext = contextType === "goal";
+const isSuggestionContext =
+  contextType === "goal" ||
+  contextType === "dashboard" ||
+  contextType === "net_worth" ||
+  contextType === "assets" ||
+  contextType === "liabilities";
 
-          if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
+if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
             const parsed = parseSummaryAndSuggestionsFromMessage(
               assistantMessage,
               contextType
