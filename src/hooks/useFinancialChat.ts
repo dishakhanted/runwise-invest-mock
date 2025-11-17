@@ -264,7 +264,16 @@ export const useFinancialChat = ({
         console.log('Received JSON response:', data);
         
         const assistantMessage: string = data.message ?? "";
-        const suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
+        
+        let suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
+        
+        // For goal context, auto-generate suggestions if none provided
+        if (contextType === "goal" && assistantMessage) {
+          const autoSuggestions = buildGoalSuggestionsFromMessage(assistantMessage);
+          if (!suggestions || suggestions.length === 0) {
+            suggestions = autoSuggestions;
+          }
+        }
         
         setMessages(prev => [
           ...prev, 
