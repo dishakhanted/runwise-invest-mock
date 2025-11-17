@@ -15,10 +15,14 @@ interface SuggestionActionsProps {
 }
 
 export const SuggestionActions = ({ suggestion, messageIndex, onAction }: SuggestionActionsProps) => {
+  // Strip out [Approve] [Deny] [Know More] patterns from display text
+  const cleanTitle = suggestion.title.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim();
+  const cleanDescription = suggestion.description.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim();
+
   return (
     <div className="bg-background/50 rounded-lg p-3 border border-border">
-      <p className="text-sm font-medium mb-1">{suggestion.title}</p>
-      <p className="text-xs text-muted-foreground mb-3">{suggestion.description}</p>
+      <p className="text-sm font-medium mb-1">{cleanTitle}</p>
+      <p className="text-xs text-muted-foreground mb-3">{cleanDescription}</p>
 
       {/* Always show all three actions */}
       <div className="flex items-center gap-2 flex-wrap">
