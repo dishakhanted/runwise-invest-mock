@@ -29,6 +29,7 @@ export const ExploreChatDialog = ({
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasAutoTriggered = useRef(false);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -38,6 +39,16 @@ export const ExploreChatDialog = ({
       }
     }
   }, [messages]);
+
+  // Auto-trigger "Know More" for market insights
+  useEffect(() => {
+    if (contextType === 'market-insights' && !hasAutoTriggered.current && messages.length > 0 && !isLoading) {
+      hasAutoTriggered.current = true;
+      setTimeout(() => {
+        sendMessage('Know More');
+      }, 500);
+    }
+  }, [contextType, messages.length, isLoading, sendMessage]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLoading) {
@@ -83,15 +94,6 @@ export const ExploreChatDialog = ({
                         .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
                         .trim()}
                     </p>
-                    {contextType === 'market-insights' && index === 0 && message.role === 'assistant' && (
-                      <button
-                        onClick={() => sendMessage('Know More')}
-                        className="mt-3 text-sm text-primary hover:underline font-medium block"
-                        disabled={isLoading}
-                      >
-                        Know More
-                      </button>
-                    )}
                   </div>
 
                   {message.role === "user" && (
