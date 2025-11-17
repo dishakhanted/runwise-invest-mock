@@ -74,7 +74,9 @@ function getPromptTypeFromContext(contextType?: string): PromptType {
     'tax-loss-harvesting': 'tax-loss-harvesting',
   };
 
-  return mapping[contextType || ''] || 'center-chat';
+  const promptType = mapping[contextType || ''] || 'center-chat';
+  console.log(`[getPromptTypeFromContext] contextType: "${contextType}" → promptType: "${promptType}"`);
+  return promptType;
 }
 
 type ParsedDecision = {
