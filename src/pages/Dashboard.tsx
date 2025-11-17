@@ -137,25 +137,46 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const generateNetWorthSummary = async (snapshot: {
-    netWorth: number;
-    assetsTotal: number;
-    liabilitiesTotal: number;
-    cashTotal: number;
-    investmentsTotal: number;
-  }) => {
+  const generateFinancialSummary = async (
+    snapshot: {
+      netWorth: number;
+      assetsTotal: number;
+      liabilitiesTotal: number;
+      cashTotal: number;
+      investmentsTotal: number;
+    },
+    mode: ViewMode
+  ) => {
     setLoadingSummary(true);
     try {
+      // Determine context type and prompt message based on view mode
+      let contextType: string;
+      let promptMessage: string;
+
+      switch (mode) {
+        case "net-worth":
+          contextType = "net_worth";
+          promptMessage = "[SUMMARY_MODE] Using the net worth prompt, give me a short 1–2 sentence summary of my current net worth and key observations. Only return the summary paragraph, no suggestions.";
+          break;
+        case "assets":
+          contextType = "assets";
+          promptMessage = "[SUMMARY_MODE] Using the assets prompt, give me a short 1–2 sentence summary of my assets and key observations. Only return the summary paragraph, no suggestions.";
+          break;
+        case "liabilities":
+          contextType = "liabilities";
+          promptMessage = "[SUMMARY_MODE] Using the liabilities prompt, give me a short 1–2 sentence summary of my liabilities and key observations. Only return the summary paragraph, no suggestions.";
+          break;
+      }
+
       const { data, error } = await supabase.functions.invoke("financial-chat", {
         body: {
           messages: [
             {
               role: "user",
-              content:
-                "[SUMMARY_MODE] Using the net worth prompt, give me a short 1–2 sentence summary of my current net worth and key observations. Only return the summary paragraph, no suggestions.",
+              content: promptMessage,
             },
           ],
-          contextType: "net_worth",
+          contextType,
           contextData: snapshot,
         },
       });
@@ -168,7 +189,7 @@ const Dashboard = () => {
 
       setNetWorthSummary(summaryText.trim());
     } catch (e) {
-      console.error("Error generating net worth summary:", e);
+      console.error("Error generating financial summary:", e);
       setNetWorthSummary(
         "Click to chat with GrowW AI for a personalized financial summary."
       );
@@ -192,7 +213,7 @@ const Dashboard = () => {
   const showInvestmentsSection = viewMode === "net-worth" || viewMode === "assets";
   const showLiabilitiesSection = viewMode === "net-worth" || viewMode === "liabilities";
 
-  // Generate net worth summary when financial data is available
+  // Generate financial summary when financial data or view mode changes
   useEffect(() => {
     if (netWorth !== 0 || assetsTotal !== 0 || liabilitiesTotal !== 0) {
       const snapshot = {
@@ -202,9 +223,9 @@ const Dashboard = () => {
         cashTotal,
         investmentsTotal,
       };
-      generateNetWorthSummary(snapshot);
+      generateFinancialSummary(snapshot, viewMode);
     }
-  }, [netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal]);
+  }, [netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal, viewMode]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
