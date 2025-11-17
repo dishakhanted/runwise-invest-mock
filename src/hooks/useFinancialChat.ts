@@ -393,35 +393,32 @@ export const useFinancialChat = ({
 
       console.log("Found suggestion:", suggestion);
 
-      if (action === "know_more") {
-        // For "know more", send the proper pattern that backend expects
-        const userMessage = `I want to know more about the suggestion: "${suggestion?.title}"`;
-        setInput(userMessage);
-        setTimeout(() => sendMessage(), 100);
-        return;
+      // Update suggestion status only for approve/deny
+      if (action === "approved" || action === "denied") {
+        setMessages((prev) =>
+          prev.map((msg, idx) => {
+            if (idx === messageIndex && msg.suggestions) {
+              return {
+                ...msg,
+                suggestions: msg.suggestions.map((s) => (s.id === suggestionId ? { ...s, status: action } : s)),
+              };
+            }
+            return msg;
+          }),
+        );
       }
-
-      // Update suggestion status for approve/deny
-      setMessages((prev) =>
-        prev.map((msg, idx) => {
-          if (idx === messageIndex && msg.suggestions) {
-            return {
-              ...msg,
-              suggestions: msg.suggestions.map((s) => (s.id === suggestionId ? { ...s, status: action } : s)),
-            };
-          }
-          return msg;
-        }),
-      );
 
       console.log("About to trigger AI response for action");
 
-      // ✅ Approve / Deny should be *silent*: no user bubble
+      // ✅ All actions (Approve / Deny / Know More) should be *silent*: no user bubble
       if (action === "approved" && suggestion) {
         const userMessage = `I approve the suggestion: "${suggestion.title}"`;
         sendMessage(userMessage, { silentUser: true });
       } else if (action === "denied" && suggestion) {
         const userMessage = `I decline the suggestion: "${suggestion.title}"`;
+        sendMessage(userMessage, { silentUser: true });
+      } else if (action === "know_more" && suggestion) {
+        const userMessage = `I want to know more about the suggestion: "${suggestion.title}"`;
         sendMessage(userMessage, { silentUser: true });
       }
     },
