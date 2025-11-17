@@ -23,7 +23,7 @@ export const ExploreChatDialog = ({
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: contextType,
     contextData: contextData,
-    initialMessage: "",
+    initialMessage: contextData?.initialInsight || "",
     initialSuggestions: [],
     onClose,
   });
@@ -83,6 +83,15 @@ export const ExploreChatDialog = ({
                         .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
                         .trim()}
                     </p>
+                    {contextType === 'market-insights' && index === 0 && message.role === 'assistant' && (
+                      <button
+                        onClick={() => sendMessage('Know More')}
+                        className="mt-3 text-sm text-primary hover:underline font-medium block"
+                        disabled={isLoading}
+                      >
+                        Know More
+                      </button>
+                    )}
                   </div>
 
                   {message.role === "user" && (

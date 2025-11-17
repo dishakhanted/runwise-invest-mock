@@ -7,16 +7,24 @@ import { ExploreChatDialog } from "@/components/ExploreChatDialog";
 import { useExploreContent } from "@/hooks/useExploreContent";
 import { Badge } from "@/components/ui/badge";
 
+interface ChatContextData {
+  initialInsight?: string;
+  [key: string]: any;
+}
+
 const Explore = () => {
   const { content, isLoading } = useExploreContent();
   const [activeChatContext, setActiveChatContext] = useState<"market-insights" | "finshorts" | "what-if" | "alternate-investments" | "tax-loss-harvesting" | null>(null);
+  const [chatContextData, setChatContextData] = useState<ChatContextData>({});
 
-  const handleChatOpen = (contextType: "market-insights" | "finshorts" | "what-if" | "alternate-investments" | "tax-loss-harvesting") => {
+  const handleChatOpen = (contextType: "market-insights" | "finshorts" | "what-if" | "alternate-investments" | "tax-loss-harvesting", data?: ChatContextData) => {
     setActiveChatContext(contextType);
+    setChatContextData(data || {});
   };
 
   const handleChatClose = () => {
     setActiveChatContext(null);
+    setChatContextData({});
   };
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -39,7 +47,7 @@ const Explore = () => {
         <div className="grid grid-cols-2 gap-4 mb-4">
           <Card 
             className="border-[hsl(var(--card-teal))]/30 bg-[hsl(var(--card-teal))]/10 cursor-pointer hover:bg-[hsl(var(--card-teal))]/20 transition-colors"
-            onClick={() => handleChatOpen('market-insights')}
+            onClick={() => handleChatOpen('market-insights', { initialInsight: content.marketInsights.items[0] })}
           >
             <CardContent className="p-4">
               <CardTitle className="text-2xl text-[hsl(var(--card-teal))] mb-4">{content.marketInsights.title}</CardTitle>
@@ -123,7 +131,7 @@ const Explore = () => {
           isOpen={true}
           onClose={handleChatClose}
           contextType={activeChatContext}
-          contextData={{}}
+          contextData={chatContextData}
         />
       )}
 
