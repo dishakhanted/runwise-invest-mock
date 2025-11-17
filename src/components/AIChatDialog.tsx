@@ -54,12 +54,12 @@ export const AIChatDialog = ({
     onClose,
   });
 
-  // Trigger initial AI response when dialog opens
+  // Trigger initial AI response when dialog opens or viewMode changes
   useEffect(() => {
     if (isOpen && messages.length === 0 && !isLoading) {
       sendMessage("Please provide an analysis and suggestions based on my financial data.", { silentUser: true });
     }
-  }, [isOpen]);
+  }, [isOpen, viewMode]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
