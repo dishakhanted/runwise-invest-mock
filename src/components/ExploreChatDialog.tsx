@@ -10,7 +10,7 @@ import { SuggestionActions } from "@/components/SuggestionActions";
 interface ExploreChatDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  contextType: string;
+  contextType: "market-insights" | "finshorts" | "what-if" | "alternate-investments" | "tax-loss-harvesting";
   contextData?: Record<string, any>;
 }
 
@@ -21,8 +21,8 @@ export const ExploreChatDialog = ({
   contextData = {},
 }: ExploreChatDialogProps) => {
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
-    contextType: 'explore',
-    contextData: { ...contextData, exploreContext: contextType },
+    contextType: contextType,
+    contextData: contextData,
     initialMessage: "",
     initialSuggestions: [],
     onClose,

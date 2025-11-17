@@ -15,7 +15,7 @@ interface Message {
 }
 
 interface UseFinancialChatProps {
-  contextType: "dashboard" | "goal" | "general" | "onboarding" | "net_worth" | "assets" | "liabilities" | "explore";
+  contextType: "dashboard" | "goal" | "general" | "onboarding" | "net_worth" | "assets" | "liabilities" | "explore" | "market-insights" | "finshorts" | "what-if" | "alternate-investments" | "tax-loss-harvesting";
   contextData?: any;
   initialMessage?: string;
   initialSuggestions?: Suggestion[];
