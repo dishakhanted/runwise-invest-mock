@@ -42,15 +42,15 @@ export const ExploreChatDialog = ({
 
   // Auto-trigger "Know More" for market insights when dialog opens
   useEffect(() => {
-    if (contextType === 'market-insights' && !hasAutoTriggered.current && isOpen && messages.length === 1) {
+    if (contextType === 'market-insights' && !hasAutoTriggered.current && isOpen && messages.length >= 1 && !isLoading) {
       hasAutoTriggered.current = true;
       console.log('[ExploreChatDialog] Auto-triggering Know More for market insights');
       setTimeout(() => {
         console.log('[ExploreChatDialog] Executing sendMessage for Know More');
         sendMessage('Know More');
-      }, 800);
+      }, 400);
     }
-  }, [contextType, isOpen, messages.length, sendMessage]);
+  }, [contextType, isOpen, messages.length, isLoading, sendMessage]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLoading) {
