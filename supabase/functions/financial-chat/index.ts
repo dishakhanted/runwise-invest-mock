@@ -398,6 +398,82 @@ serve(async (req) => {
       if (contextData.description) {
         contextInfo += `\nGoal Details: ${contextData.description}`;
       }
+    } else if (contextType === 'alternate-investments') {
+      // Fetch user financial data for alternate investments
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        
+        if (user) {
+          contextInfo = `\n\n## User Financial Profile\n`;
+          
+          // Get user profile (income)
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('income, employment_type, goals, risk_inferred')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (profile) {
+            contextInfo += `Income: ${profile.income || 'Not specified'}\n`;
+            contextInfo += `Employment Type: ${profile.employment_type || 'Not specified'}\n`;
+            contextInfo += `Financial Goals: ${profile.goals || 'Not specified'}\n`;
+            contextInfo += `Risk Profile: ${profile.risk_inferred || 'Not specified'}\n\n`;
+          }
+          
+          // Get user goals
+          const { data: goals } = await supabase
+            .from('goals')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          if (goals && goals.length > 0) {
+            contextInfo += `## Active Goals (${goals.length})\n`;
+            goals.forEach((goal, idx) => {
+              const progress = goal.target_amount > 0 ? ((goal.current_amount / goal.target_amount) * 100).toFixed(1) : 0;
+              contextInfo += `${idx + 1}. ${goal.name}\n`;
+              contextInfo += `   - Target: $${goal.target_amount?.toLocaleString() || 0}\n`;
+              contextInfo += `   - Current: $${goal.current_amount?.toLocaleString() || 0} (${progress}% complete)\n`;
+              contextInfo += `   - Allocation: ${goal.allocation_savings}% savings, ${goal.allocation_stocks}% stocks, ${goal.allocation_bonds}% bonds\n`;
+              if (goal.description) contextInfo += `   - Details: ${goal.description}\n`;
+            });
+            contextInfo += '\n';
+          }
+          
+          // Get linked accounts (bank financials)
+          const { data: accounts } = await supabase
+            .from('linked_accounts')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          if (accounts && accounts.length > 0) {
+            contextInfo += `## Linked Financial Accounts (${accounts.length})\n`;
+            let totalAssets = 0;
+            let totalLiabilities = 0;
+            
+            accounts.forEach((account, idx) => {
+              contextInfo += `${idx + 1}. ${account.provider_name} (${account.account_type}) - ***${account.last_four_digits}\n`;
+              contextInfo += `   - Balance: $${account.total_amount?.toLocaleString() || 0}\n`;
+              contextInfo += `   - Interest Rate: ${account.interest_rate}%\n`;
+              
+              // Categorize as asset or liability
+              if (account.account_type.toLowerCase().includes('loan') || 
+                  account.account_type.toLowerCase().includes('credit') ||
+                  account.account_type.toLowerCase().includes('debt')) {
+                totalLiabilities += account.total_amount || 0;
+              } else {
+                totalAssets += account.total_amount || 0;
+              }
+            });
+            
+            contextInfo += `\n**Portfolio Summary:**\n`;
+            contextInfo += `Total Assets: $${totalAssets.toLocaleString()}\n`;
+            contextInfo += `Total Liabilities: $${totalLiabilities.toLocaleString()}\n`;
+            contextInfo += `Net Worth: $${(totalAssets - totalLiabilities).toLocaleString()}\n`;
+          }
+        }
+      }
     } else if (contextData) {
       contextInfo = `\n\n## Additional Context\n${JSON.stringify(contextData, null, 2)}`;
     }
