@@ -88,54 +88,6 @@ export const useFinancialChat = ({
     );
   }, [initialMessage, initialSuggestions, conversationId]);
 
-  const handleSuggestionAction = useCallback(
-    (messageIndex: number, suggestionId: string, action: "approved" | "denied" | "know_more") => {
-      console.log("handleSuggestionAction called:", {
-        messageIndex,
-        suggestionId,
-        action,
-      });
-
-      const message = messages[messageIndex];
-      const suggestion = message.suggestions?.find((s) => s.id === suggestionId);
-
-      console.log("Found suggestion:", suggestion);
-
-      if (action === "know_more") {
-        // For "know more" it's fine to show the user question in the chat
-        const userMessage = `Tell me more about "${suggestion?.title}"`;
-        setInput(userMessage);
-        setTimeout(() => sendMessage(), 100);
-        return;
-      }
-
-      // Update suggestion status for approve/deny
-      setMessages((prev) =>
-        prev.map((msg, idx) => {
-          if (idx === messageIndex && msg.suggestions) {
-            return {
-              ...msg,
-              suggestions: msg.suggestions.map((s) => (s.id === suggestionId ? { ...s, status: action } : s)),
-            };
-          }
-          return msg;
-        }),
-      );
-
-      console.log("About to trigger AI response for action");
-
-      // ✅ Approve / Deny should be *silent*: no user bubble
-      if (action === "approved" && suggestion) {
-        const userMessage = `I approve the suggestion: "${suggestion.title}"`;
-        sendMessage(userMessage, { silentUser: true });
-      } else if (action === "denied" && suggestion) {
-        const userMessage = `I decline the suggestion: "${suggestion.title}"`;
-        sendMessage(userMessage, { silentUser: true });
-      }
-    },
-    [messages, sendMessage, setInput, setMessages],
-  );
-
   const generateTitle = (firstUserMessage: string) => {
     // Generate a concise title from the first user message
     const message = firstUserMessage.trim();
@@ -431,6 +383,54 @@ export const useFinancialChat = ({
       }
     },
     [input, messages, isLoading, contextType, contextData, conversationId, saveConversation, saveMessage, toast],
+  );
+
+  const handleSuggestionAction = useCallback(
+    (messageIndex: number, suggestionId: string, action: "approved" | "denied" | "know_more") => {
+      console.log("handleSuggestionAction called:", {
+        messageIndex,
+        suggestionId,
+        action,
+      });
+
+      const message = messages[messageIndex];
+      const suggestion = message.suggestions?.find((s) => s.id === suggestionId);
+
+      console.log("Found suggestion:", suggestion);
+
+      if (action === "know_more") {
+        // For "know more" it's fine to show the user question in the chat
+        const userMessage = `Tell me more about "${suggestion?.title}"`;
+        setInput(userMessage);
+        setTimeout(() => sendMessage(), 100);
+        return;
+      }
+
+      // Update suggestion status for approve/deny
+      setMessages((prev) =>
+        prev.map((msg, idx) => {
+          if (idx === messageIndex && msg.suggestions) {
+            return {
+              ...msg,
+              suggestions: msg.suggestions.map((s) => (s.id === suggestionId ? { ...s, status: action } : s)),
+            };
+          }
+          return msg;
+        }),
+      );
+
+      console.log("About to trigger AI response for action");
+
+      // ✅ Approve / Deny should be *silent*: no user bubble
+      if (action === "approved" && suggestion) {
+        const userMessage = `I approve the suggestion: "${suggestion.title}"`;
+        sendMessage(userMessage, { silentUser: true });
+      } else if (action === "denied" && suggestion) {
+        const userMessage = `I decline the suggestion: "${suggestion.title}"`;
+        sendMessage(userMessage, { silentUser: true });
+      }
+    },
+    [messages, sendMessage, setInput, setMessages],
   );
 
   const handleClose = useCallback(() => {
