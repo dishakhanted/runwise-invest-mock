@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot } from "lucide-react";
+import { Send, Bot, User } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
+import { SuggestionActions } from "@/components/SuggestionActions";
 
 interface ExploreChatDialogProps {
   isOpen: boolean;
@@ -19,8 +20,8 @@ export const ExploreChatDialog = ({
   contextType,
   contextData = {},
 }: ExploreChatDialogProps) => {
-  const { messages, input, setInput, isLoading, sendMessage, handleClose } = useFinancialChat({
-    contextType: 'general',
+  const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
+    contextType: 'explore',
     contextData: { ...contextData, exploreContext: contextType },
     initialMessage: "",
     initialSuggestions: [],
@@ -57,20 +58,63 @@ export const ExploreChatDialog = ({
         <ScrollArea className="flex-1 px-6" ref={scrollRef}>
           <div className="space-y-4 pr-4">
             {messages.map((message, index) => (
-              <div key={index} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                {message.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                )}
+              <React.Fragment key={index}>
+                {/* Main message bubble */}
                 <div
-                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                  className={`flex gap-3 ${
+                    message.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  {message.role === "assistant" && (
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                      <Bot className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                  )}
+
+                  <div
+                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.content
+                        .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
+                        .trim()}
+                    </p>
+                  </div>
+
+                  {message.role === "user" && (
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4" />
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                {/* Separate chat bubbles for each suggestion */}
+                {message.role === "assistant" &&
+                  message.suggestions &&
+                  message.suggestions.length > 0 &&
+                  message.suggestions.map((suggestion) => (
+                    <div
+                      key={suggestion.id}
+                      className="flex gap-3 justify-start mt-2"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-primary-foreground" />
+                      </div>
+
+                      <div className="max-w-[80%]">
+                        <SuggestionActions
+                          suggestion={suggestion}
+                          messageIndex={index}
+                          onAction={handleSuggestionAction}
+                        />
+                      </div>
+                    </div>
+                  ))}
+              </React.Fragment>
             ))}
             {isLoading && (
               <div className="flex gap-3 justify-start">

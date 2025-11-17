@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,39 +99,63 @@ export const AIChatDialog = ({
         <ScrollArea className="flex-1 px-6" ref={scrollRef}>
           <div className="space-y-4 pr-4">
             {messages.map((message, index) => (
-              <div key={index} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                {message.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                )}
+              <React.Fragment key={index}>
+                {/* Main message bubble */}
                 <div
-                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                  className={`flex gap-3 ${
+                    message.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}</p>
+                  {message.role === "assistant" && (
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                      <Bot className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                  )}
 
-                  {/* Suggestions */}
-                  {message.suggestions && message.suggestions.length > 0 && (
-                    <div className="mt-3 space-y-3">
-                      {message.suggestions.map((suggestion) => (
+                  <div
+                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.content
+                        .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
+                        .trim()}
+                    </p>
+                  </div>
+
+                  {message.role === "user" && (
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Separate chat bubbles for each suggestion */}
+                {message.role === "assistant" &&
+                  message.suggestions &&
+                  message.suggestions.length > 0 &&
+                  message.suggestions.map((suggestion) => (
+                    <div
+                      key={suggestion.id}
+                      className="flex gap-3 justify-start mt-2"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-primary-foreground" />
+                      </div>
+
+                      <div className="max-w-[80%]">
                         <SuggestionActions
-                          key={suggestion.id}
                           suggestion={suggestion}
                           messageIndex={index}
                           onAction={handleSuggestionAction}
                         />
-                      ))}
+                      </div>
                     </div>
-                  )}
-                </div>
-                {message.role === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4" />
-                  </div>
-                )}
-              </div>
+                  ))}
+              </React.Fragment>
             ))}
             {isLoading && messages[messages.length - 1]?.role === "user" && (
               <div className="flex gap-3 justify-start">

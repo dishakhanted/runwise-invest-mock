@@ -1,6 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Suggestion,
+  buildSuggestionsFromMessage,
+  isApprovalOrDenialMessage,
+} from "@/lib/suggestions";
 
 interface Message {
   role: "user" | "assistant";
@@ -8,46 +13,14 @@ interface Message {
   suggestions?: Suggestion[];
 }
 
-interface Suggestion {
-  id: string;
-  title: string;
-  description: string;
-  status?: "pending" | "approved" | "denied";
-}
-
 interface UseFinancialChatProps {
-  contextType: "dashboard" | "goal" | "general" | "onboarding";
+  contextType: "dashboard" | "goal" | "general" | "onboarding" | "net_worth" | "assets" | "liabilities" | "explore";
   contextData?: any;
   initialMessage?: string;
   initialSuggestions?: Suggestion[];
   onClose?: () => void;
 }
 
-const buildGoalSuggestionsFromMessage = (assistantMessage: string): Suggestion[] => {
-  // Split into lines, ignore empty ones
-  const lines = assistantMessage
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  if (lines.length === 0) {
-    return [];
-  }
-
-  // Use the first line as a "headline" style title,
-  // and the rest as description.
-  const title = lines[0].slice(0, 80);
-  const description = lines.slice(1).join(" ").slice(0, 300);
-
-  return [
-    {
-      id: `goal-suggestion-${Date.now()}`,
-      title: title || "Recommendation",
-      description: description || assistantMessage.slice(0, 300),
-      status: "pending",
-    },
-  ];
-};
 
 export const useFinancialChat = ({
   contextType,
@@ -197,9 +170,7 @@ export const useFinancialChat = ({
       if (!textToSend || isLoading) return;
 
       // Detect approval/denial messages to skip auto-generating suggestions
-      const isApprovalOrDenial =
-        textToSend.startsWith('I approve the suggestion:') ||
-        textToSend.startsWith('I deny the suggestion:');
+      const isApprovalOrDenial = isApprovalOrDenialMessage(textToSend);
 
       const userMessage: Message = { role: "user", content: textToSend };
       const newMessages = [...messages, userMessage];
@@ -260,10 +231,22 @@ export const useFinancialChat = ({
 
           let suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
 
-          // For goal context, auto-generate suggestions if none provided,
-          // BUT skip this when the user just approved/declined a suggestion.
-          if (contextType === "goal" && assistantMessage && !isApprovalOrDenial) {
-            const autoSuggestions = buildGoalSuggestionsFromMessage(assistantMessage);
+          // For AI chat contexts like goal, net worth, assets, liabilities,
+          // auto-generate suggestions if none are provided,
+          // but SKIP this when the last message was an approval/denial.
+          const isSuggestionContext =
+            contextType === "goal" ||
+            contextType === "dashboard" ||
+            contextType === "net_worth" ||
+            contextType === "assets" ||
+            contextType === "liabilities" ||
+            contextType === "explore";
+
+          if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
+            const autoSuggestions = buildSuggestionsFromMessage(
+              assistantMessage,
+              contextType
+            );
             if (!suggestions || suggestions.length === 0) {
               suggestions = autoSuggestions;
             }
@@ -357,15 +340,28 @@ export const useFinancialChat = ({
             }
           }
 
-          // After streaming finishes, attach suggestions for goal chat,
-          // but DON'T do this for approval/denial confirmations.
-          if (contextType === "goal" && assistantMessage && !isApprovalOrDenial) {
-            const goalSuggestions = buildGoalSuggestionsFromMessage(assistantMessage);
+          // After streaming finishes, attach suggestions for AI chat contexts,
+          // but don't do this for approval/denial confirmation messages.
+          const isSuggestionContext =
+            contextType === "goal" ||
+            contextType === "dashboard" ||
+            contextType === "net_worth" ||
+            contextType === "assets" ||
+            contextType === "liabilities" ||
+            contextType === "explore";
 
-            if (goalSuggestions.length > 0) {
+          if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
+            const builtSuggestions = buildSuggestionsFromMessage(
+              assistantMessage,
+              contextType
+            );
+
+            if (builtSuggestions.length > 0) {
               setMessages((prev) =>
                 prev.map((m, i) =>
-                  i === prev.length - 1 && m.role === "assistant" ? { ...m, suggestions: goalSuggestions } : m,
+                  i === prev.length - 1 && m.role === "assistant"
+                    ? { ...m, suggestions: builtSuggestions }
+                    : m,
                 ),
               );
             }
@@ -407,7 +403,7 @@ export const useFinancialChat = ({
 
       if (action === "know_more") {
         // For "know more", send the proper pattern that backend expects
-        const userMessage = `I want to know more about the suggestion: "${suggestion?.title}"`;
+        const userMessage = `Tell me more about "${suggestion?.title}"`;
         setInput(userMessage);
         setTimeout(() => sendMessage(), 100);
         return;
@@ -433,7 +429,7 @@ export const useFinancialChat = ({
         const userMessage = `I approve the suggestion: "${suggestion.title}"`;
         sendMessage(userMessage, { silentUser: true });
       } else if (action === "denied" && suggestion) {
-        const userMessage = `I deny the suggestion: "${suggestion.title}"`;
+        const userMessage = `I decline the suggestion: "${suggestion.title}"`;
         sendMessage(userMessage, { silentUser: true });
       }
     },
