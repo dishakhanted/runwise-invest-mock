@@ -48,7 +48,7 @@ export function useExploreContent() {
         const [marketData, whatIfData, finShortsData, alternateData, harvestData] = await Promise.all([
           supabase.functions.invoke('financial-chat', {
             body: {
-              messages: [{ role: 'user', content: 'Generate market insights summary' }],
+              messages: [{ role: 'user', content: 'Generate one random market insight in the short format' }],
               contextType: 'market-insights',
             },
           }),
