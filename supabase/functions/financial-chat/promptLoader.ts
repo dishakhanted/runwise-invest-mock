@@ -44,6 +44,7 @@ export function getPromptTypeFromContext(contextType?: string): PromptType {
     'onboarding': 'onboarding',
     'dashboard': 'networth',
     'net-worth': 'networth',
+    'net_worth': 'networth',  // Support underscore variant
     'assets': 'assets',
     'liabilities': 'liabilities',
     'goal': 'goals',
