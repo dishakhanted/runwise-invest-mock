@@ -196,6 +196,11 @@ export const useFinancialChat = ({
       const textToSend = (overrideText ?? input).trim();
       if (!textToSend || isLoading) return;
 
+      // Detect approval/denial messages to skip auto-generating suggestions
+      const isApprovalOrDenial =
+        textToSend.startsWith('I approve the suggestion:') ||
+        textToSend.startsWith('I deny the suggestion:');
+
       const userMessage: Message = { role: "user", content: textToSend };
       const newMessages = [...messages, userMessage];
       if (!options?.silentUser) {
@@ -255,8 +260,9 @@ export const useFinancialChat = ({
 
           let suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
 
-          // For goal context, auto-generate suggestions if none provided
-          if (contextType === "goal" && assistantMessage) {
+          // For goal context, auto-generate suggestions if none provided,
+          // BUT skip this when the user just approved/declined a suggestion.
+          if (contextType === "goal" && assistantMessage && !isApprovalOrDenial) {
             const autoSuggestions = buildGoalSuggestionsFromMessage(assistantMessage);
             if (!suggestions || suggestions.length === 0) {
               suggestions = autoSuggestions;
@@ -351,8 +357,9 @@ export const useFinancialChat = ({
             }
           }
 
-          // After streaming finishes, attach suggestions for goal chat
-          if (contextType === "goal" && assistantMessage) {
+          // After streaming finishes, attach suggestions for goal chat,
+          // but DON'T do this for approval/denial confirmations.
+          if (contextType === "goal" && assistantMessage && !isApprovalOrDenial) {
             const goalSuggestions = buildGoalSuggestionsFromMessage(assistantMessage);
 
             if (goalSuggestions.length > 0) {
