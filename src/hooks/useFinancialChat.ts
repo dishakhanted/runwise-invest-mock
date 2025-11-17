@@ -236,9 +236,18 @@ export const useFinancialChat = ({
       if (contentType?.includes('application/json')) {
         const data = await response.json();
         console.log('Received JSON response:', data);
-        const assistantMessage = data.message;
         
-        setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+        const assistantMessage: string = data.message ?? "";
+        const suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
+        
+        setMessages(prev => [
+          ...prev, 
+          { 
+            role: 'assistant', 
+            content: assistantMessage,
+            suggestions
+          }
+        ]);
         
         // Save assistant message
         if (convId && assistantMessage) {
@@ -271,34 +280,47 @@ export const useFinancialChat = ({
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
                 
+                // Optional: structured suggestions may be sent on some chunks
+                const chunkSuggestions: Suggestion[] | undefined = parsed.suggestions;
+                
+                // Append content if present
                 if (content) {
                   assistantMessage += content;
+                }
+                
+                // Build up suggestions:
+                // - Prefer structured suggestions from the stream if provided
+                // - Otherwise, leave suggestions undefined
+                let suggestions: Suggestion[] | undefined = undefined;
+                
+                if (Array.isArray(chunkSuggestions) && chunkSuggestions.length > 0) {
+                  suggestions = chunkSuggestions;
+                }
+                
+                setMessages(prev => {
+                  const last = prev[prev.length - 1];
                   
-                  // Check if message contains suggestions (simple pattern matching)
-                  let suggestions: Suggestion[] | undefined;
-                  if (assistantMessage.includes('Suggestion:') || assistantMessage.includes('I suggest')) {
-                    // Extract suggestions (this is a simple implementation)
-                    // In production, you'd want the AI to return structured data
-                    suggestions = [{
-                      id: `suggestion-${Date.now()}`,
-                      title: 'Financial Action',
-                      description: assistantMessage.split('\n')[0].substring(0, 100),
-                      status: 'pending'
-                    }];
+                  if (last?.role === 'assistant') {
+                    return prev.map((m, i) =>
+                      i === prev.length - 1 
+                        ? { 
+                            ...m, 
+                            content: assistantMessage,
+                            suggestions: suggestions ?? m.suggestions
+                          } 
+                        : m
+                    );
                   }
                   
-                  setMessages(prev => {
-                    const last = prev[prev.length - 1];
-                    if (last?.role === 'assistant') {
-                      return prev.map((m, i) =>
-                        i === prev.length - 1 
-                          ? { ...m, content: assistantMessage, suggestions } 
-                          : m
-                      );
+                  return [
+                    ...prev, 
+                    { 
+                      role: 'assistant', 
+                      content: assistantMessage,
+                      suggestions
                     }
-                    return [...prev, { role: 'assistant', content: assistantMessage, suggestions }];
-                  });
-                }
+                  ];
+                });
               } catch (e) {
                 // Ignore JSON parse errors for incomplete chunks
               }
