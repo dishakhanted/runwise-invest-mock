@@ -23,6 +23,32 @@ interface UseFinancialChatProps {
   onClose?: () => void;
 }
 
+const buildGoalSuggestionsFromMessage = (assistantMessage: string): Suggestion[] => {
+  // Split into lines, ignore empty ones
+  const lines = assistantMessage
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return [];
+  }
+
+  // Use the first line as a "headline" style title,
+  // and the rest as description.
+  const title = lines[0].slice(0, 80);
+  const description = lines.slice(1).join(" ").slice(0, 300);
+
+  return [
+    {
+      id: `goal-suggestion-${Date.now()}`,
+      title: title || "Recommendation",
+      description: description || assistantMessage.slice(0, 300),
+      status: "pending",
+    },
+  ];
+};
+
 export const useFinancialChat = ({
   contextType,
   contextData,
@@ -325,6 +351,21 @@ export const useFinancialChat = ({
                 // Ignore JSON parse errors for incomplete chunks
               }
             }
+          }
+        }
+
+        // After streaming finishes, attach suggestions for goal chat
+        if (contextType === "goal" && assistantMessage) {
+          const goalSuggestions = buildGoalSuggestionsFromMessage(assistantMessage);
+
+          if (goalSuggestions.length > 0) {
+            setMessages((prev) =>
+              prev.map((m, i) =>
+                i === prev.length - 1 && m.role === "assistant"
+                  ? { ...m, suggestions: goalSuggestions }
+                  : m
+              )
+            );
           }
         }
 
