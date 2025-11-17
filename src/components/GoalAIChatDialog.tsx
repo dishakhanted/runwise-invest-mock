@@ -104,25 +104,21 @@ export const GoalAIChatDialog = ({ isOpen, onClose, goal }: GoalAIChatDialogProp
                   <p className="text-sm whitespace-pre-wrap">{message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}</p>
 
                   {/* Embedded suggestion boxes with approve/deny/know more buttons */}
-<p className="text-sm whitespace-pre-wrap">
-  {message.content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim()}
-</p>
-
-{/* Suggestion box shown inside the AI chatbot bubble */}
-{message.role === "assistant" &&
-  message.suggestions &&
-  message.suggestions.length > 0 && (
-    <div className="mt-3 space-y-3">
-      {message.suggestions.map((suggestion) => (
-        <SuggestionActions
-          key={suggestion.id}
-          suggestion={suggestion}
-          messageIndex={index}
-          onAction={handleSuggestionAction}
-        />
-      ))}
-    </div>
-  )}
+                  {message.role === "assistant" &&
+                    message.suggestions &&
+                    message.suggestions.length > 0 && (
+                      <div className="mt-3 space-y-3">
+                        {message.suggestions.map((suggestion) => (
+                          <SuggestionActions
+                            key={suggestion.id}
+                            suggestion={suggestion}
+                            messageIndex={index}
+                            onAction={handleSuggestionAction}
+                          />
+                        ))}
+                      </div>
+                    )}
+                </div>
 
                 {message.role === "user" && (
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
