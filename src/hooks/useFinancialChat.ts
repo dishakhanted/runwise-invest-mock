@@ -26,7 +26,7 @@ interface UseFinancialChatProps {
 export const useFinancialChat = ({
   contextType,
   contextData,
-  initialMessage = "",
+  initialMessage,
   initialSuggestions,
   onClose,
 }: UseFinancialChatProps) => {
