@@ -204,11 +204,9 @@ OUTPUT FORMAT
 
 [Recommendation 1 Headline]
 [1-3 sentence explanation]
-[Approve] [Deny] [Know More]
 
 [Recommendation 2 Headline] (if applicable)
 [1-3 sentence explanation]
-[Approve] [Deny] [Know More]
 
 HANDLING USER RESPONSES TO RECOMMENDATIONS
 
@@ -231,7 +229,6 @@ IMPORTANT
 - No disclaimers or meta-commentary
 - No references to other modules
 - Focus solely on THIS goal with the data provided`;
-
 
 // Placeholder prompts for other types - add actual content from .md files as needed
 export const NETWORTH_PROMPT = `You are GrowWise AI, a helpful financial assistant specializing in net worth analysis.`;
