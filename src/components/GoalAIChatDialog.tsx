@@ -1,11 +1,12 @@
+import React, { useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User } from "lucide-react";
 import { useFinancialChat } from "@/hooks/useFinancialChat";
-import React, { useEffect, useMemo } from "react";
 import { SuggestionActions } from "@/components/SuggestionActions";
+import { Suggestion } from "@/lib/suggestions";
 
 interface Goal {
   id: string;
