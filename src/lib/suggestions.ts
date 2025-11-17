@@ -6,6 +6,53 @@ export interface Suggestion {
 }
 
 /**
+ * Parse an assistant message into:
+ * - summary: first paragraph (top of the chat bubble)
+ * - suggestions: one per subsequent paragraph
+ */
+export const parseSummaryAndSuggestionsFromMessage = (
+  assistantMessage: string,
+  contextType: string
+): { summary: string; suggestions: Suggestion[] } => {
+  // Split into paragraphs on blank lines
+  const blocks = assistantMessage
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+
+  if (blocks.length === 0) {
+    return {
+      summary: assistantMessage,
+      suggestions: [],
+    };
+  }
+
+  const summary = blocks[0];
+
+  const suggestionBlocks = blocks.slice(1);
+
+  const suggestions: Suggestion[] = suggestionBlocks.map((block, idx) => {
+    // Within each block, first line = title, rest = description
+    const lines = block
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    const title = (lines[0] || "").slice(0, 80);
+    const description = lines.slice(1).join(" ").slice(0, 300);
+
+    return {
+      id: `${contextType || "suggestion"}-${Date.now()}-${idx}`,
+      title: title || block.slice(0, 80),
+      description: description || block.slice(0, 300),
+      status: "pending",
+    };
+  });
+
+  return { summary, suggestions };
+};
+
+/**
  * Build one or more suggestions from an assistant message.
  * This is used for goal, net worth, assets, liabilities chatbots,
  * and should produce a clean "headline + explanation" card.
