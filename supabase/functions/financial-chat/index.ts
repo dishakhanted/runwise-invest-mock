@@ -14,7 +14,8 @@ import {
   ALTERNATE_INVESTMENTS_PROMPT,
   EXPLORE_PROMPT,
   TAX_LOSS_HARVESTING_PROMPT,
-  SUGGESTIONS_PROMPT
+  DECISION_HANDLING_PROMPT,
+  GOAL_UPDATE_PROMPT
 } from './prompts.ts';
 
 export type PromptType = 
@@ -30,7 +31,8 @@ export type PromptType =
   | 'alternate-investments'
   | 'explore'
   | 'tax-loss-harvesting'
-  | 'suggestions';
+  | 'decision-handling'
+  | 'goal-update';
 
 function loadPrompt(promptType: PromptType): string {
   const prompts: Record<PromptType, string> = {
@@ -46,7 +48,8 @@ function loadPrompt(promptType: PromptType): string {
     'alternate-investments': ALTERNATE_INVESTMENTS_PROMPT,
     'explore': EXPLORE_PROMPT,
     'tax-loss-harvesting': TAX_LOSS_HARVESTING_PROMPT,
-    'suggestions': SUGGESTIONS_PROMPT,
+    'decision-handling': DECISION_HANDLING_PROMPT,
+    'goal-update': GOAL_UPDATE_PROMPT,
   };
   
   return prompts[promptType] || CENTER_CHAT_PROMPT;
@@ -191,10 +194,7 @@ serve(async (req) => {
         }
       }
 
-      // Use the suggestions prompt to generate appropriate response
-      const suggestionsPrompt = loadPrompt('suggestions');
-      
-      // Build context info based on context type
+      // Use the decision handling prompt
       let contextInfo = `\n\n## User Data\n`;
       
       if (contextType === "goal") {
@@ -218,20 +218,17 @@ serve(async (req) => {
         contextInfo += `Total Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}\n`;
       }
 
-      // Add decision-specific instructions
+      // Add decision-specific context
       let decisionContext = `\n\n## User Action\n`;
       if (decision.decision === 'approved') {
-        decisionContext += `The user APPROVED the suggestion: "${decision.suggestionTitle}"\n`;
-        decisionContext += `IMPORTANT: Follow the APPROVE rules. Provide 2-3 specific next steps. DO NOT generate any new suggestions.`;
+        decisionContext += `The user APPROVED the suggestion: "${decision.suggestionTitle}"`;
       } else if (decision.decision === 'denied') {
-        decisionContext += `The user DENIED the suggestion: "${decision.suggestionTitle}"\n`;
-        decisionContext += `IMPORTANT: Follow the DENY rules. Accept gracefully, ask ONE clarifying question, offer ONE alternative. DO NOT generate multiple new suggestions.`;
+        decisionContext += `The user DENIED the suggestion: "${decision.suggestionTitle}"`;
       } else if (decision.decision === 'know_more') {
-        decisionContext += `The user wants to KNOW MORE about the suggestion: "${decision.suggestionTitle}"\n`;
-        decisionContext += `IMPORTANT: Follow the KNOW MORE rules. Expand on the recommendation, explain benefits and impact. End with "Would you like to proceed with this?"`;
+        decisionContext += `The user wants to KNOW MORE about the suggestion: "${decision.suggestionTitle}"`;
       }
 
-      const systemPrompt = `${suggestionsPrompt}${contextInfo}${decisionContext}`;
+      const systemPrompt = `${DECISION_HANDLING_PROMPT}${contextInfo}${decisionContext}`;
 
       // Format messages for Lovable AI
       const aiMessages = [
