@@ -30,6 +30,7 @@ export const ExploreChatDialog = ({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasAutoTriggered = useRef(false);
+  const [isFollowingUp, setIsFollowingUp] = React.useState(false);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -40,11 +41,19 @@ export const ExploreChatDialog = ({
     }
   }, [messages]);
 
+  // Clear follow-up skeleton when new messages arrive
+  useEffect(() => {
+    if (isFollowingUp && messages.length > 1) {
+      setIsFollowingUp(false);
+    }
+  }, [messages.length, isFollowingUp]);
+
   // Auto-trigger "Know More" for market insights when dialog opens
   useEffect(() => {
     if (contextType === 'market-insights' && !hasAutoTriggered.current && isOpen && messages.length >= 1 && !isLoading) {
       hasAutoTriggered.current = true;
       console.log('[ExploreChatDialog] Auto-triggering Know More for market insights');
+      setIsFollowingUp(true);
       setTimeout(() => {
         console.log('[ExploreChatDialog] Executing sendMessage for Know More');
         sendMessage('Know More');
@@ -52,10 +61,44 @@ export const ExploreChatDialog = ({
     }
   }, [contextType, isOpen, messages.length, isLoading, sendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLoading) {
       sendMessage();
     }
+  };
+
+  const handleKnowMoreClick = () => {
+    sendMessage('Know More');
+  };
+
+  const renderMessageContent = (content: string) => {
+    // Strip action markers and split by "Know More"
+    const cleaned = content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim();
+    const parts = cleaned.split(/Know More/gi);
+    
+    if (parts.length === 1) {
+      return <p className="text-sm whitespace-pre-wrap">{cleaned}</p>;
+    }
+
+    return (
+      <div className="space-y-2">
+        {parts.map((part, idx) => (
+          <React.Fragment key={idx}>
+            {part.trim() && <p className="text-sm whitespace-pre-wrap">{part.trim()}</p>}
+            {idx < parts.length - 1 && (
+              <Button
+                size="sm"
+                variant="link"
+                className="p-0 h-auto text-primary hover:underline"
+                onClick={handleKnowMoreClick}
+              >
+                Know More
+              </Button>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -91,11 +134,14 @@ export const ExploreChatDialog = ({
                         : "bg-muted"
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">
-                      {message.content
-                        .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
-                        .trim()}
-                    </p>
+                    {message.role === "assistant" && contextType === "market-insights" 
+                      ? renderMessageContent(message.content)
+                      : <p className="text-sm whitespace-pre-wrap">
+                          {message.content
+                            .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
+                            .trim()}
+                        </p>
+                    }
                   </div>
 
                   {message.role === "user" && (
@@ -129,7 +175,17 @@ export const ExploreChatDialog = ({
                   ))}
               </React.Fragment>
             ))}
-            {isLoading && (
+            {isFollowingUp && (
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <div className="rounded-lg px-4 py-2 bg-muted">
+                  <p className="text-sm">Following up...</p>
+                </div>
+              </div>
+            )}
+            {isLoading && !isFollowingUp && (
               <div className="flex gap-3 justify-start">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                   <Bot className="h-4 w-4 text-primary-foreground" />
@@ -147,7 +203,7 @@ export const ExploreChatDialog = ({
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="Ask a question..."
               disabled={isLoading}
               className="flex-1"
