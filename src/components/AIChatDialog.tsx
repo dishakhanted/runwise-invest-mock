@@ -54,7 +54,7 @@ export const AIChatDialog = ({
   const initialSuggestionsMemo = useMemo(() => getInitialSuggestions(), [showFinancialSummary, viewMode]);
 
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
-    contextType: "dashboard",
+    contextType: viewMode === "net-worth" ? "net_worth" : viewMode === "assets" ? "assets" : "liabilities",
     contextData: {
       viewMode,
       netWorth,

@@ -145,18 +145,23 @@ serve(async (req) => {
     // Check if this is a suggestion decision (approve/deny/know more)
     const lastMessage = messages[messages.length - 1];
     const lastContent: string = lastMessage?.content ?? "";
-    const isGoalContext = contextType === "goal";
+    const isSuggestionContext = 
+      contextType === "goal" || 
+      contextType === "dashboard" ||
+      contextType === "net_worth" || 
+      contextType === "assets" || 
+      contextType === "liabilities";
 
     let decision: ParsedDecision | null = null;
-    if (isGoalContext && lastMessage?.role === "user") {
+    if (isSuggestionContext && lastMessage?.role === "user") {
       const parsed = parseDecisionFromMessage(lastContent);
       if (parsed.isDecision) {
         decision = parsed;
       }
     }
 
-    // If this is a decision for a goal, store it and call AI with suggestions prompt
-    if (decision && isGoalContext) {
+    // If this is a decision, store it and call AI with suggestions prompt
+    if (decision && isSuggestionContext) {
       // Get auth user from the request
       const authHeader = req.headers.get('Authorization');
       if (authHeader) {
@@ -165,7 +170,8 @@ serve(async (req) => {
 
         const goalId = contextData?.id;
 
-        if (user && goalId) {
+        // Only store to DB for goal context (has goal_recommendations table)
+        if (user && goalId && contextType === "goal") {
           // Insert a row into goal_recommendations
           const { error: insertError } = await supabase
             .from("goal_recommendations")
@@ -188,15 +194,28 @@ serve(async (req) => {
       // Use the suggestions prompt to generate appropriate response
       const suggestionsPrompt = loadPrompt('suggestions');
       
-      // Build goal context
-      let contextInfo = `\n\n## User Goal Data\n`;
-      contextInfo += `Goal Name: "${contextData.name}"\n`;
-      contextInfo += `Target Amount: $${contextData.targetAmount?.toLocaleString() || 0}\n`;
-      contextInfo += `Current Amount: $${contextData.currentAmount?.toLocaleString() || 0}\n`;
-      contextInfo += `Progress: ${((contextData.currentAmount / contextData.targetAmount) * 100).toFixed(1)}%\n`;
-      contextInfo += `Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds\n`;
-      if (contextData.description) {
-        contextInfo += `\nGoal Details: ${contextData.description}`;
+      // Build context info based on context type
+      let contextInfo = `\n\n## User Data\n`;
+      
+      if (contextType === "goal") {
+        contextInfo += `Goal Name: "${contextData.name}"\n`;
+        contextInfo += `Target Amount: $${contextData.targetAmount?.toLocaleString() || 0}\n`;
+        contextInfo += `Current Amount: $${contextData.currentAmount?.toLocaleString() || 0}\n`;
+        contextInfo += `Progress: ${((contextData.currentAmount / contextData.targetAmount) * 100).toFixed(1)}%\n`;
+        contextInfo += `Allocation: ${contextData.allocation?.savings || 0}% savings, ${contextData.allocation?.stocks || 0}% stocks, ${contextData.allocation?.bonds || 0}% bonds\n`;
+        if (contextData.description) {
+          contextInfo += `\nGoal Details: ${contextData.description}`;
+        }
+      } else if (contextType === "dashboard" || contextType === "net_worth") {
+        contextInfo += `Net Worth: $${contextData.netWorth?.toLocaleString() || 0}\n`;
+        contextInfo += `Total Assets: $${contextData.assetsTotal?.toLocaleString() || 0}\n`;
+        contextInfo += `Total Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}\n`;
+      } else if (contextType === "assets") {
+        contextInfo += `Total Assets: $${contextData.assetsTotal?.toLocaleString() || 0}\n`;
+        contextInfo += `Cash: $${contextData.cashTotal?.toLocaleString() || 0}\n`;
+        contextInfo += `Investments: $${contextData.investmentsTotal?.toLocaleString() || 0}\n`;
+      } else if (contextType === "liabilities") {
+        contextInfo += `Total Liabilities: $${contextData.liabilitiesTotal?.toLocaleString() || 0}\n`;
       }
 
       // Add decision-specific instructions
