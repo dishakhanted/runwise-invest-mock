@@ -313,6 +313,11 @@ const Dashboard = () => {
                     : netWorthSummary ||
                       "Click to chat with GrowW AI for a personalized financial summary and insights."}
                 </p>
+                {!loadingSummary && netWorthSummary && (
+                  <p className="text-sm font-bold text-primary mt-2">
+                    Click here to know more suggestions
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
