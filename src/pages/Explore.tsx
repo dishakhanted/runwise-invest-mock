@@ -4,8 +4,6 @@ import { Logo } from "@/components/Logo";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { ExploreChatDialog } from "@/components/ExploreChatDialog";
-import { useExploreContent } from "@/hooks/useExploreContent";
-import { Badge } from "@/components/ui/badge";
 
 interface ChatContextData {
   initialInsight?: string;
@@ -13,9 +11,46 @@ interface ChatContextData {
 }
 
 const Explore = () => {
-  const { content, isLoading } = useExploreContent();
   const [activeChatContext, setActiveChatContext] = useState<"market-insights" | "finshorts" | "what-if" | "alternate-investments" | "tax-loss-harvesting" | null>(null);
   const [chatContextData, setChatContextData] = useState<ChatContextData>({});
+
+  // Static demo content
+  const content = {
+    marketInsights: {
+      title: "📈 Market Insights",
+      items: [
+        "Tech stocks rally on AI chip demand surge",
+        "Federal Reserve holds rates steady at 5.25%",
+        "Energy sector shows strongest growth in Q4"
+      ]
+    },
+    whatIfScenarios: [
+      { title: "I increase my 401(k) by 2%?" },
+      { title: "I delay buying a home by 1 year?" },
+      { title: "I refinance my student loans?" }
+    ],
+    finShorts: {
+      title: "⚡ Fin-shorts",
+      items: [
+        "529 plans now cover apprenticeships and student loan repayments",
+        "IRS increases 401(k) contribution limit to $23,000 for 2024",
+        "High-yield savings accounts averaging 4.5% APY"
+      ]
+    },
+    alternateInvestments: {
+      title: "🎯 Alternate Investments",
+      description: "Based on your portfolio, consider:",
+      items: [
+        "Real Estate Investment Trusts (REITs)",
+        "Treasury Inflation-Protected Securities",
+        "Municipal bonds for tax advantages"
+      ]
+    },
+    harvestGains: {
+      title: "💰 Harvest gains",
+      description: "Potential tax-loss harvesting opportunities identified in your portfolio"
+    }
+  };
 
   const handleChatOpen = (contextType: "market-insights" | "finshorts" | "what-if" | "alternate-investments" | "tax-loss-harvesting", data?: ChatContextData) => {
     setActiveChatContext(contextType);
@@ -34,14 +69,6 @@ const Explore = () => {
           <h1 className="text-5xl font-bold">Explore</h1>
           <Logo className="h-10 w-10" />
         </div>
-        
-        {isLoading && (
-          <div className="mb-4">
-            <Badge variant="secondary" className="text-xs">
-              🤖 Generating AI content...
-            </Badge>
-          </div>
-        )}
 
         {/* Top Row - Market Insights & What if */}
         <div className="grid grid-cols-2 gap-4 mb-4">
