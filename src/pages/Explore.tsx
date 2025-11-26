@@ -54,7 +54,28 @@ const Explore = () => {
 
   const handleChatOpen = (contextType: "market-insights" | "finshorts" | "what-if" | "alternate-investments" | "tax-loss-harvesting", data?: ChatContextData) => {
     setActiveChatContext(contextType);
-    setChatContextData(data || {});
+    
+    // Prepare the initial summary based on context type
+    let initialSummary = "";
+    switch (contextType) {
+      case "market-insights":
+        initialSummary = content.marketInsights.items.join("\n");
+        break;
+      case "finshorts":
+        initialSummary = content.finShorts.items.join("\n");
+        break;
+      case "what-if":
+        initialSummary = "Explore scenarios:\n" + content.whatIfScenarios.map(s => s.title).join("\n");
+        break;
+      case "alternate-investments":
+        initialSummary = content.alternateInvestments.description + "\n" + content.alternateInvestments.items.map((item, i) => `${i + 1}. ${item}`).join("\n");
+        break;
+      case "tax-loss-harvesting":
+        initialSummary = content.harvestGains.description;
+        break;
+    }
+    
+    setChatContextData({ ...data, initialSummary });
   };
 
   const handleChatClose = () => {

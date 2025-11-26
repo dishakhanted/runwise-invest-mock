@@ -23,18 +23,12 @@ export const ExploreChatDialog = ({
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: contextType,
     contextData: contextData,
-    initialMessage: contextData?.initialInsight || "",
+    initialMessage: contextData?.initialSummary || "",
     initialSuggestions: [],
     onClose,
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const hasAutoTriggered = useRef(false);
-
-  // Reset auto-trigger when context changes
-  useEffect(() => {
-    hasAutoTriggered.current = false;
-  }, [contextType]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -45,26 +39,10 @@ export const ExploreChatDialog = ({
     }
   }, [messages]);
 
-  // Auto-send initial message when dialog opens to get 2-line summary
-  useEffect(() => {
-    if (!hasAutoTriggered.current && isOpen && messages.length === 0 && !isLoading) {
-      hasAutoTriggered.current = true;
-      console.log('[ExploreChatDialog] Auto-sending initial message for summary');
-      setTimeout(() => {
-        sendMessage('Give me a brief overview');
-      }, 300);
-    }
-  }, [isOpen, messages.length, isLoading, sendMessage]);
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLoading) {
       sendMessage();
     }
-  };
-
-  const renderMessageContent = (content: string) => {
-    // Display content as-is without special "Know More" handling
-    return <p className="text-sm whitespace-pre-wrap">{content}</p>;
   };
 
   return (
@@ -100,14 +78,11 @@ export const ExploreChatDialog = ({
                         : "bg-muted"
                     }`}
                   >
-                    {message.role === "assistant" && contextType === "market-insights" 
-                      ? renderMessageContent(message.content)
-                      : <p className="text-sm whitespace-pre-wrap">
-                          {message.content
-                            .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
-                            .trim()}
-                        </p>
-                    }
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.content
+                        .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
+                        .trim()}
+                    </p>
                   </div>
 
                   {message.role === "user" && (
