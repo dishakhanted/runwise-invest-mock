@@ -30,7 +30,11 @@ export const ExploreChatDialog = ({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasAutoTriggered = useRef(false);
-  const [isFollowingUp, setIsFollowingUp] = React.useState(false);
+
+  // Reset auto-trigger when context changes
+  useEffect(() => {
+    hasAutoTriggered.current = false;
+  }, [contextType]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -41,25 +45,16 @@ export const ExploreChatDialog = ({
     }
   }, [messages]);
 
-  // Clear follow-up skeleton when new messages arrive
+  // Auto-send initial message when dialog opens to get 2-line summary
   useEffect(() => {
-    if (isFollowingUp && messages.length > 1) {
-      setIsFollowingUp(false);
-    }
-  }, [messages.length, isFollowingUp]);
-
-  // Auto-trigger "Know More" for market insights when dialog opens
-  useEffect(() => {
-    if (contextType === 'market-insights' && !hasAutoTriggered.current && isOpen && messages.length >= 1 && !isLoading) {
+    if (!hasAutoTriggered.current && isOpen && messages.length === 0 && !isLoading) {
       hasAutoTriggered.current = true;
-      console.log('[ExploreChatDialog] Auto-triggering Know More for market insights');
-      setIsFollowingUp(true);
+      console.log('[ExploreChatDialog] Auto-sending initial message for summary');
       setTimeout(() => {
-        console.log('[ExploreChatDialog] Executing sendMessage for Know More');
-        sendMessage('Know More');
-      }, 400);
+        sendMessage('Give me a brief overview');
+      }, 300);
     }
-  }, [contextType, isOpen, messages.length, isLoading, sendMessage]);
+  }, [isOpen, messages.length, isLoading, sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLoading) {
@@ -67,38 +62,9 @@ export const ExploreChatDialog = ({
     }
   };
 
-  const handleKnowMoreClick = () => {
-    sendMessage('Know More');
-  };
-
   const renderMessageContent = (content: string) => {
-    // Strip action markers and split by "Know More"
-    const cleaned = content.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim();
-    const parts = cleaned.split(/Know More/gi);
-    
-    if (parts.length === 1) {
-      return <p className="text-sm whitespace-pre-wrap">{cleaned}</p>;
-    }
-
-    return (
-      <div className="space-y-2">
-        {parts.map((part, idx) => (
-          <React.Fragment key={idx}>
-            {part.trim() && <p className="text-sm whitespace-pre-wrap">{part.trim()}</p>}
-            {idx < parts.length - 1 && (
-              <Button
-                size="sm"
-                variant="link"
-                className="p-0 h-auto text-primary hover:underline"
-                onClick={handleKnowMoreClick}
-              >
-                Know More
-              </Button>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    );
+    // Display content as-is without special "Know More" handling
+    return <p className="text-sm whitespace-pre-wrap">{content}</p>;
   };
 
   return (
@@ -175,17 +141,7 @@ export const ExploreChatDialog = ({
                   ))}
               </React.Fragment>
             ))}
-            {isFollowingUp && (
-              <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <div className="rounded-lg px-4 py-2 bg-muted">
-                  <p className="text-sm">Following up...</p>
-                </div>
-              </div>
-            )}
-            {isLoading && !isFollowingUp && (
+            {isLoading && (
               <div className="flex gap-3 justify-start">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                   <Bot className="h-4 w-4 text-primary-foreground" />
