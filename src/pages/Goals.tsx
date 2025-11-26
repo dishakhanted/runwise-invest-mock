@@ -397,7 +397,7 @@ const Goals = () => {
                         {/* Display summary text only */}
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                           {(goalSummary || "Click to chat with GrowW AI for personalized strategies to reach your goal.").split('**').map((part, index) => 
-                            index % 2 === 1 ? <span key={index} className="font-bold">{part}</span> : part
+                            index % 2 === 1 ? <span key={index} className="font-bold">{part}</span> : <span key={index}>{part}</span>
                           )}
                         </p>
                         
