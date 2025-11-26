@@ -83,6 +83,9 @@ const Explore = () => {
                   <li key={index}>{item}</li>
                 ))}
               </ul>
+              <p className="text-sm font-bold text-[hsl(var(--card-teal))] mt-4">
+                Click here to know more
+              </p>
             </CardContent>
           </Card>
 
@@ -99,6 +102,9 @@ const Explore = () => {
                   </li>
                 ))}
               </ul>
+              <p className="text-sm font-bold text-[hsl(var(--card-amber))] mt-4">
+                Click here to know more
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -115,6 +121,9 @@ const Explore = () => {
                 <li key={index}>{item}</li>
               ))}
             </ul>
+            <p className="text-sm font-bold text-[hsl(var(--card-sky))] mt-4">
+              Click here to know more
+            </p>
           </CardContent>
         </Card>
 
@@ -134,6 +143,9 @@ const Explore = () => {
                   <li key={index}>{item}</li>
                 ))}
               </ol>
+              <p className="text-sm font-bold text-[hsl(var(--card-violet))] mt-4">
+                Click here to know more
+              </p>
             </CardContent>
           </Card>
 
@@ -145,6 +157,9 @@ const Explore = () => {
               <CardTitle className="text-2xl text-[hsl(var(--card-rose))] mb-4">{content.harvestGains.title}</CardTitle>
               <p className="text-sm text-foreground">
                 {content.harvestGains.description}
+              </p>
+              <p className="text-sm font-bold text-[hsl(var(--card-rose))] mt-4">
+                Click here to know more
               </p>
             </CardContent>
           </Card>
