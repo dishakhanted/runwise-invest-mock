@@ -20,6 +20,8 @@ export const ExploreChatDialog = ({
   contextType,
   contextData = {},
 }: ExploreChatDialogProps) => {
+  console.log('[ExploreChatDialog] Rendering with:', { isOpen, contextType, initialSummary: contextData?.initialSummary });
+  
   const { messages, input, setInput, isLoading, sendMessage, handleClose, handleSuggestionAction } = useFinancialChat({
     contextType: contextType,
     contextData: contextData,
@@ -27,6 +29,8 @@ export const ExploreChatDialog = ({
     initialSuggestions: [],
     onClose,
   });
+
+  console.log('[ExploreChatDialog] Messages:', messages.length, messages);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +61,16 @@ export const ExploreChatDialog = ({
 
         <ScrollArea className="flex-1 px-6" ref={scrollRef}>
           <div className="space-y-4 pr-4">
+            {messages.length === 0 && (
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <div className="rounded-lg px-4 py-2 bg-muted max-w-[80%]">
+                  <p className="text-sm text-muted-foreground">Starting conversation...</p>
+                </div>
+              </div>
+            )}
             {messages.map((message, index) => (
               <React.Fragment key={index}>
                 {/* Main message bubble */}
