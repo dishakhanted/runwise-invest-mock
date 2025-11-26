@@ -208,7 +208,7 @@ const Goals = () => {
           messages: [
             {
               role: 'user',
-              content: `[SUMMARY_MODE] Generate a concise 1-2 line summary for my goal using the provided data. Do not include any recommendations. After the summary, output exactly: Click to see more insights and suggestions`
+              content: `[SUMMARY_MODE] Generate a concise 1-2 line summary for my goal using the provided data. Do not include any recommendations. After the summary, output exactly: **Click to see more insights and suggestions**`
             }
           ],
           contextType: 'goal',
@@ -396,7 +396,9 @@ const Goals = () => {
                       <div className="space-y-2">
                         {/* Display summary text only */}
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {goalSummary || "Click to chat with GrowW AI for personalized strategies to reach your goal."}
+                          {(goalSummary || "Click to chat with GrowW AI for personalized strategies to reach your goal.").split('**').map((part, index) => 
+                            index % 2 === 1 ? <span key={index} className="font-bold">{part}</span> : part
+                          )}
                         </p>
                         
                       </div>
