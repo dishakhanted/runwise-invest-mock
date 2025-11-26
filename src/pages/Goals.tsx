@@ -395,12 +395,10 @@ const Goals = () => {
                     ) : (
                       <div className="space-y-2">
                         {/* Display summary text only */}
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {(goalSummary || "Click to chat with GrowW AI for personalized strategies to reach your goal.").split('**').map((part, index) => 
-                            index % 2 === 1 ? <span key={index} className="font-bold">{part}</span> : <span key={index}>{part}</span>
-                          )}
-                        </p>
-                        
+                        <div className="text-sm text-muted-foreground">
+                          {goalSummary.replace(/\*\*Click to see more insights and suggestions\*\*/g, '').trim()}
+                          {goalSummary && <><br /><span className="font-bold">Click to see more insights and suggestions</span></>}
+                        </div>
                       </div>
                     )}
                   </div>
