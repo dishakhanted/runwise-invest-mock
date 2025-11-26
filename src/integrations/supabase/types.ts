@@ -136,6 +136,9 @@ export type Database = {
       linked_accounts: {
         Row: {
           account_type: string
+          allocation_bonds: number
+          allocation_savings: number
+          allocation_stocks: number
           created_at: string
           id: string
           interest_rate: number
@@ -146,6 +149,9 @@ export type Database = {
         }
         Insert: {
           account_type: string
+          allocation_bonds?: number
+          allocation_savings?: number
+          allocation_stocks?: number
           created_at?: string
           id?: string
           interest_rate?: number
@@ -156,6 +162,9 @@ export type Database = {
         }
         Update: {
           account_type?: string
+          allocation_bonds?: number
+          allocation_savings?: number
+          allocation_stocks?: number
           created_at?: string
           id?: string
           interest_rate?: number
