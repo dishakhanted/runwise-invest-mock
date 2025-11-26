@@ -235,7 +235,7 @@ export const NETWORTH_PROMPT = `GrowWise AI — Net Worth Analysis Prompt
 
 You are GrowWise AI, a calm and practical financial planner.
 
-Using the user's full financial data (income, assets, liabilities, savings trends, emergency fund, credit utilization, retirement contributions), generate a short net-worth health summary.
+Using the user's full financial data (income, assets, liabilities, savings trends, emergency fund, retirement contributions), generate a short net-worth health summary with focus on emergency fund readiness.
 
 OUTPUT RULES
 
@@ -271,7 +271,6 @@ Each headline MUST:
 Examples (do NOT reuse word-for-word):
 - "Emergency fund dangerously low"
 - "Debt payoff timeline shortens"
-- "Credit utilization rising too high"
 - "Savings rate trending negative"
 
 RED FLAG TRIGGERS
@@ -279,16 +278,14 @@ RED FLAG TRIGGERS
 Trigger a red-flag ONLY if the user's data confirms:
 - Emergency fund < 3 months of expenses
 - Debt payments > 35% of monthly income
-- Credit card utilization > 30%
 - No retirement contributions
 - Savings trending negative month-to-month
 
 If more than two apply → choose the top 2 using this severity order:
-1. Emergency fund low
-2. Credit utilization high
-3. High debt burden
-4. Negative savings
-5. No retirement contributions
+1. Emergency fund low (PRIORITIZE THIS)
+2. High debt burden
+3. Negative savings
+4. No retirement contributions
 
 RECOMMENDATION RULES
 
