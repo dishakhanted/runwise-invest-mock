@@ -6,53 +6,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/contexts/SessionContext';
 import { getDemoProfile } from '@/demo/demoProfiles';
+import type { LinkedAccount, Goal, NetWorthSummary, UserProfile } from '@/domain/types';
 
-export interface LinkedAccount {
-  id: string;
-  account_type: string;
-  provider_name: string;
-  last_four_digits: string;
-  total_amount: number;
-  interest_rate: number;
-  allocation_savings?: number;
-  allocation_stocks?: number;
-  allocation_bonds?: number;
-}
-
-export interface Goal {
-  id: string;
-  name: string;
-  target_amount: number;
-  current_amount: number;
-  target_age?: number;
-  description?: string;
-  saving_account?: string;
-  investment_account?: string;
-  allocation_savings: number;
-  allocation_stocks: number;
-  allocation_bonds: number;
-}
-
-export interface NetWorthSummary {
-  netWorth: number;
-  assetsTotal: number;
-  liabilitiesTotal: number;
-  cashTotal: number;
-  investmentsTotal: number;
-}
-
-export interface UserProfile {
-  legal_first_name?: string;
-  legal_last_name?: string;
-  preferred_first_name?: string;
-  income?: string;
-  employment_type?: string;
-  goals?: string;
-  risk_inferred?: string;
-  date_of_birth?: string;
-  city?: string;
-  state?: string;
-}
+// Re-export types for consumers
+export type { LinkedAccount, Goal, NetWorthSummary, UserProfile };
 
 interface UseFinancialDataResult {
   linkedAccounts: LinkedAccount[];
@@ -133,7 +90,17 @@ export const useFinancialData = (): UseFinancialDataResult => {
         .eq('user_id', user.id);
 
       if (accountsError) throw accountsError;
-      setLinkedAccounts(accountsData || []);
+      setLinkedAccounts((accountsData || []).map(acc => ({
+        id: acc.id,
+        account_type: acc.account_type as LinkedAccount['account_type'],
+        provider_name: acc.provider_name,
+        last_four_digits: acc.last_four_digits,
+        total_amount: Number(acc.total_amount),
+        interest_rate: Number(acc.interest_rate),
+        allocation_savings: acc.allocation_savings,
+        allocation_stocks: acc.allocation_stocks,
+        allocation_bonds: acc.allocation_bonds,
+      })));
 
       // Load goals
       const { data: goalsData, error: goalsError } = await supabase

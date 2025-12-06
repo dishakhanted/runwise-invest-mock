@@ -3,56 +3,10 @@
  * Contains realistic sample data for each demo persona
  */
 
-export interface DemoProfile {
-  id: string;
-  name: string;
-  avatar: string;
-  description: string;
-  profile: {
-    legal_first_name: string;
-    legal_last_name: string;
-    preferred_first_name: string;
-    email: string;
-    date_of_birth: string;
-    income: string;
-    employment_type: string;
-    goals: string;
-    risk_inferred: string;
-    city: string;
-    state: string;
-  };
-  linkedAccounts: Array<{
-    id: string;
-    account_type: string;
-    provider_name: string;
-    last_four_digits: string;
-    total_amount: number;
-    interest_rate: number;
-    allocation_savings: number;
-    allocation_stocks: number;
-    allocation_bonds: number;
-  }>;
-  goals: Array<{
-    id: string;
-    name: string;
-    target_amount: number;
-    current_amount: number;
-    target_age?: number;
-    description?: string;
-    saving_account?: string;
-    investment_account?: string;
-    allocation_savings: number;
-    allocation_stocks: number;
-    allocation_bonds: number;
-  }>;
-  netWorthSummary: {
-    netWorth: number;
-    assetsTotal: number;
-    liabilitiesTotal: number;
-    cashTotal: number;
-    investmentsTotal: number;
-  };
-}
+import type { DemoProfile } from '@/domain/types';
+
+// Re-export the type for consumers
+export type { DemoProfile };
 
 export const demoProfiles: Record<string, DemoProfile> = {
   'young-professional': {
