@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "@/contexts/SessionContext";
 import {
   Suggestion,
   buildSuggestionsFromMessage,
@@ -30,6 +31,8 @@ export const useFinancialChat = ({
   initialSuggestions,
   onClose,
 }: UseFinancialChatProps) => {
+  const { mode, demoProfileId } = useSession();
+  
   const [messages, setMessages] = useState<Message[]>(
     initialMessage
       ? [
@@ -112,6 +115,9 @@ export const useFinancialChat = ({
 
   const saveConversation = useCallback(
     async (messages: Message[], title?: string) => {
+      // Skip saving conversations in demo mode
+      if (mode === 'demo') return null;
+      
       try {
         const {
           data: { user },
@@ -149,7 +155,7 @@ export const useFinancialChat = ({
         return null;
       }
     },
-    [conversationId, contextType, contextData],
+    [conversationId, contextType, contextData, mode],
   );
 
   const saveMessage = useCallback(async (convId: string, role: string, content: string) => {
@@ -199,7 +205,20 @@ export const useFinancialChat = ({
           data: { session },
         } = await supabase.auth.getSession();
 
-        console.log("Sending to edge function:", { contextType, contextData });
+        // Build request body - include demo info if in demo mode
+        const requestBody: any = {
+          messages: newMessages,
+          conversationId: convId,
+          contextType,
+          contextData,
+        };
+
+        // Add demo info if in demo mode
+        if (mode === 'demo' && demoProfileId) {
+          requestBody.demo = { demoProfileId };
+        }
+
+        console.log("Sending to edge function:", { contextType, contextData, isDemo: mode === 'demo' });
 
         // Call edge function with streaming
         const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/financial-chat`, {
@@ -208,12 +227,7 @@ export const useFinancialChat = ({
             "Content-Type": "application/json",
             ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
           },
-          body: JSON.stringify({
-            messages: newMessages,
-            conversationId: convId,
-            contextType,
-            contextData,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         console.log("Response status:", response.status);
