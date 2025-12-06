@@ -13,6 +13,7 @@ import {
   invokeChat,
   type PromptType,
 } from './langchainClient.ts';
+import { getDemoProfile, buildDemoContextInfo } from './demoProfiles.ts';
 
 // Import static prompts as fallback
 import {
@@ -365,11 +366,16 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, conversationId, contextType, contextData } = await req.json();
+    const { messages, conversationId, contextType, contextData, demo } = await req.json();
+    const isDemo = demo?.demoProfileId ? true : false;
+    const demoProfileId = demo?.demoProfileId;
+    
     console.log('[financial-chat] Request received:', { 
       messagesLength: messages?.length, 
       conversationId, 
-      contextType 
+      contextType,
+      isDemo,
+      demoProfileId
     });
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -450,7 +456,15 @@ serve(async (req) => {
     
     // Build context-specific information
     let contextInfo = "";
-    if (contextType === 'alternate-investments') {
+    
+    // If demo mode, use demo profile data
+    if (isDemo && demoProfileId) {
+      const demoProfile = getDemoProfile(demoProfileId);
+      if (demoProfile) {
+        contextInfo = buildDemoContextInfo(demoProfile, contextType);
+        console.log('[financial-chat] Using demo profile:', demoProfile.name);
+      }
+    } else if (contextType === 'alternate-investments') {
       contextInfo = await fetchAlternateInvestmentsContext(supabase, authHeader);
     } else {
       contextInfo = buildContextInfo(contextType, contextData);

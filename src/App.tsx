@@ -3,8 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SessionProvider } from "@/contexts/SessionContext";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import DemoLogin from "./pages/DemoLogin";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Explore from "./pages/Explore";
@@ -28,36 +30,39 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/login" element={<Auth />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/inbox" element={<Inbox />} />
-          <Route path="/inbox/:conversationId" element={<ConversationView />} />
-          <Route path="/transfer" element={<Transfer />} />
-          <Route path="/goals" element={<Goals />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/security" element={<Security />} />
-          <Route path="/accounts" element={<Accounts />} />
-          <Route path="/investing" element={<Investing />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/activity-log" element={<ActivityLog />} />
-          <Route path="/documents" element={<Documents />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <SessionProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/login" element={<Auth />} />
+            <Route path="/demo-login" element={<DemoLogin />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/inbox/:conversationId" element={<ConversationView />} />
+            <Route path="/transfer" element={<Transfer />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/security" element={<Security />} />
+            <Route path="/accounts" element={<Accounts />} />
+            <Route path="/investing" element={<Investing />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/activity-log" element={<ActivityLog />} />
+            <Route path="/documents" element={<Documents />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </SessionProvider>
   </QueryClientProvider>
 );
 
