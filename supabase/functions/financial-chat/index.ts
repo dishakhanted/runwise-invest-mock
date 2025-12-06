@@ -1,6 +1,7 @@
 /**
  * Financial Chat Edge Function
  * Uses LangChain for all AI interactions via Lovable AI Gateway
+ * All database queries are scoped to the authenticated user
  */
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -12,7 +13,12 @@ import {
   invokeChat,
 } from './langchainClient.ts';
 import { getDemoProfile } from './demoProfiles.ts';
-import { buildContextForType, buildContextForDemo } from './contextBuilder.ts';
+import { 
+  getUserIdFromRequest, 
+  buildContextForUser, 
+  buildContextForDemo,
+  buildSimpleContextFromData 
+} from './contextBuilder.ts';
 
 // Import static prompts as fallback
 import { DECISION_HANDLING_PROMPT } from './prompts.ts';
@@ -54,7 +60,22 @@ const corsHeaders = {
 };
 
 /**
+ * Creates a Supabase client with service role for database operations
+ */
+function createSupabaseClient() {
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Missing Supabase configuration');
+  }
+  
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+}
+
+/**
  * Handles suggestion decisions (approve/deny/know more)
+ * All database operations are scoped to the authenticated user
  */
 async function handleSuggestionDecision(
   supabase: any,
@@ -62,32 +83,28 @@ async function handleSuggestionDecision(
   contextType: string,
   contextData: any,
   messages: Array<{ role: string; content: string }>,
-  authHeader: string | null,
+  userId: string | null,
   isDemo: boolean,
   demoProfileId?: string
 ): Promise<string> {
-  // Store decision in DB for goal context (only for authenticated users)
-  if (!isDemo && authHeader && contextData?.id && contextType === "goal") {
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user } } = await supabase.auth.getUser(token);
+  // Store decision in DB for goal context (only for authenticated users, never in demo mode)
+  if (!isDemo && userId && contextData?.id && contextType === "goal") {
+    console.log('[handleSuggestionDecision] Storing decision for user:', userId);
     
-    if (user) {
-      const lastContent = messages[messages.length - 1]?.content ?? "";
-      const { error: insertError } = await supabase
-        .from("goal_recommendations")
-        .insert({
-          user_id: user.id,
-          goal_id: contextData.id,
-          suggestion_title: decision.suggestionTitle,
-          suggestion_note: lastContent,
-          decision: decision.decision,
-        });
+    const { error: insertError } = await supabase
+      .from("goal_recommendations")
+      .insert({
+        user_id: userId,
+        goal_id: contextData.id,
+        suggestion_title: decision.suggestionTitle,
+        suggestion_note: messages[messages.length - 1]?.content ?? "",
+        decision: decision.decision,
+      });
 
-      if (insertError) {
-        console.error("Error inserting goal_recommendation:", insertError);
-      } else {
-        console.log(`Stored ${decision.decision} decision for suggestion: ${decision.suggestionTitle}`);
-      }
+    if (insertError) {
+      console.error("Error inserting goal_recommendation:", insertError);
+    } else {
+      console.log(`Stored ${decision.decision} decision for suggestion: ${decision.suggestionTitle}`);
     }
   }
 
@@ -95,12 +112,17 @@ async function handleSuggestionDecision(
   let contextInfo = '';
   
   if (isDemo && demoProfileId) {
+    // Demo mode: use in-memory data only, no database access
     const demoProfile = getDemoProfile(demoProfileId);
     if (demoProfile) {
       contextInfo = buildContextForDemo(demoProfile, contextType, contextData);
     }
+  } else if (userId) {
+    // Auth mode: fetch from database scoped to user
+    contextInfo = await buildContextForUser(supabase, userId, contextType, contextData);
   } else {
-    contextInfo = await buildContextForType(supabase, authHeader, contextType, contextData);
+    // Fallback to simple context data
+    contextInfo = buildSimpleContextFromData(contextType, contextData);
   }
 
   // Add decision-specific context
@@ -134,16 +156,24 @@ async function handleSuggestionDecision(
 
 /**
  * Handles goal update requests
+ * All database operations are scoped to the authenticated user
  */
 async function handleGoalUpdate(
   supabase: any,
   contextData: any,
   messages: Array<{ role: string; content: string }>,
-  authHeader: string | null,
+  userId: string | null,
   isDemo: boolean
 ): Promise<{ updated: boolean; message: string }> {
-  // Demo mode doesn't support goal updates
+  // Demo mode doesn't support goal updates (no database mutations)
   if (isDemo) {
+    console.log('[handleGoalUpdate] Skipping - demo mode');
+    return { updated: false, message: '' };
+  }
+
+  // Require authenticated user for database mutations
+  if (!userId) {
+    console.warn('[handleGoalUpdate] No userId - cannot update goal');
     return { updated: false, message: '' };
   }
 
@@ -164,21 +194,17 @@ async function handleGoalUpdate(
   
   const newTargetAmount = parseFloat(numberMatch[1].replace(/,/g, ''));
   
-  if (!authHeader || newTargetAmount <= 0) {
+  if (newTargetAmount <= 0) {
     return { updated: false, message: '' };
   }
+
+  console.log('[handleGoalUpdate] Updating goal for user:', userId);
   
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user } } = await supabase.auth.getUser(token);
-  
-  if (!user) {
-    return { updated: false, message: '' };
-  }
-  
+  // Fetch profile with user_id filter
   const { data: profile } = await supabase
     .from('profiles')
     .select('date_of_birth')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .maybeSingle();
   
   let newTargetAge = null;
@@ -189,6 +215,7 @@ async function handleGoalUpdate(
     newTargetAge = currentAge + 8;
   }
   
+  // Update goal with BOTH id and user_id filters for security
   const { error } = await supabase
     .from('goals')
     .update({
@@ -197,7 +224,7 @@ async function handleGoalUpdate(
       updated_at: new Date().toISOString()
     })
     .eq('id', contextData.id)
-    .eq('user_id', user.id);
+    .eq('user_id', userId);  // Critical: always scope to user
   
   if (error) {
     console.error("Error updating goal:", error);
@@ -230,10 +257,21 @@ serve(async (req) => {
       demoProfileId
     });
 
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    const supabase = createSupabaseClient();
     const authHeader = req.headers.get('Authorization');
+
+    // Extract user ID from JWT (null for demo mode or unauthenticated)
+    let userId: string | null = null;
+    
+    if (!isDemo && authHeader) {
+      try {
+        userId = await getUserIdFromRequest(supabase, authHeader);
+        console.log('[financial-chat] Authenticated user:', userId);
+      } catch (authError) {
+        console.warn('[financial-chat] Auth extraction failed:', authError);
+        // Continue without userId - will use contextData fallback
+      }
+    }
 
     // Check if this is a suggestion decision
     const lastMessage = messages[messages.length - 1];
@@ -262,7 +300,7 @@ serve(async (req) => {
         contextType,
         contextData,
         messages,
-        authHeader,
+        userId,
         isDemo,
         demoProfileId
       );
@@ -279,7 +317,7 @@ serve(async (req) => {
         supabase,
         contextData,
         messages,
-        authHeader,
+        userId,
         isDemo
       );
       
@@ -307,13 +345,20 @@ serve(async (req) => {
     let contextInfo = "";
     
     if (isDemo && demoProfileId) {
+      // Demo mode: use in-memory demo profile data only
       const demoProfile = getDemoProfile(demoProfileId);
       if (demoProfile) {
         contextInfo = buildContextForDemo(demoProfile, contextType, contextData);
         console.log('[financial-chat] Using demo profile:', demoProfile.name);
       }
+    } else if (userId) {
+      // Auth mode: fetch from database, scoped to authenticated user
+      contextInfo = await buildContextForUser(supabase, userId, contextType, contextData);
+      console.log('[financial-chat] Built context for user:', userId);
     } else {
-      contextInfo = await buildContextForType(supabase, authHeader, contextType, contextData);
+      // Fallback: use provided contextData only (no database access without auth)
+      console.warn('[financial-chat] No userId available, using contextData fallback');
+      contextInfo = buildSimpleContextFromData(contextType, contextData);
     }
 
     const systemPrompt = `${promptContent}${contextInfo}`;
