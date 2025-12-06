@@ -25,38 +25,103 @@ export interface UserContext {
 }
 
 /**
- * Builds context from Supabase for authenticated users
+ * Extracts the authenticated user ID from the request
+ * Throws if no valid user is found
  */
-async function fetchUserContextFromSupabase(
+export async function getUserIdFromRequest(
   supabase: any,
   authHeader: string | null
-): Promise<UserContext | null> {
-  if (!authHeader) return null;
+): Promise<string> {
+  if (!authHeader) {
+    throw new Error('Authorization header is required');
+  }
 
   const token = authHeader.replace('Bearer ', '');
-  const { data: { user } } = await supabase.auth.getUser(token);
+  if (!token) {
+    throw new Error('Invalid authorization token');
+  }
 
-  if (!user) return null;
+  const { data: { user }, error } = await supabase.auth.getUser(token);
 
-  // Fetch all data in parallel for efficiency
+  if (error) {
+    console.error('[getUserIdFromRequest] Auth error:', error.message);
+    throw new Error(`Authentication failed: ${error.message}`);
+  }
+
+  if (!user || !user.id) {
+    console.warn('[getUserIdFromRequest] No valid user found in JWT');
+    throw new Error('No valid user found');
+  }
+
+  return user.id;
+}
+
+/**
+ * Validates that a query result belongs to the expected user
+ * Logs warning and throws if data doesn't match user
+ */
+function validateUserOwnership(data: any[], userId: string, tableName: string): void {
+  if (!data || data.length === 0) return;
+  
+  for (const row of data) {
+    if (row.user_id && row.user_id !== userId) {
+      console.error(`[SECURITY] Data from ${tableName} does not belong to user ${userId}`);
+      throw new Error(`Security violation: Attempted to access data not owned by user`);
+    }
+  }
+}
+
+/**
+ * Builds context from Supabase for authenticated users
+ * All queries are scoped to the authenticated user
+ */
+export async function fetchUserContextFromSupabase(
+  supabase: any,
+  userId: string
+): Promise<UserContext> {
+  console.log('[fetchUserContextFromSupabase] Fetching data for user:', userId);
+
+  // Fetch all data in parallel, always filtering by user_id
   const [profileResult, goalsResult, accountsResult] = await Promise.all([
     supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle(),
     supabase
       .from('goals')
       .select('*')
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
     supabase
       .from('linked_accounts')
       .select('*')
-      .eq('user_id', user.id),
+      .eq('user_id', userId),
   ]);
 
+  // Log any query errors
+  if (profileResult.error) {
+    console.error('[fetchUserContextFromSupabase] Profile query error:', profileResult.error);
+  }
+  if (goalsResult.error) {
+    console.error('[fetchUserContextFromSupabase] Goals query error:', goalsResult.error);
+  }
+  if (accountsResult.error) {
+    console.error('[fetchUserContextFromSupabase] Accounts query error:', accountsResult.error);
+  }
+
   const profile = profileResult.data;
-  const goals: Goal[] = (goalsResult.data || []).map((g: any) => ({
+  const goalsData = goalsResult.data || [];
+  const accountsData = accountsResult.data || [];
+
+  // Validate ownership of returned data
+  if (goalsData.length > 0) {
+    validateUserOwnership(goalsData, userId, 'goals');
+  }
+  if (accountsData.length > 0) {
+    validateUserOwnership(accountsData, userId, 'linked_accounts');
+  }
+
+  const goals: Goal[] = goalsData.map((g: any) => ({
     id: g.id,
     name: g.name,
     target_amount: g.target_amount,
@@ -70,7 +135,7 @@ async function fetchUserContextFromSupabase(
     allocation_bonds: g.allocation_bonds,
   }));
 
-  const linkedAccounts: LinkedAccount[] = (accountsResult.data || []).map((a: any) => ({
+  const linkedAccounts: LinkedAccount[] = accountsData.map((a: any) => ({
     id: a.id,
     account_type: a.account_type,
     provider_name: a.provider_name,
@@ -132,7 +197,7 @@ async function fetchUserContextFromSupabase(
 }
 
 /**
- * Builds context from demo profile data
+ * Builds context from demo profile data (no Supabase queries)
  */
 function buildUserContextFromDemo(demoProfile: DemoProfile): UserContext {
   return {
@@ -190,19 +255,16 @@ function formatContextToString(
   } else if (contextType === 'market-insights' || contextType === 'finshorts' || 
              contextType === 'what-if' || contextType === 'tax-loss-harvesting' || 
              contextType === 'explore') {
-    // These prompts need full context for personalization
     contextInfo += formatNetWorthContext(context);
     contextInfo += formatGoalsContext(context);
     contextInfo += formatAccountsContext(context);
   } else if (contextType === 'suggestions') {
     contextInfo += formatSuggestionsContext(context);
   } else if (contextType === 'onboarding') {
-    // Minimal context for onboarding
     if (context.userProfile) {
       contextInfo += `User is completing onboarding.\n`;
     }
   } else {
-    // Default: include net worth and goals
     contextInfo += formatNetWorthContext(context);
     contextInfo += formatGoalsContext(context);
   }
@@ -280,7 +342,6 @@ function formatAssetsContext(context: UserContext): string {
   info += `Cash: $${nw.cashTotal.toLocaleString()}\n`;
   info += `Investments: $${nw.investmentsTotal.toLocaleString()}\n\n`;
   
-  // Add account details
   const assetAccounts = context.linkedAccounts.filter(a => a.account_type !== 'loan');
   if (assetAccounts.length > 0) {
     info += `### Asset Accounts\n`;
@@ -313,7 +374,6 @@ function formatLiabilitiesContext(context: UserContext): string {
 function formatGoalDetailContext(context: UserContext, contextData?: Record<string, unknown>): string {
   let info = '';
   
-  // If specific goal data is provided in contextData, use it
   if (contextData?.name) {
     info += `## User Goal Data\n`;
     info += `Goal Name: "${contextData.name}"\n`;
@@ -334,7 +394,6 @@ function formatGoalDetailContext(context: UserContext, contextData?: Record<stri
     info += '\n';
   }
   
-  // Also include all goals for context
   info += formatGoalsContext(context);
   info += formatNetWorthContext(context);
   
@@ -344,7 +403,6 @@ function formatGoalDetailContext(context: UserContext, contextData?: Record<stri
 function formatAlternateInvestmentsContext(context: UserContext): string {
   let info = '';
   
-  // Income and profile
   if (context.userProfile) {
     info += `Income: ${context.userProfile.income || 'Not specified'}\n`;
     info += `Employment Type: ${context.userProfile.employment_type || 'Not specified'}\n`;
@@ -352,13 +410,9 @@ function formatAlternateInvestmentsContext(context: UserContext): string {
     info += `Risk Profile: ${context.userProfile.risk_inferred || 'Not specified'}\n\n`;
   }
   
-  // Goals with details
   info += formatGoalsContext(context);
-  
-  // Accounts with allocation data
   info += formatAccountsContext(context);
   
-  // Portfolio summary
   info += `## Portfolio Summary\n`;
   info += `Total Assets: $${context.netWorthSummary.assetsTotal.toLocaleString()}\n`;
   info += `Total Liabilities: $${context.netWorthSummary.liabilitiesTotal.toLocaleString()}\n`;
@@ -379,96 +433,21 @@ function formatSuggestionsContext(context: UserContext): string {
 // ==========================================
 
 /**
- * Builds context for net worth / dashboard views
+ * Unified context builder for authenticated users
+ * Requires a valid userId extracted from JWT
  */
-export async function buildNetWorthContext(
+export async function buildContextForUser(
   supabase: any,
-  authHeader: string | null,
-  contextData?: Record<string, unknown>
-): Promise<string> {
-  const context = await fetchUserContextFromSupabase(supabase, authHeader);
-  if (!context) return '';
-  return formatContextToString(context, 'networth', contextData);
-}
-
-/**
- * Builds context for goals views
- */
-export async function buildGoalsContext(
-  supabase: any,
-  authHeader: string | null,
-  contextData?: Record<string, unknown>
-): Promise<string> {
-  const context = await fetchUserContextFromSupabase(supabase, authHeader);
-  if (!context) return '';
-  return formatContextToString(context, 'goals', contextData);
-}
-
-/**
- * Builds context for center chat (main AI assistant)
- */
-export async function buildCenterChatContext(
-  supabase: any,
-  authHeader: string | null,
-  contextData?: Record<string, unknown>
-): Promise<string> {
-  const context = await fetchUserContextFromSupabase(supabase, authHeader);
-  if (!context) return '';
-  return formatContextToString(context, 'center-chat', contextData);
-}
-
-/**
- * Builds context for market insights
- */
-export async function buildMarketInsightsContext(
-  supabase: any,
-  authHeader: string | null,
-  contextData?: Record<string, unknown>
-): Promise<string> {
-  const context = await fetchUserContextFromSupabase(supabase, authHeader);
-  if (!context) return '';
-  return formatContextToString(context, 'market-insights', contextData);
-}
-
-/**
- * Builds context for alternate investments
- */
-export async function buildAlternateInvestmentsContext(
-  supabase: any,
-  authHeader: string | null,
-  contextData?: Record<string, unknown>
-): Promise<string> {
-  const context = await fetchUserContextFromSupabase(supabase, authHeader);
-  if (!context) return '';
-  return formatContextToString(context, 'alternate-investments', contextData);
-}
-
-/**
- * Unified context builder that routes to the appropriate builder based on contextType
- */
-export async function buildContextForType(
-  supabase: any,
-  authHeader: string | null,
+  userId: string,
   contextType: ContextType | string,
   contextData?: Record<string, unknown>
 ): Promise<string> {
-  const context = await fetchUserContextFromSupabase(supabase, authHeader);
-  if (!context) {
-    // Fallback to simple context data if no user data available
-    return buildSimpleContextFromData(contextType, contextData);
-  }
-  
-  // Merge contextData into context for goal-specific data
-  const enrichedContext = {
-    ...context,
-    contextData,
-  };
-  
-  return formatContextToString(enrichedContext, contextType, contextData);
+  const context = await fetchUserContextFromSupabase(supabase, userId);
+  return formatContextToString(context, contextType, contextData);
 }
 
 /**
- * Builds context from demo profile
+ * Builds context from demo profile (no database access)
  */
 export function buildContextForDemo(
   demoProfile: DemoProfile,
@@ -480,9 +459,9 @@ export function buildContextForDemo(
 }
 
 /**
- * Simple fallback context builder from raw contextData (for backwards compatibility)
+ * Simple fallback context builder from raw contextData
  */
-function buildSimpleContextFromData(contextType: string, contextData?: Record<string, unknown>): string {
+export function buildSimpleContextFromData(contextType: string, contextData?: Record<string, unknown>): string {
   if (!contextData) return '';
   
   let contextInfo = "";
