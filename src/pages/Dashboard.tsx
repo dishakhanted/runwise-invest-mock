@@ -20,46 +20,35 @@ import {
   MessageSquare,
   Link,
   CreditCard,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/contexts/SessionContext";
+import { useFinancialData } from "@/hooks/useFinancialData";
+import { useNavigate } from "react-router-dom";
 
 type ViewMode = "net-worth" | "assets" | "liabilities";
 
-type LinkedAccount = {
-  id: string;
-  account_type: string;
-  provider_name: string;
-  last_four_digits: string;
-  total_amount: number;
-  interest_rate: number;
-};
-
-type Goal = {
-  id: string;
-  name: string;
-  target_amount: number;
-  current_amount: number;
-  target_age?: number;
-};
-
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { mode, exitDemo } = useSession();
+  const { linkedAccounts, goals, netWorthSummary: financialSummary, isLoading, refetch } = useFinancialData();
+  
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isLinkAccountOpen, setIsLinkAccountOpen] = useState(false);
   const [showFinancialSummary, setShowFinancialSummary] = useState(false);
-  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [netWorthSummary, setNetWorthSummary] = useState<string>("");
+  const [netWorthSummaryText, setNetWorthSummaryText] = useState<string>("");
   const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
 
   useEffect(() => {
-    loadLinkedAccounts();
-    loadGoals();
+    // Only set up real-time subscription for auth mode
+    if (mode !== 'auth') return;
 
-    // Set up real-time subscription for goals updates
     const channel = supabase
       .channel('dashboard-goals-changes')
       .on(
@@ -71,7 +60,7 @@ const Dashboard = () => {
         },
         (payload) => {
           console.log('Goal updated on dashboard:', payload);
-          loadGoals(); // Reload goals when any change occurs
+          refetch();
         }
       )
       .subscribe();
@@ -79,54 +68,24 @@ const Dashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [mode, refetch]);
 
-  const loadLinkedAccounts = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('linked_accounts')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error loading accounts:', error);
-      return;
-    }
-
-    setLinkedAccounts(data || []);
+  const handleExitDemo = () => {
+    exitDemo();
+    navigate('/');
   };
 
-  const loadGoals = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('goals')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('target_age', { ascending: true, nullsFirst: false });
-
-    if (error) {
-      console.error('Error loading goals:', error);
-      return;
-    }
-
-    setGoals(data || []);
-  };
-
+  // Computed values from hook data
   const bankAccounts = linkedAccounts.filter(acc => acc.account_type === 'bank');
   const investmentAccounts = linkedAccounts.filter(acc => acc.account_type === 'investment');
   const loanAccounts = linkedAccounts.filter(acc => acc.account_type === 'loan');
 
-  const cashTotal = bankAccounts.reduce((sum, acc) => sum + Number(acc.total_amount), 0);
-  const investmentsTotal = investmentAccounts.reduce((sum, acc) => sum + Number(acc.total_amount), 0);
-  const assetsTotal = cashTotal + investmentsTotal;
-  
-  const liabilitiesTotal = loanAccounts.reduce((sum, acc) => sum + Number(acc.total_amount), 0);
-  
-  const netWorth = assetsTotal - liabilitiesTotal;
+  const cashTotal = financialSummary.cashTotal;
+  const investmentsTotal = financialSummary.investmentsTotal;
+  const assetsTotal = financialSummary.assetsTotal;
+  const liabilitiesTotal = financialSummary.liabilitiesTotal;
+  const netWorth = financialSummary.netWorth;
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -137,7 +96,7 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const generateFinancialSummary = async (
+  const generateFinancialSummaryText = async (
     snapshot: {
       netWorth: number;
       assetsTotal: number;
@@ -145,7 +104,7 @@ const Dashboard = () => {
       cashTotal: number;
       investmentsTotal: number;
     },
-    mode: ViewMode
+    currentViewMode: ViewMode
   ) => {
     setLoadingSummary(true);
     try {
@@ -153,7 +112,7 @@ const Dashboard = () => {
       let contextType: string;
       let promptMessage: string;
 
-      switch (mode) {
+      switch (currentViewMode) {
         case "net-worth":
           contextType = "net_worth";
           promptMessage = "[SUMMARY_MODE] Using the net worth prompt, give me a short 1–2 sentence summary of my current net worth and key observations. Only return the summary paragraph, no suggestions.";
@@ -187,10 +146,10 @@ const Dashboard = () => {
         data?.message ||
         "Click to chat with GrowW AI for a personalized financial summary.";
 
-      setNetWorthSummary(summaryText.trim());
+      setNetWorthSummaryText(summaryText.trim());
     } catch (e) {
       console.error("Error generating financial summary:", e);
-      setNetWorthSummary(
+      setNetWorthSummaryText(
         "Click to chat with GrowW AI for a personalized financial summary."
       );
     } finally {
@@ -215,7 +174,7 @@ const Dashboard = () => {
 
   // Generate financial summary when financial data or view mode changes
   useEffect(() => {
-    if (netWorth !== 0 || assetsTotal !== 0 || liabilitiesTotal !== 0) {
+    if (!isLoading && (netWorth !== 0 || assetsTotal !== 0 || liabilitiesTotal !== 0)) {
       const snapshot = {
         netWorth,
         assetsTotal,
@@ -223,13 +182,37 @@ const Dashboard = () => {
         cashTotal,
         investmentsTotal,
       };
-      generateFinancialSummary(snapshot, viewMode);
+      generateFinancialSummaryText(snapshot, viewMode);
     }
-  }, [netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal, viewMode]);
+  }, [netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal, viewMode, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
+        {/* Demo Mode Banner */}
+        {mode === 'demo' && (
+          <div className="mb-4 flex items-center justify-between bg-primary/10 border border-primary/20 rounded-lg px-4 py-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-primary text-primary-foreground">
+                Demo Mode
+              </Badge>
+              <span className="text-sm text-muted-foreground">Viewing sample data</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleExitDemo} className="gap-1">
+              <LogOut className="h-4 w-4" />
+              Exit
+            </Button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <h1 className="text-5xl font-bold">{formatCurrency(getCurrentAmount())}</h1>
@@ -310,10 +293,10 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {loadingSummary
                     ? "Generating your financial summary..."
-                    : netWorthSummary ||
+                    : netWorthSummaryText ||
                       "Click to chat with GrowW AI for a personalized financial summary and insights."}
                 </p>
-                {!loadingSummary && netWorthSummary && (
+                {!loadingSummary && netWorthSummaryText && (
                   <p className="text-sm font-bold text-primary mt-2">
                     Click here to know more suggestions
                   </p>

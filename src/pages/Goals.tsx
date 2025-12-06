@@ -5,11 +5,15 @@ import { Logo } from "@/components/Logo";
 import { GoalAIChatDialog } from "@/components/GoalAIChatDialog";
 import { NewGoalDialog } from "@/components/NewGoalDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare, Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare, Check, X, LogOut } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "@/contexts/SessionContext";
+import { useFinancialData } from "@/hooks/useFinancialData";
+import { useNavigate } from "react-router-dom";
 
 interface Goal {
   id: string;
@@ -28,8 +32,25 @@ interface Goal {
 
 const Goals = () => {
   const { toast } = useToast();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { mode, exitDemo } = useSession();
+  const { goals: rawGoals, isLoading, refetch } = useFinancialData();
+
+  // Transform raw goals to component format
+  const goals: Goal[] = rawGoals.map(g => ({
+    id: g.id,
+    name: g.name,
+    targetAmount: g.target_amount,
+    currentAmount: g.current_amount,
+    savingAccount: g.saving_account || 'None',
+    investmentAccount: g.investment_account || 'None',
+    description: g.description,
+    allocation: {
+      savings: g.allocation_savings,
+      stocks: g.allocation_stocks,
+      bonds: g.allocation_bonds
+    }
+  }));
 
   const [selectedGoalId, setSelectedGoalId] = useState<string>("");
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -41,10 +62,17 @@ const Goals = () => {
     explanation: string;
   }>>([]);
 
+  // Set first goal as selected when goals load
   useEffect(() => {
-    loadGoals();
+    if (goals.length > 0 && !selectedGoalId) {
+      setSelectedGoalId(goals[0].id);
+    }
+  }, [goals, selectedGoalId]);
 
-    // Set up real-time subscription for goals updates
+  useEffect(() => {
+    // Only set up real-time subscription for auth mode
+    if (mode !== 'auth') return;
+
     const channel = supabase
       .channel('goals-changes')
       .on(
@@ -56,7 +84,7 @@ const Goals = () => {
         },
         (payload) => {
           console.log('Goal updated:', payload);
-          loadGoals(); // Reload goals when any change occurs
+          refetch();
         }
       )
       .subscribe();
@@ -64,56 +92,24 @@ const Goals = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [mode, refetch]);
 
-  const loadGoals = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedGoals: Goal[] = (data || []).map(goal => ({
-        id: goal.id,
-        name: goal.name,
-        targetAmount: Number(goal.target_amount),
-        currentAmount: Number(goal.current_amount),
-        savingAccount: goal.saving_account || 'None',
-        investmentAccount: goal.investment_account || 'None',
-        description: goal.description || undefined,
-        allocation: {
-          savings: goal.allocation_savings,
-          stocks: goal.allocation_stocks,
-          bonds: goal.allocation_bonds
-        }
-      }));
-
-      setGoals(formattedGoals);
-      
-      // Set first goal as selected by default
-      if (formattedGoals.length > 0 && !selectedGoalId) {
-        setSelectedGoalId(formattedGoals[0].id);
-      }
-    } catch (error) {
-      console.error('Error loading goals:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load goals",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleExitDemo = () => {
+    exitDemo();
+    navigate('/');
   };
 
-
   const handleCreateGoal = async (newGoal: Omit<Goal, "id">) => {
+    // In demo mode, don't allow creating goals
+    if (mode === 'demo') {
+      toast({
+        title: "Demo Mode",
+        description: "Creating goals is disabled in demo mode",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -136,22 +132,8 @@ const Goals = () => {
 
       if (error) throw error;
 
-      const goal: Goal = {
-        id: data.id,
-        name: data.name,
-        targetAmount: Number(data.target_amount),
-        currentAmount: Number(data.current_amount),
-        savingAccount: data.saving_account,
-        investmentAccount: data.investment_account,
-        allocation: {
-          savings: data.allocation_savings,
-          stocks: data.allocation_stocks,
-          bonds: data.allocation_bonds
-        }
-      };
-
-      setGoals([...goals, goal]);
-      setSelectedGoalId(goal.id);
+      setSelectedGoalId(data.id);
+      refetch();
 
       toast({
         title: "Success",
@@ -241,15 +223,40 @@ const Goals = () => {
   
   // Generate summary when selected goal changes
   useEffect(() => {
-    if (selectedGoal) {
+    if (selectedGoal && !isLoading) {
       generateGoalSummary(selectedGoal);
     }
-  }, [selectedGoalId]);
+  }, [selectedGoalId, isLoading]);
+
   const totalGoalAmount = selectedGoal?.currentAmount || 0;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
+        {/* Demo Mode Banner */}
+        {mode === 'demo' && (
+          <div className="mb-4 flex items-center justify-between bg-primary/10 border border-primary/20 rounded-lg px-4 py-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-primary text-primary-foreground">
+                Demo Mode
+              </Badge>
+              <span className="text-sm text-muted-foreground">Viewing sample data</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleExitDemo} className="gap-1">
+              <LogOut className="h-4 w-4" />
+              Exit
+            </Button>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-5xl font-bold mb-2">
@@ -415,7 +422,7 @@ const Goals = () => {
         isOpen={isChatOpen} 
         onClose={() => {
           setIsChatOpen(false);
-          loadGoals(); // Refresh goals after closing dialog
+          if (mode === 'auth') refetch(); // Refresh goals after closing dialog in auth mode
         }}
         goal={selectedGoal || null}
       />

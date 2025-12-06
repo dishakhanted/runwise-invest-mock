@@ -18,6 +18,7 @@ export interface SessionState {
 interface SessionContextType extends SessionState {
   setDemoMode: (profileId: string) => void;
   clearSession: () => void;
+  exitDemo: () => void;
   isDemo: boolean;
   isAuthenticated: boolean;
 }
@@ -149,10 +150,21 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
   };
 
+  const exitDemo = () => {
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+    setSessionState({
+      mode: 'none',
+      demoProfileId: null,
+      user: null,
+      isLoading: false,
+    });
+  };
+
   const value: SessionContextType = {
     ...sessionState,
     setDemoMode,
     clearSession,
+    exitDemo,
     isDemo: sessionState.mode === 'demo',
     isAuthenticated: sessionState.mode === 'auth',
   };
