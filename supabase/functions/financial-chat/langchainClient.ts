@@ -3,8 +3,8 @@
  * Provides LLM and prompt template utilities for AI interactions
  */
 
-import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.3.17";
-import { HumanMessage, SystemMessage, AIMessage, type BaseMessage } from "https://esm.sh/@langchain/core@0.3.32/messages";
+import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.3.17?deps=@langchain/core@0.3.32,langsmith@0.2.15";
+import { HumanMessage, SystemMessage, AIMessage, type BaseMessage } from "https://esm.sh/@langchain/core@0.3.32/messages?deps=langsmith@0.2.15";
 
 // Lovable AI Gateway configuration
 const LOVABLE_AI_BASE_URL = "https://ai.gateway.lovable.dev/v1";
