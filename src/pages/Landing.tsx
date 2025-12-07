@@ -34,6 +34,13 @@ const Landing = () => {
             Get started
           </Button>
           <Button
+            onClick={() => navigate("/demo-login")}
+            variant="outline"
+            className="w-full h-14 text-lg rounded-2xl border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            Try Demo
+          </Button>
+          <Button
             onClick={() => navigate("/auth")}
             variant="ghost"
             className="w-full h-14 text-lg text-foreground hover:bg-secondary rounded-2xl"
