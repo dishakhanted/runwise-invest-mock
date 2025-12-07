@@ -1,6 +1,11 @@
 /**
+ * @deprecated This file is deprecated. Use openaiClient.ts instead.
+ * 
  * LangChain Client for Financial Chat Edge Function
  * Provides LLM and prompt template utilities for AI interactions
+ * 
+ * This file is kept for reference but is no longer used.
+ * All AI calls now go through openaiClient.ts using the official OpenAI SDK.
  */
 
 import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.3.17?deps=@langchain/core@0.3.32,langsmith@0.2.15";

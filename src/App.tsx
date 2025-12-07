@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SessionProvider } from "@/contexts/SessionContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { logger } from "@/lib/logger";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import DemoLogin from "./pages/DemoLogin";
@@ -28,6 +30,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Log app initialization
+logger.info('App initializing', {
+  mode: import.meta.env.MODE,
+  dev: import.meta.env.DEV,
+});
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <SessionProvider>
@@ -36,27 +44,149 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/login" element={<Auth />} />
             <Route path="/demo-login" element={<DemoLogin />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/inbox" element={<Inbox />} />
-            <Route path="/inbox/:conversationId" element={<ConversationView />} />
-            <Route path="/transfer" element={<Transfer />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/security" element={<Security />} />
-            <Route path="/accounts" element={<Accounts />} />
-            <Route path="/investing" element={<Investing />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/activity-log" element={<ActivityLog />} />
-            <Route path="/documents" element={<Documents />} />
+            
+            {/* Protected routes - allow demo mode */}
+            <Route 
+              path="/onboarding" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Onboarding />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/explore" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Explore />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/chat" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Chat />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inbox" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Inbox />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inbox/:conversationId" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <ConversationView />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transfer" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Transfer />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/goals" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Goals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security" 
+              element={
+                <ProtectedRoute allowDemo={false}>
+                  <Security />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/accounts" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Accounts />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/investing" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Investing />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Notifications />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/support" 
+              element={
+                <ProtectedRoute allowDemo={true}>
+                  <Support />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/activity-log" 
+              element={
+                <ProtectedRoute allowDemo={false}>
+                  <ActivityLog />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/documents" 
+              element={
+                <ProtectedRoute allowDemo={false}>
+                  <Documents />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

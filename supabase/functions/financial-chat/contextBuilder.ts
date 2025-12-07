@@ -279,7 +279,28 @@ function formatNetWorthContext(context: UserContext): string {
   info += `Total Assets: $${nw.assetsTotal.toLocaleString()}\n`;
   info += `Total Liabilities: $${nw.liabilitiesTotal.toLocaleString()}\n`;
   info += `Cash: $${nw.cashTotal.toLocaleString()}\n`;
-  info += `Investments: $${nw.investmentsTotal.toLocaleString()}\n\n`;
+  info += `Investments: $${nw.investmentsTotal.toLocaleString()}\n`;
+  
+  // Add monthly income estimate if available for emergency fund calculations
+  if (context.userProfile?.income) {
+    const incomeStr = context.userProfile.income;
+    // Try to extract annual income number (e.g., "$125,000/year" -> 125000)
+    const incomeMatch = incomeStr.match(/\$?([\d,]+)/);
+    if (incomeMatch) {
+      const annualIncome = parseFloat(incomeMatch[1].replace(/,/g, ''));
+      if (!isNaN(annualIncome) && annualIncome > 0) {
+        const monthlyIncome = annualIncome / 12;
+        info += `Estimated Monthly Income: $${Math.round(monthlyIncome).toLocaleString()}\n`;
+        // Calculate emergency fund months coverage
+        if (nw.cashTotal > 0) {
+          const emergencyMonths = (nw.cashTotal / monthlyIncome).toFixed(1);
+          info += `Emergency Fund Coverage: ${emergencyMonths} months\n`;
+        }
+      }
+    }
+  }
+  
+  info += '\n';
   return info;
 }
 
@@ -311,14 +332,14 @@ function formatAccountsContext(context: UserContext): string {
   const loanAccounts = context.linkedAccounts.filter(a => a.account_type === 'loan');
   
   if (bankAccounts.length > 0) {
-    info += `\n### Bank Accounts\n`;
+    info += `\n### ASSETS: Bank Accounts (${bankAccounts.length})\n`;
     bankAccounts.forEach((account) => {
       info += `- ${account.provider_name} (***${account.last_four_digits}): $${account.total_amount.toLocaleString()} @ ${account.interest_rate}% APY\n`;
     });
   }
   
   if (investmentAccounts.length > 0) {
-    info += `\n### Investment Accounts\n`;
+    info += `\n### ASSETS: Investment Accounts (${investmentAccounts.length})\n`;
     investmentAccounts.forEach((account) => {
       info += `- ${account.provider_name} (***${account.last_four_digits}): $${account.total_amount.toLocaleString()} @ ${account.interest_rate}% return\n`;
       info += `  Allocation: ${account.allocation_savings}% savings, ${account.allocation_stocks}% stocks, ${account.allocation_bonds}% bonds\n`;
@@ -326,7 +347,7 @@ function formatAccountsContext(context: UserContext): string {
   }
   
   if (loanAccounts.length > 0) {
-    info += `\n### Loans/Liabilities\n`;
+    info += `\n### LIABILITIES: Loans & Debt (${loanAccounts.length})\n`;
     loanAccounts.forEach((account) => {
       info += `- ${account.provider_name} (***${account.last_four_digits}): $${account.total_amount.toLocaleString()} @ ${account.interest_rate}% APR\n`;
     });

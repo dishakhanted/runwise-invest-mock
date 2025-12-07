@@ -13,7 +13,10 @@ export type PromptType =
   | 'finshorts'
   | 'alternate-investments'
   | 'explore'
-  | 'tax-loss-harvesting';
+  | 'tax-loss-harvesting'
+  | 'decision-handling'
+  | 'goal-update'
+  | 'suggestions';
 
 /**
  * Loads a prompt from the prompts directory
@@ -21,17 +24,20 @@ export type PromptType =
 export async function loadPrompt(promptType: PromptType): Promise<string> {
   try {
     const path = new URL(`./prompts/${promptType}.md`, import.meta.url).pathname;
+    console.log(`[promptLoader] Loading prompt: ${promptType}.md from ${path}`);
+    
     const content = await Deno.readTextFile(path);
     
     if (!content || content.trim().length === 0) {
-      console.error(`Prompt file ${promptType}.md is empty`);
+      console.error(`[promptLoader] Prompt file ${promptType}.md is empty`);
       throw new Error(`Prompt file missing or invalid for type: ${promptType}`);
     }
     
+    console.log(`[promptLoader] Successfully loaded ${promptType}.md (${content.length} chars)`);
     return content;
   } catch (error) {
-    console.error(`Error loading prompt ${promptType}:`, error);
-    throw new Error(`Prompt file missing or invalid for type: ${promptType}`);
+    console.error(`[promptLoader] Error loading prompt ${promptType}:`, error);
+    throw new Error(`Prompt file missing or invalid for type: ${promptType} - ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -45,6 +51,7 @@ export function getPromptTypeFromContext(contextType?: string): PromptType {
     'dashboard': 'networth',
     'net-worth': 'networth',
     'net_worth': 'networth',  // Support underscore variant
+    'networth': 'networth',
     'assets': 'assets',
     'liabilities': 'liabilities',
     'goal': 'goals',
@@ -57,6 +64,9 @@ export function getPromptTypeFromContext(contextType?: string): PromptType {
     'finshorts': 'finshorts',
     'explore': 'explore',
     'tax-loss-harvesting': 'tax-loss-harvesting',
+    'decision-handling': 'decision-handling',
+    'goal-update': 'goal-update',
+    'suggestions': 'suggestions',
   };
 
   return mapping[contextType || ''] || 'center-chat';

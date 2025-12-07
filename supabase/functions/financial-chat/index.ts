@@ -1,17 +1,14 @@
 /**
  * Financial Chat Edge Function
- * Uses LangChain for all AI interactions via Lovable AI Gateway
+ * Uses Google Gemini API for all AI interactions
  * All database queries are scoped to the authenticated user
  */
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import {
-  resolvePromptType,
-  loadPromptFromFile,
-  invokeChat,
-} from './langchainClient.ts';
+import { callChatModel, type ChatMessage } from './openaiClient.ts';
+import { getPromptTypeFromContext, loadPrompt } from './promptLoader.ts';
 import { getDemoProfile } from './demoProfiles.ts';
 import { 
   getUserIdFromRequest, 
@@ -58,6 +55,36 @@ function logRequest(log: RequestLog): void {
   }
 }
 
+function logDebug(message: string, context?: Record<string, unknown>): void {
+  const logEntry = {
+    level: 'debug',
+    message,
+    context: context || {},
+    timestamp: new Date().toISOString(),
+  };
+  console.log('[financial-chat] [DEBUG]', JSON.stringify(logEntry));
+}
+
+function logInfo(message: string, context?: Record<string, unknown>): void {
+  const logEntry = {
+    level: 'info',
+    message,
+    context: context || {},
+    timestamp: new Date().toISOString(),
+  };
+  console.log('[financial-chat] [INFO]', JSON.stringify(logEntry));
+}
+
+function logWarn(message: string, context?: Record<string, unknown>): void {
+  const logEntry = {
+    level: 'warn',
+    message,
+    context: context || {},
+    timestamp: new Date().toISOString(),
+  };
+  console.warn('[financial-chat] [WARN]', JSON.stringify(logEntry));
+}
+
 function createErrorResponse(
   error: Error | unknown, 
   requestId: string, 
@@ -97,32 +124,42 @@ type ParsedDecision = {
 
 const parseDecisionFromMessage = (content: string): ParsedDecision => {
   const trimmed = content.trim();
+  logDebug('Parsing decision from message', { messageLength: trimmed.length });
 
+  // Match frontend patterns: "I approve the suggestion:", "I decline the suggestion:", "I want to know more about the suggestion:"
   const approvalRegex = /^I approve the suggestion:\s*[""](.+?)[""]/i;
-  const denialRegex = /^I deny the suggestion:\s*[""](.+?)[""]/i;
+  const denialRegex = /^I (?:deny|decline) the suggestion:\s*[""](.+?)[""]/i; // Support both "deny" and "decline"
   const knowMoreRegex = /^I want to know more about the suggestion:\s*[""](.+?)[""]/i;
 
   let match = trimmed.match(approvalRegex);
   if (match && match[1]) {
-    return { isDecision: true, suggestionTitle: match[1].trim(), decision: 'approved' };
+    const decision = { isDecision: true, suggestionTitle: match[1].trim(), decision: 'approved' as const };
+    logDebug('Decision parsed: approval', { suggestionTitle: decision.suggestionTitle });
+    return decision;
   }
 
   match = trimmed.match(denialRegex);
   if (match && match[1]) {
-    return { isDecision: true, suggestionTitle: match[1].trim(), decision: 'denied' };
+    const decision = { isDecision: true, suggestionTitle: match[1].trim(), decision: 'denied' as const };
+    logDebug('Decision parsed: denial', { suggestionTitle: decision.suggestionTitle });
+    return decision;
   }
 
   match = trimmed.match(knowMoreRegex);
   if (match && match[1]) {
-    return { isDecision: true, suggestionTitle: match[1].trim(), decision: 'know_more' };
+    const decision = { isDecision: true, suggestionTitle: match[1].trim(), decision: 'know_more' as const };
+    logDebug('Decision parsed: know more', { suggestionTitle: decision.suggestionTitle });
+    return decision;
   }
 
+  logDebug('No decision pattern matched');
   return { isDecision: false };
 };
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 /**
@@ -132,7 +169,16 @@ function createSupabaseClient() {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   
+  logDebug('Creating Supabase client', {
+    hasUrl: !!SUPABASE_URL,
+    hasServiceKey: !!SUPABASE_SERVICE_ROLE_KEY,
+  });
+  
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    logWarn('Missing Supabase configuration', {
+      hasUrl: !!SUPABASE_URL,
+      hasServiceKey: !!SUPABASE_SERVICE_ROLE_KEY,
+    });
     throw new Error('Missing Supabase configuration');
   }
   
@@ -153,9 +199,22 @@ async function handleSuggestionDecision(
   isDemo: boolean,
   demoProfileId?: string
 ): Promise<string> {
+  logInfo('Handling suggestion decision', {
+    decision: decision.decision,
+    suggestionTitle: decision.suggestionTitle,
+    contextType,
+    isDemo,
+    userId: userId || undefined,
+  });
+
   // Store decision in DB for goal context (only for authenticated users, never in demo mode)
   if (!isDemo && userId && contextData?.id && contextType === "goal") {
-    console.log('[handleSuggestionDecision] Storing decision for user:', userId);
+    logDebug('Storing decision in database', {
+      userId,
+      goalId: contextData.id,
+      suggestionTitle: decision.suggestionTitle,
+      decision: decision.decision,
+    });
     
     const { error: insertError } = await supabase
       .from("goal_recommendations")
@@ -168,10 +227,22 @@ async function handleSuggestionDecision(
       });
 
     if (insertError) {
-      console.error("Error inserting goal_recommendation:", insertError);
+      logWarn('Error inserting goal_recommendation', {
+        error: insertError.message,
+        userId,
+        goalId: contextData.id,
+      });
     } else {
-      console.log(`Stored ${decision.decision} decision for suggestion: ${decision.suggestionTitle}`);
+      logInfo('Decision stored successfully', {
+        decision: decision.decision,
+        suggestionTitle: decision.suggestionTitle,
+        userId,
+      });
     }
+  } else {
+    logDebug('Skipping decision storage', {
+      reason: isDemo ? 'demo_mode' : !userId ? 'no_user' : contextType !== 'goal' ? 'not_goal_context' : 'no_goal_id',
+    });
   }
 
   // Build context info for decision handling
@@ -203,13 +274,35 @@ async function handleSuggestionDecision(
 
   const systemPrompt = `${DECISION_HANDLING_PROMPT}${contextInfo}${decisionContext}`;
 
-  console.log('[handleSuggestionDecision] Invoking LangChain for decision:', decision.decision);
+  logDebug('Invoking Gemini for decision response', {
+    decision: decision.decision,
+    promptLength: systemPrompt.length,
+    messageCount: messages.length,
+  });
 
   try {
-    const response = await invokeChat(systemPrompt, messages);
+    // Convert messages to ChatMessage format
+    const chatMessages: ChatMessage[] = messages.map(msg => ({
+      role: msg.role as "user" | "assistant",
+      content: msg.content,
+    }));
+
+    const response = await callChatModel({
+      systemPrompt,
+      messages: chatMessages,
+      promptType: 'decision-handling', // Pass promptType for logging
+    });
+    
+    logInfo('Decision response received', {
+      decision: decision.decision,
+      responseLength: response.length,
+    });
     return response;
   } catch (error) {
-    console.error("LangChain error for suggestion response:", error);
+    logWarn('Gemini error for suggestion response', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      decision: decision.decision,
+    });
     if (decision.decision === 'approved') {
       return `Great! I've noted your approval. This will help you reach your goal faster.`;
     } else if (decision.decision === 'denied') {
@@ -231,15 +324,22 @@ async function handleGoalUpdate(
   userId: string | null,
   isDemo: boolean
 ): Promise<{ updated: boolean; message: string }> {
+  logDebug('Checking for goal update', {
+    isDemo,
+    hasUserId: !!userId,
+    hasContextData: !!contextData,
+    goalId: contextData?.id,
+  });
+
   // Demo mode doesn't support goal updates (no database mutations)
   if (isDemo) {
-    console.log('[handleGoalUpdate] Skipping - demo mode');
+    logDebug('Skipping goal update - demo mode');
     return { updated: false, message: '' };
   }
 
   // Require authenticated user for database mutations
   if (!userId) {
-    console.warn('[handleGoalUpdate] No userId - cannot update goal');
+    logWarn('Cannot update goal - no userId');
     return { updated: false, message: '' };
   }
 
@@ -259,19 +359,31 @@ async function handleGoalUpdate(
   }
   
   const newTargetAmount = parseFloat(numberMatch[1].replace(/,/g, ''));
-  
+
   if (newTargetAmount <= 0) {
+    logDebug('Invalid target amount', { newTargetAmount });
     return { updated: false, message: '' };
   }
 
-  console.log('[handleGoalUpdate] Updating goal for user:', userId);
+  logInfo('Updating goal', {
+    userId,
+    goalId: contextData.id,
+    newTargetAmount,
+  });
   
   // Fetch profile with user_id filter
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('date_of_birth')
     .eq('user_id', userId)
     .maybeSingle();
+  
+  if (profileError) {
+    logWarn('Error fetching profile for goal update', {
+      error: profileError.message,
+      userId,
+    });
+  }
   
   let newTargetAge = null;
   if (profile?.date_of_birth) {
@@ -279,6 +391,7 @@ async function handleGoalUpdate(
     const birthDate = new Date(profile.date_of_birth);
     const currentAge = today.getFullYear() - birthDate.getFullYear();
     newTargetAge = currentAge + 8;
+    logDebug('Calculated target age', { currentAge, newTargetAge });
   }
   
   // Update goal with BOTH id and user_id filters for security
@@ -293,9 +406,20 @@ async function handleGoalUpdate(
     .eq('user_id', userId);  // Critical: always scope to user
   
   if (error) {
-    console.error("Error updating goal:", error);
+    logWarn('Error updating goal', {
+      error: error.message,
+      userId,
+      goalId: contextData.id,
+    });
     return { updated: false, message: '' };
   }
+  
+  logInfo('Goal updated successfully', {
+    userId,
+    goalId: contextData.id,
+    newTargetAmount,
+    newTargetAge,
+  });
   
   const goalUpdateSummary = `✅ Goal Updated Successfully!\n\n` +
     `Your goal has been updated to $${newTargetAmount.toLocaleString()}. ` +
@@ -307,6 +431,7 @@ async function handleGoalUpdate(
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
+    logDebug('OPTIONS request received');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -316,11 +441,27 @@ serve(async (req) => {
   let userId = 'anonymous';
   let isDemo = false;
 
+  logInfo('Request received', {
+    requestId,
+    method: req.method,
+    url: req.url,
+  });
+
   try {
     const { messages, conversationId, contextType: reqContextType, contextData, demo } = await req.json();
     contextType = reqContextType || 'unknown';
     isDemo = demo?.demoProfileId ? true : false;
     const demoProfileId = demo?.demoProfileId;
+    
+    logDebug('Request parsed', {
+      requestId,
+      contextType,
+      isDemo,
+      demoProfileId: demoProfileId || undefined,
+      messageCount: messages?.length || 0,
+      hasConversationId: !!conversationId,
+      hasContextData: !!contextData,
+    });
     
     // Log request start
     logRequest({
@@ -335,6 +476,12 @@ serve(async (req) => {
     const supabase = createSupabaseClient();
     const authHeader = req.headers.get('Authorization');
 
+    logDebug('Extracting user authentication', {
+      requestId,
+      isDemo,
+      hasAuthHeader: !!authHeader,
+    });
+
     // Extract user ID from JWT (null for demo mode or unauthenticated)
     let authenticatedUserId: string | null = null;
     
@@ -342,22 +489,33 @@ serve(async (req) => {
       try {
         authenticatedUserId = await getUserIdFromRequest(supabase, authHeader);
         userId = authenticatedUserId;
-        console.log(`[financial-chat] [${requestId}] Authenticated user: ${userId}`);
+        logInfo('User authenticated', {
+          requestId,
+          userId,
+        });
       } catch (authError) {
-        console.warn(`[financial-chat] [${requestId}] Auth extraction failed:`, authError);
+        logWarn('Auth extraction failed', {
+          requestId,
+          error: authError instanceof Error ? authError.message : 'Unknown error',
+        });
         // Continue without userId - will use contextData fallback
       }
     } else if (isDemo) {
       userId = `demo:${demoProfileId}`;
+      logDebug('Using demo profile', {
+        requestId,
+        demoProfileId,
+      });
     }
 
     // Check if this is a suggestion decision
+    // Net worth, assets, liabilities, goals, and dashboard contexts support suggestion actions
     const lastMessage = messages[messages.length - 1];
     const lastContent: string = lastMessage?.content ?? "";
     const isSuggestionContext = 
       contextType === "goal" || 
       contextType === "dashboard" ||
-      contextType === "net_worth" || 
+      contextType === "net_worth" ||  // Net worth chat supports approve/deny/know more
       contextType === "networth" ||
       contextType === "assets" || 
       contextType === "liabilities";
@@ -372,7 +530,12 @@ serve(async (req) => {
 
     // Handle suggestion decisions
     if (decision && isSuggestionContext) {
-      console.log(`[financial-chat] [${requestId}] Handling suggestion decision: ${decision.decision}`);
+      logInfo('Handling suggestion decision', {
+        requestId,
+        decision: decision.decision,
+        suggestionTitle: decision.suggestionTitle,
+        contextType,
+      });
       
       const confirmationMessage = await handleSuggestionDecision(
         supabase,
@@ -434,15 +597,33 @@ serve(async (req) => {
     }
 
     // Load prompt from markdown file
-    const promptType = resolvePromptType(contextType);
-    console.log(`[financial-chat] [${requestId}] Loading prompt: ${promptType}`);
+    const promptType = getPromptTypeFromContext(contextType);
+    logDebug('Loading prompt', {
+      requestId,
+      contextType,
+      promptType,
+    });
     
     let promptContent: string;
     try {
-      promptContent = await loadPromptFromFile(promptType);
+      promptContent = await loadPrompt(promptType);
+      logInfo('Prompt loaded successfully', {
+        requestId,
+        contextType,
+        promptType,
+        promptLength: promptContent.length,
+      });
     } catch (error) {
-      console.error(`[financial-chat] [${requestId}] Error loading prompt file:`, error);
-      promptContent = "You are GrowWise AI, a helpful financial assistant. Provide clear, concise, and helpful responses.";
+      // Log error but throw instead of falling back to generic prompt
+      // This ensures we catch prompt loading issues early
+      logWarn('Error loading prompt file', {
+        requestId,
+        contextType,
+        promptType,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      // Re-throw to surface the issue - don't silently fall back to generic prompt
+      throw new Error(`Failed to load prompt for type '${promptType}': ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     // Build context using the unified context builder
@@ -450,29 +631,76 @@ serve(async (req) => {
     
     if (isDemo && demoProfileId) {
       // Demo mode: use in-memory demo profile data only
+      logDebug('Building context from demo profile', {
+        requestId,
+        demoProfileId,
+        contextType,
+      });
       const demoProfile = getDemoProfile(demoProfileId);
       if (demoProfile) {
         contextInfo = buildContextForDemo(demoProfile, contextType, contextData);
-        console.log(`[financial-chat] [${requestId}] Using demo profile: ${demoProfile.name}`);
+        logInfo('Using demo profile', {
+          requestId,
+          demoProfileName: demoProfile.name,
+          contextLength: contextInfo.length,
+        });
+      } else {
+        logWarn('Demo profile not found', {
+          requestId,
+          demoProfileId,
+        });
       }
     } else if (authenticatedUserId) {
       // Auth mode: fetch from database, scoped to authenticated user
+      logDebug('Building context from database', {
+        requestId,
+        userId: authenticatedUserId,
+        contextType,
+      });
       contextInfo = await buildContextForUser(supabase, authenticatedUserId, contextType, contextData);
-      console.log(`[financial-chat] [${requestId}] Built context for user: ${authenticatedUserId}`);
+      logInfo('Built context for user', {
+        requestId,
+        userId: authenticatedUserId,
+        contextLength: contextInfo.length,
+      });
     } else {
       // Fallback: use provided contextData only (no database access without auth)
-      console.warn(`[financial-chat] [${requestId}] No userId available, using contextData fallback`);
+      logWarn('No userId available, using contextData fallback', {
+        requestId,
+        contextType,
+      });
       contextInfo = buildSimpleContextFromData(contextType, contextData);
     }
 
     const systemPrompt = `${promptContent}${contextInfo}`;
 
-    console.log(`[financial-chat] [${requestId}] Invoking LangChain with prompt type: ${promptType}`);
+    // Enhanced logging with breakdown of systemPrompt components
+    logInfo('Invoking Gemini', {
+      requestId,
+      contextType,
+      promptType,
+      promptContentLength: promptContent.length,
+      contextInfoLength: contextInfo.length,
+      systemPromptLength: systemPrompt.length,
+      messageCount: messages.length,
+    });
 
     try {
-      const response = await invokeChat(systemPrompt, messages);
+      // Convert messages to ChatMessage format
+      const chatMessages: ChatMessage[] = messages.map(msg => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+      }));
+
+      const response = await callChatModel({
+        systemPrompt,
+        messages: chatMessages,
+        promptType, // Pass promptType for logging
+      });
       
       const endTime = Date.now();
+      const durationMs = endTime - startTime;
+      
       logRequest({
         requestId,
         contextType,
@@ -480,18 +708,22 @@ serve(async (req) => {
         isDemo,
         startTime,
         endTime,
-        durationMs: endTime - startTime,
+        durationMs,
         status: 'success',
       });
 
-      console.log(`[financial-chat] [${requestId}] LangChain response received successfully`);
+      logInfo('Gemini response received', {
+        requestId,
+        responseLength: response.length,
+        durationMs,
+      });
 
       return new Response(
         JSON.stringify({ message: response }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (llmError: any) {
-      console.error(`[financial-chat] [${requestId}] LangChain LLM error:`, llmError);
+      console.error(`[financial-chat] [${requestId}] Gemini API error:`, llmError);
       
       if (llmError.message?.includes('429') || llmError.status === 429) {
         const endTime = Date.now();

@@ -76,7 +76,7 @@ describe("promptLoader", () => {
 
 /**
  * Helper function to resolve prompt type from context type
- * Mirrors the logic in langchainClient.ts
+ * Mirrors the logic in promptLoader.ts
  */
 function resolvePromptType(contextType: string): string {
   const contextTypeToPrompt: Record<string, string> = {

@@ -60,30 +60,34 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## LangChain Backend Setup
+## OpenAI Backend Setup
 
-The financial chat functionality uses LangChain with OpenAI on the backend (Supabase Edge Functions).
+The financial chat functionality uses the official OpenAI API on the backend (Supabase Edge Functions).
 
 ### Environment Variables
 
-Required secrets (configured in Supabase):
-- `OPENAI_API_KEY` - OpenAI API key for LangChain LLM
-- `SUPABASE_URL` - Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
+Required secrets (configured in Supabase Edge Function secrets):
+- `OPENAI_API_KEY` - Your OpenAI API key (required)
+- `OPENAI_MODEL_MAIN` - Main model to use (default: `gpt-4o-mini`)
+- `OPENAI_MODEL_CHEAP` - Cheaper model for cost-sensitive operations (default: `gpt-4o-mini`)
+- `SUPABASE_URL` - Supabase project URL (auto-configured)
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (auto-configured)
+
+**Note:** Never commit API keys to Git. Configure these in Supabase Dashboard > Edge Functions > Secrets.
 
 ### Architecture
 
 **Backend (Edge Functions):**
 - Located in `/supabase/functions/financial-chat/`
-- Uses Deno runtime with LangChain integration
+- Uses Deno runtime with official OpenAI SDK
 - Loads prompts from MD files using `promptLoader.ts`
-- Constructs dynamic prompts with `PromptTemplate` from LangChain
-- Streams responses from OpenAI GPT-4o-mini
+- Uses `openaiClient.ts` for all OpenAI API calls
+- Supports latest GPT models (gpt-4o-mini, gpt-4, etc.)
 
 **Frontend:**
 - Located in `/src/`
 - React components call edge functions via Supabase client
-- No direct AI/LangChain imports in frontend code
+- No direct AI/OpenAI imports in frontend code
 - Uses `useFinancialChat` hook for chat functionality
 
 ### Prompt Files
@@ -110,14 +114,22 @@ AI prompts are stored as markdown files and loaded dynamically:
 ### How It Works
 
 1. User sends message from React component
-2. Frontend calls `/supabase/functions/financial-chat` via Supabase client
+2. Frontend calls `/supabase/functions/v1/financial-chat` via Supabase client
 3. Edge function:
    - Loads appropriate MD prompt based on context type
    - Builds context (user data, conversation history, goals, etc.)
-   - Creates LangChain `PromptTemplate` with prompt + context
-   - Invokes OpenAI LLM via LangChain
-   - Streams response back to frontend
-4. Frontend displays streaming response in chat UI
+   - Combines prompt + context into system prompt
+   - Calls OpenAI API via `openaiClient.ts` using configured model
+   - Returns JSON response to frontend
+4. Frontend displays response in chat UI
+
+### Model Configuration
+
+To change the model, set environment variables in Supabase:
+- `OPENAI_MODEL_MAIN` - Primary model (e.g., `gpt-4o-mini`, `gpt-4`, `gpt-4-turbo`)
+- `OPENAI_MODEL_CHEAP` - Cheaper model for high-volume operations
+
+The model can be changed in one place (`openaiClient.ts`) without touching other code.
 
 ## How can I deploy this project?
 

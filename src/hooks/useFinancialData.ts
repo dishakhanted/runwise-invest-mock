@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/contexts/SessionContext';
 import { getDemoProfile } from '@/demo/demoProfiles';
+import { logger } from '@/lib/logger';
 import type { LinkedAccount, Goal, NetWorthSummary, UserProfile } from '@/domain/types';
 
 // Re-export types for consumers
@@ -40,17 +41,34 @@ export const useFinancialData = (): UseFinancialDataResult => {
     const liabilitiesTotal = loanAccounts.reduce((sum, acc) => sum + Number(acc.total_amount), 0);
     const netWorth = assetsTotal - liabilitiesTotal;
 
-    return {
+    const summary = {
       netWorth,
       assetsTotal,
       liabilitiesTotal,
       cashTotal,
       investmentsTotal,
     };
+
+    logger.financial('Calculated net worth summary', {
+      netWorth,
+      assetsTotal,
+      liabilitiesTotal,
+      cashTotal,
+      investmentsTotal,
+      accountCount: accounts.length,
+      bankCount: bankAccounts.length,
+      investmentCount: investmentAccounts.length,
+      loanCount: loanAccounts.length,
+    });
+
+    return summary;
   };
 
   const loadDemoData = useCallback(() => {
+    logger.financial('Loading demo data', { demoProfileId });
+    
     if (!demoProfileId) {
+      logger.error('No demo profile selected', { demoProfileId });
       setError('No demo profile selected');
       setIsLoading(false);
       return;
@@ -58,10 +76,18 @@ export const useFinancialData = (): UseFinancialDataResult => {
 
     const profile = getDemoProfile(demoProfileId);
     if (!profile) {
+      logger.error('Demo profile not found', { demoProfileId });
       setError('Demo profile not found');
       setIsLoading(false);
       return;
     }
+
+    logger.financial('Demo profile loaded', {
+      demoProfileId,
+      accountCount: profile.linkedAccounts.length,
+      goalCount: profile.goals.length,
+      hasProfile: !!profile.profile,
+    });
 
     setLinkedAccounts(profile.linkedAccounts);
     setGoals(profile.goals.map(g => ({
@@ -72,16 +98,29 @@ export const useFinancialData = (): UseFinancialDataResult => {
     setUserProfile(profile.profile);
     setError(null);
     setIsLoading(false);
+    
+    logger.financial('Demo data loaded successfully', { demoProfileId });
   }, [demoProfileId]);
 
   const loadAuthData = useCallback(async () => {
+    logger.financial('Loading authenticated user data');
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        logger.error('Error getting user', { error: userError.message }, userError as Error);
+        throw userError;
+      }
+      
       if (!user) {
+        logger.warn('No authenticated user found');
         setError('Not authenticated');
         setIsLoading(false);
         return;
       }
+
+      logger.financial('Fetching linked accounts', { userId: user.id });
 
       // Load linked accounts
       const { data: accountsData, error: accountsError } = await supabase
@@ -89,7 +128,16 @@ export const useFinancialData = (): UseFinancialDataResult => {
         .select('*')
         .eq('user_id', user.id);
 
-      if (accountsError) throw accountsError;
+      if (accountsError) {
+        logger.error('Error loading linked accounts', { error: accountsError.message }, accountsError as Error);
+        throw accountsError;
+      }
+      
+      logger.financial('Linked accounts loaded', {
+        userId: user.id,
+        accountCount: accountsData?.length || 0,
+      });
+
       setLinkedAccounts((accountsData || []).map(acc => ({
         id: acc.id,
         account_type: acc.account_type as LinkedAccount['account_type'],
@@ -102,6 +150,8 @@ export const useFinancialData = (): UseFinancialDataResult => {
         allocation_bonds: acc.allocation_bonds,
       })));
 
+      logger.financial('Fetching goals', { userId: user.id });
+
       // Load goals
       const { data: goalsData, error: goalsError } = await supabase
         .from('goals')
@@ -109,7 +159,16 @@ export const useFinancialData = (): UseFinancialDataResult => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (goalsError) throw goalsError;
+      if (goalsError) {
+        logger.error('Error loading goals', { error: goalsError.message }, goalsError as Error);
+        throw goalsError;
+      }
+      
+      logger.financial('Goals loaded', {
+        userId: user.id,
+        goalCount: goalsData?.length || 0,
+      });
+
       setGoals((goalsData || []).map(g => ({
         id: g.id,
         name: g.name,
@@ -124,6 +183,8 @@ export const useFinancialData = (): UseFinancialDataResult => {
         allocation_bonds: g.allocation_bonds,
       })));
 
+      logger.financial('Fetching user profile', { userId: user.id });
+
       // Load user profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -131,12 +192,24 @@ export const useFinancialData = (): UseFinancialDataResult => {
         .eq('user_id', user.id)
         .single();
 
-      if (profileError && profileError.code !== 'PGRST116') throw profileError;
+      if (profileError && profileError.code !== 'PGRST116') {
+        logger.error('Error loading profile', { error: profileError.message }, profileError as Error);
+        throw profileError;
+      }
+      
+      logger.financial('User profile loaded', {
+        userId: user.id,
+        hasProfile: !!profileData,
+      });
+
       setUserProfile(profileData || null);
 
       setError(null);
+      logger.financial('Auth data loaded successfully', { userId: user.id });
     } catch (err) {
-      console.error('Error loading financial data:', err);
+      logger.error('Error loading financial data', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+      }, err instanceof Error ? err : undefined);
       setError('Failed to load financial data');
     } finally {
       setIsLoading(false);
@@ -144,18 +217,24 @@ export const useFinancialData = (): UseFinancialDataResult => {
   }, []);
 
   const refetch = useCallback(async () => {
+    logger.financial('Refetching financial data', { mode, demoProfileId });
     setIsLoading(true);
     if (mode === 'demo') {
       loadDemoData();
     } else if (mode === 'auth') {
       await loadAuthData();
     } else {
+      logger.debug('No session mode, skipping data load');
       setIsLoading(false);
     }
-  }, [mode, loadDemoData, loadAuthData]);
+  }, [mode, demoProfileId, loadDemoData, loadAuthData]);
 
   useEffect(() => {
-    if (sessionLoading) return;
+    if (sessionLoading) {
+      logger.debug('Session still loading, skipping financial data fetch');
+      return;
+    }
+    logger.financial('Session ready, fetching financial data', { mode, demoProfileId });
     refetch();
   }, [mode, demoProfileId, sessionLoading, refetch]);
 

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/contexts/SessionContext";
+import { logger } from "@/lib/logger";
 import {
   Suggestion,
   buildSuggestionsFromMessage,
@@ -51,6 +52,12 @@ export const useFinancialChat = ({
 
   // Reset messages and conversation whenever contextType changes
   useEffect(() => {
+    logger.chat('Context type changed, resetting messages', {
+      contextType,
+      hasInitialMessage: !!initialMessage,
+      initialSuggestionsCount: initialSuggestions?.length || 0,
+    });
+    
     setMessages(
       initialMessage
         ? [
@@ -64,6 +71,7 @@ export const useFinancialChat = ({
     );
     // Force a new conversation for each context
     setConversationId(null);
+    logger.chat('Conversation reset', { contextType });
   }, [contextType, initialMessage, initialSuggestions]);
 
   const generateTitle = (firstUserMessage: string) => {
@@ -175,12 +183,26 @@ export const useFinancialChat = ({
   const sendMessage = useCallback(
     async (overrideText?: string, options?: { silentUser?: boolean }) => {
       const textToSend = (overrideText ?? input).trim();
-      if (!textToSend || isLoading) return;
+      if (!textToSend || isLoading) {
+        logger.chat('Send message skipped', { 
+          hasText: !!textToSend, 
+          isLoading,
+          reason: !textToSend ? 'empty' : 'loading',
+        });
+        return;
+      }
 
       // Detect approval/denial messages to skip auto-generating suggestions
       const isApprovalOrDenial = isApprovalOrDenialMessage(textToSend);
       
-      console.log(`[useFinancialChat sendMessage] contextType: "${contextType}", isApprovalOrDenial: ${isApprovalOrDenial}`);
+      logger.chat('Sending message', {
+        contextType,
+        isApprovalOrDenial,
+        messageLength: textToSend.length,
+        silentUser: options?.silentUser || false,
+        mode,
+        demoProfileId: demoProfileId || undefined,
+      });
 
       const userMessage: Message = { role: "user", content: textToSend };
       const newMessages = [...messages, userMessage];
@@ -193,11 +215,16 @@ export const useFinancialChat = ({
       try {
         // Save conversation and get conversation ID
         const title = conversationId ? undefined : generateTitle(textToSend);
+        logger.chat('Saving conversation', { conversationId, isNew: !conversationId, title });
+        
         const convId = await saveConversation(newMessages, title);
 
         if (convId) {
+          logger.chat('Conversation saved', { conversationId: convId });
           // Save user message
           await saveMessage(convId, "user", textToSend);
+        } else {
+          logger.debug('Conversation not saved (demo mode or error)', { mode });
         }
 
         // Get auth token (optional - works without auth for testing)
@@ -218,7 +245,13 @@ export const useFinancialChat = ({
           requestBody.demo = { demoProfileId };
         }
 
-        console.log("Sending to edge function:", { contextType, contextData, isDemo: mode === 'demo' });
+        logger.api('POST', '/functions/v1/financial-chat', {
+          contextType,
+          isDemo: mode === 'demo',
+          hasAuth: !!session,
+          messageCount: newMessages.length,
+          conversationId: convId,
+        });
 
         // Call edge function with streaming
         const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/financial-chat`, {
@@ -230,12 +263,20 @@ export const useFinancialChat = ({
           body: JSON.stringify(requestBody),
         });
 
-        console.log("Response status:", response.status);
-        console.log("Response content-type:", response.headers.get("content-type"));
+        logger.api('Response received', {
+          status: response.status,
+          contentType: response.headers.get("content-type"),
+          conversationId: convId,
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-          console.error("Error response:", errorData);
+          logger.error('Edge function error response', {
+            status: response.status,
+            error: errorData,
+            contextType,
+            conversationId: convId,
+          }, new Error(errorData.error || "Unknown error"));
           
           // Handle specific error codes with friendly messages
           if (response.status === 429) {
@@ -255,11 +296,15 @@ export const useFinancialChat = ({
         const contentType = response.headers.get("content-type");
         if (contentType?.includes("application/json")) {
           const data = await response.json();
-          console.log("Received JSON response:", data);
-          console.log("[useFinancialChat] Current messages before update:", messages.length);
+          logger.chat('Received JSON response', {
+            hasMessage: !!data.message,
+            messageLength: data.message?.length || 0,
+            hasSuggestions: !!data.suggestions,
+            goalUpdated: data.goalUpdated || false,
+            conversationId: convId,
+          });
 
           const rawAssistantMessage: string = data.message ?? "";
-          console.log("[useFinancialChat] Raw assistant message length:", rawAssistantMessage.length);
 
           let summary = rawAssistantMessage;
           let suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
@@ -271,16 +316,17 @@ export const useFinancialChat = ({
     contextType === "assets" ||
     contextType === "liabilities";
 
-  if (isSuggestionContext && rawAssistantMessage && !isApprovalOrDenial) {
+          if (isSuggestionContext && rawAssistantMessage && !isApprovalOrDenial) {
             const parsed = parseSummaryAndSuggestionsFromMessage(
               rawAssistantMessage,
               contextType
             );
 
-            console.log(`[useFinancialChat JSON] Parsed for ${contextType}:`, {
+            logger.chat('Parsed suggestions from JSON response', {
+              contextType,
               summaryLength: parsed.summary.length,
               suggestionsCount: parsed.suggestions.length,
-              suggestions: parsed.suggestions
+              conversationId: convId,
             });
 
             summary = parsed.summary;
@@ -290,27 +336,32 @@ export const useFinancialChat = ({
             }
           }
 
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content: summary,
-              suggestions,
-            },
-          ]);
-          console.log("[useFinancialChat] Messages updated, new length:", messages.length + 1);
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: "assistant",
+                content: summary,
+                suggestions,
+              },
+            ]);
+          logger.chat('Messages updated with assistant response', {
+            messageCount: messages.length + 1,
+            hasSuggestions: !!suggestions && suggestions.length > 0,
+            conversationId: convId,
+          });
 
           // Save assistant message
           if (convId && rawAssistantMessage) {
             await saveMessage(convId, "assistant", rawAssistantMessage);
+            logger.chat('Assistant message saved', { conversationId: convId });
           }
 
-          console.log("[useFinancialChat] Setting isLoading to false");
           setIsLoading(false);
           return;
         }
 
         // Handle streaming response
+        logger.chat('Handling streaming response', { conversationId: convId });
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
         let assistantMessage = "";
@@ -395,10 +446,11 @@ if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
               contextType
             );
 
-            console.log(`[useFinancialChat streaming] Parsed for ${contextType}:`, {
+            logger.chat('Parsed suggestions from streaming response', {
+              contextType,
               summaryLength: parsed.summary.length,
               suggestionsCount: parsed.suggestions.length,
-              suggestions: parsed.suggestions
+              conversationId: convId,
             });
 
             setMessages((prev) =>
@@ -417,10 +469,21 @@ if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
           // Save assistant message
           if (convId && assistantMessage) {
             await saveMessage(convId, "assistant", assistantMessage);
+            logger.chat('Streaming assistant message saved', { 
+              conversationId: convId,
+              messageLength: assistantMessage.length,
+            });
           }
+        } else {
+          logger.warn('No reader available for streaming response', { conversationId: convId });
         }
       } catch (error: any) {
-        console.error("Error sending message:", error);
+        logger.error('Error sending message', {
+          contextType,
+          conversationId,
+          error: error.message,
+          stack: error.stack,
+        }, error);
         
         // Show user-friendly error message
         const errorMessage = error.message || "Failed to send message";
@@ -441,23 +504,29 @@ if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
         ]);
       } finally {
         setIsLoading(false);
+        logger.chat('Send message completed', { contextType, conversationId });
       }
     },
-    [input, messages, isLoading, contextType, contextData, conversationId, saveConversation, saveMessage, toast],
+    [input, messages, isLoading, contextType, contextData, conversationId, saveConversation, saveMessage, toast, mode, demoProfileId],
   );
 
   const handleSuggestionAction = useCallback(
     (messageIndex: number, suggestionId: string, action: "approved" | "denied" | "know_more") => {
-      console.log("handleSuggestionAction called:", {
+      logger.chat('Suggestion action triggered', {
         messageIndex,
         suggestionId,
         action,
+        contextType,
       });
 
       const message = messages[messageIndex];
       const suggestion = message.suggestions?.find((s) => s.id === suggestionId);
 
-      console.log("Found suggestion:", suggestion);
+      if (!suggestion) {
+        logger.warn('Suggestion not found', { messageIndex, suggestionId, action });
+      } else {
+        logger.chat('Suggestion found', { suggestionTitle: suggestion.title, action });
+      }
 
       // Update suggestion status only for approve/deny
       if (action === "approved" || action === "denied") {
@@ -479,16 +548,19 @@ if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
       // ✅ All actions (Approve / Deny / Know More) should be *silent*: no user bubble
       if (action === "approved" && suggestion) {
         const userMessage = `I approve the suggestion: "${suggestion.title}"`;
+        logger.chat('Sending approval message', { suggestionTitle: suggestion.title });
         sendMessage(userMessage, { silentUser: true });
       } else if (action === "denied" && suggestion) {
         const userMessage = `I decline the suggestion: "${suggestion.title}"`;
+        logger.chat('Sending denial message', { suggestionTitle: suggestion.title });
         sendMessage(userMessage, { silentUser: true });
       } else if (action === "know_more" && suggestion) {
         const userMessage = `I want to know more about the suggestion: "${suggestion.title}"`;
+        logger.chat('Sending know-more message', { suggestionTitle: suggestion.title });
         sendMessage(userMessage, { silentUser: true });
       }
     },
-    [messages, sendMessage, setInput, setMessages],
+    [messages, sendMessage, contextType],
   );
 
   const handleClose = useCallback(() => {
