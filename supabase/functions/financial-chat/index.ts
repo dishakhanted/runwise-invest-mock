@@ -23,6 +23,72 @@ import {
 // Import static prompts as fallback
 import { DECISION_HANDLING_PROMPT } from './prompts.ts';
 
+// ============= Structured Logging Helpers =============
+
+interface RequestLog {
+  requestId: string;
+  contextType: string;
+  userId: string;
+  isDemo: boolean;
+  startTime: number;
+  endTime?: number;
+  durationMs?: number;
+  status: 'started' | 'success' | 'error';
+  error?: {
+    message: string;
+    stack?: string;
+    code?: string;
+  };
+}
+
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+function logRequest(log: RequestLog): void {
+  const logEntry = {
+    ...log,
+    timestamp: new Date().toISOString(),
+  };
+  
+  if (log.status === 'error') {
+    console.error('[financial-chat]', JSON.stringify(logEntry));
+  } else {
+    console.log('[financial-chat]', JSON.stringify(logEntry));
+  }
+}
+
+function createErrorResponse(
+  error: Error | unknown, 
+  requestId: string, 
+  corsHeaders: Record<string, string>
+): Response {
+  const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+  const errorStack = error instanceof Error ? error.stack : undefined;
+  
+  // Log structured error
+  console.error('[financial-chat] Error details:', JSON.stringify({
+    requestId,
+    error: errorMessage,
+    stack: errorStack,
+    timestamp: new Date().toISOString(),
+  }));
+  
+  // Return safe error message to frontend
+  return new Response(
+    JSON.stringify({ 
+      error: 'Something went wrong. Please try again.',
+      requestId,
+    }),
+    { 
+      status: 500, 
+      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    }
+  );
+}
+
+// ============= Types =============
+
 type ParsedDecision = {
   isDecision: boolean;
   suggestionTitle?: string;
@@ -244,33 +310,45 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const requestId = generateRequestId();
+  const startTime = Date.now();
+  let contextType = 'unknown';
+  let userId = 'anonymous';
+  let isDemo = false;
+
   try {
-    const { messages, conversationId, contextType, contextData, demo } = await req.json();
-    const isDemo = demo?.demoProfileId ? true : false;
+    const { messages, conversationId, contextType: reqContextType, contextData, demo } = await req.json();
+    contextType = reqContextType || 'unknown';
+    isDemo = demo?.demoProfileId ? true : false;
     const demoProfileId = demo?.demoProfileId;
     
-    console.log('[financial-chat] Request received:', { 
-      messagesLength: messages?.length, 
-      conversationId, 
+    // Log request start
+    logRequest({
+      requestId,
       contextType,
+      userId: isDemo ? `demo:${demoProfileId}` : 'pending',
       isDemo,
-      demoProfileId
+      startTime,
+      status: 'started',
     });
 
     const supabase = createSupabaseClient();
     const authHeader = req.headers.get('Authorization');
 
     // Extract user ID from JWT (null for demo mode or unauthenticated)
-    let userId: string | null = null;
+    let authenticatedUserId: string | null = null;
     
     if (!isDemo && authHeader) {
       try {
-        userId = await getUserIdFromRequest(supabase, authHeader);
-        console.log('[financial-chat] Authenticated user:', userId);
+        authenticatedUserId = await getUserIdFromRequest(supabase, authHeader);
+        userId = authenticatedUserId;
+        console.log(`[financial-chat] [${requestId}] Authenticated user: ${userId}`);
       } catch (authError) {
-        console.warn('[financial-chat] Auth extraction failed:', authError);
+        console.warn(`[financial-chat] [${requestId}] Auth extraction failed:`, authError);
         // Continue without userId - will use contextData fallback
       }
+    } else if (isDemo) {
+      userId = `demo:${demoProfileId}`;
     }
 
     // Check if this is a suggestion decision
@@ -294,16 +372,30 @@ serve(async (req) => {
 
     // Handle suggestion decisions
     if (decision && isSuggestionContext) {
+      console.log(`[financial-chat] [${requestId}] Handling suggestion decision: ${decision.decision}`);
+      
       const confirmationMessage = await handleSuggestionDecision(
         supabase,
         decision,
         contextType,
         contextData,
         messages,
-        userId,
+        authenticatedUserId,
         isDemo,
         demoProfileId
       );
+
+      const endTime = Date.now();
+      logRequest({
+        requestId,
+        contextType,
+        userId,
+        isDemo,
+        startTime,
+        endTime,
+        durationMs: endTime - startTime,
+        status: 'success',
+      });
 
       return new Response(
         JSON.stringify({ message: confirmationMessage }),
@@ -317,11 +409,23 @@ serve(async (req) => {
         supabase,
         contextData,
         messages,
-        userId,
+        authenticatedUserId,
         isDemo
       );
       
       if (goalUpdateResult.updated) {
+        const endTime = Date.now();
+        logRequest({
+          requestId,
+          contextType,
+          userId,
+          isDemo,
+          startTime,
+          endTime,
+          durationMs: endTime - startTime,
+          status: 'success',
+        });
+
         return new Response(
           JSON.stringify({ message: goalUpdateResult.message, goalUpdated: true }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -331,13 +435,13 @@ serve(async (req) => {
 
     // Load prompt from markdown file
     const promptType = resolvePromptType(contextType);
-    console.log('[financial-chat] Loading prompt:', promptType);
+    console.log(`[financial-chat] [${requestId}] Loading prompt: ${promptType}`);
     
     let promptContent: string;
     try {
       promptContent = await loadPromptFromFile(promptType);
     } catch (error) {
-      console.error("Error loading prompt file:", error);
+      console.error(`[financial-chat] [${requestId}] Error loading prompt file:`, error);
       promptContent = "You are GrowWise AI, a helpful financial assistant. Provide clear, concise, and helpful responses.";
     }
     
@@ -349,44 +453,82 @@ serve(async (req) => {
       const demoProfile = getDemoProfile(demoProfileId);
       if (demoProfile) {
         contextInfo = buildContextForDemo(demoProfile, contextType, contextData);
-        console.log('[financial-chat] Using demo profile:', demoProfile.name);
+        console.log(`[financial-chat] [${requestId}] Using demo profile: ${demoProfile.name}`);
       }
-    } else if (userId) {
+    } else if (authenticatedUserId) {
       // Auth mode: fetch from database, scoped to authenticated user
-      contextInfo = await buildContextForUser(supabase, userId, contextType, contextData);
-      console.log('[financial-chat] Built context for user:', userId);
+      contextInfo = await buildContextForUser(supabase, authenticatedUserId, contextType, contextData);
+      console.log(`[financial-chat] [${requestId}] Built context for user: ${authenticatedUserId}`);
     } else {
       // Fallback: use provided contextData only (no database access without auth)
-      console.warn('[financial-chat] No userId available, using contextData fallback');
+      console.warn(`[financial-chat] [${requestId}] No userId available, using contextData fallback`);
       contextInfo = buildSimpleContextFromData(contextType, contextData);
     }
 
     const systemPrompt = `${promptContent}${contextInfo}`;
 
-    console.log('[financial-chat] Invoking LangChain with prompt type:', promptType);
-    console.log('[financial-chat] System prompt preview:', systemPrompt.slice(0, 150));
+    console.log(`[financial-chat] [${requestId}] Invoking LangChain with prompt type: ${promptType}`);
 
     try {
       const response = await invokeChat(systemPrompt, messages);
-      console.log('[financial-chat] LangChain response received successfully');
+      
+      const endTime = Date.now();
+      logRequest({
+        requestId,
+        contextType,
+        userId,
+        isDemo,
+        startTime,
+        endTime,
+        durationMs: endTime - startTime,
+        status: 'success',
+      });
+
+      console.log(`[financial-chat] [${requestId}] LangChain response received successfully`);
 
       return new Response(
         JSON.stringify({ message: response }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (llmError: any) {
-      console.error("LangChain LLM error:", llmError);
+      console.error(`[financial-chat] [${requestId}] LangChain LLM error:`, llmError);
       
       if (llmError.message?.includes('429') || llmError.status === 429) {
+        const endTime = Date.now();
+        logRequest({
+          requestId,
+          contextType,
+          userId,
+          isDemo,
+          startTime,
+          endTime,
+          durationMs: endTime - startTime,
+          status: 'error',
+          error: { message: 'Rate limit exceeded', code: '429' },
+        });
+
         return new Response(
-          JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
+          JSON.stringify({ error: "We're experiencing high demand. Please try again in a moment.", requestId }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       
       if (llmError.message?.includes('402') || llmError.status === 402) {
+        const endTime = Date.now();
+        logRequest({
+          requestId,
+          contextType,
+          userId,
+          isDemo,
+          startTime,
+          endTime,
+          durationMs: endTime - startTime,
+          status: 'error',
+          error: { message: 'Payment required', code: '402' },
+        });
+
         return new Response(
-          JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace." }),
+          JSON.stringify({ error: "Service temporarily unavailable. Please try again later.", requestId }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -395,10 +537,22 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error("[financial-chat] Error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const endTime = Date.now();
+    logRequest({
+      requestId,
+      contextType,
+      userId,
+      isDemo,
+      startTime,
+      endTime,
+      durationMs: endTime - startTime,
+      status: 'error',
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+    });
+
+    return createErrorResponse(error, requestId, corsHeaders);
   }
 });

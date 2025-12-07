@@ -236,6 +236,18 @@ export const useFinancialChat = ({
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
           console.error("Error response:", errorData);
+          
+          // Handle specific error codes with friendly messages
+          if (response.status === 429) {
+            throw new Error("We're experiencing high demand. Please try again in a moment.");
+          }
+          if (response.status === 402) {
+            throw new Error("Service temporarily unavailable. Please try again later.");
+          }
+          if (response.status >= 500) {
+            throw new Error("Something went wrong on our end. Please try again.");
+          }
+          
           throw new Error(errorData.error || "Failed to get response");
         }
 
@@ -409,13 +421,24 @@ if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
         }
       } catch (error: any) {
         console.error("Error sending message:", error);
+        
+        // Show user-friendly error message
+        const errorMessage = error.message || "Failed to send message";
+        
         toast({
-          title: "Error",
-          description: error.message || "Failed to send message",
+          title: "Unable to send message",
+          description: errorMessage,
           variant: "destructive",
         });
-        // Remove the failed user message
-        setMessages(messages);
+        
+        // Add a fallback assistant message so the user knows what happened
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "I'm sorry, I encountered an issue processing your request. Please try again in a moment.",
+          },
+        ]);
       } finally {
         setIsLoading(false);
       }
