@@ -77,4 +77,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['tests/**/*.test.ts'],
+    coverage: {
+      reporter: ['text', 'html'],
+      exclude: ['node_modules/', 'tests/'],
+    },
+  },
 }));
