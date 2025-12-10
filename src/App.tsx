@@ -27,6 +27,7 @@ import Chat from "./pages/Chat";
 import Inbox from "./pages/Inbox";
 import ConversationView from "./pages/ConversationView";
 import NotFound from "./pages/NotFound";
+import Waitlist from "./pages/Waitlist";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/login" element={<Auth />} />
             <Route path="/demo-login" element={<DemoLogin />} />
+            <Route path="/waitlist" element={<Waitlist />} />
             
             {/* Protected routes - allow demo mode */}
             <Route 

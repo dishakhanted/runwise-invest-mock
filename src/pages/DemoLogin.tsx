@@ -118,9 +118,9 @@ const DemoLogin = () => {
           <Button 
             variant="link" 
             className="mt-2"
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate('/waitlist')}
           >
-            Have an account? Sign in instead
+            Join waitlist
           </Button>
         </div>
       </div>

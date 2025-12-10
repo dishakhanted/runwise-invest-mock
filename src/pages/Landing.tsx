@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { WealthChart } from "@/components/WealthChart";
 import { useNavigate } from "react-router-dom";
-import { Logo } from "@/components/Logo";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -28,12 +27,6 @@ const Landing = () => {
         {/* Buttons */}
         <div className="space-y-4">
           <Button
-            onClick={() => navigate("/onboarding")}
-            className="w-full h-14 text-lg bg-foreground text-background hover:bg-foreground/90 rounded-2xl"
-          >
-            Get started
-          </Button>
-          <Button
             onClick={() => navigate("/demo-login")}
             variant="outline"
             className="w-full h-14 text-lg rounded-2xl border-primary text-primary hover:bg-primary hover:text-primary-foreground"
@@ -41,11 +34,11 @@ const Landing = () => {
             Try Demo
           </Button>
           <Button
-            onClick={() => navigate("/auth")}
             variant="ghost"
+            onClick={() => navigate("/waitlist")}
             className="w-full h-14 text-lg text-foreground hover:bg-secondary rounded-2xl"
           >
-            Log in
+            Join waitlist
           </Button>
         </div>
       </div>
