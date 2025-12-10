@@ -16,9 +16,11 @@ import {
   buildContextForDemo,
   buildSimpleContextFromData 
 } from './contextBuilder.ts';
+import { parseStructuredResponse, type AISuggestion } from './suggestionParser.ts';
 
-// Import static prompts as fallback
-import { DECISION_HANDLING_PROMPT } from './prompts.ts';
+import { DECISION_HANDLING_PROMPT, SUMMARY_AND_SUGGESTIONS_SPEC } from './prompts.ts';
+import { applySuggestionEffect } from './effects.ts';
+import type { DemoProfile } from './types.ts';
 
 // ============= Structured Logging Helpers =============
 
@@ -197,8 +199,9 @@ async function handleSuggestionDecision(
   messages: Array<{ role: string; content: string }>,
   userId: string | null,
   isDemo: boolean,
-  demoProfileId?: string
-): Promise<string> {
+  demoProfileId?: string,
+  demoProfileState?: DemoProfile
+): Promise<{ message: string; updatedNetWorth?: number; updatedDemoProfile?: DemoProfile }> {
   logInfo('Handling suggestion decision', {
     decision: decision.decision,
     suggestionTitle: decision.suggestionTitle,
@@ -245,12 +248,12 @@ async function handleSuggestionDecision(
     });
   }
 
-  // Build context info for decision handling
+  // 1) Build context as you already do
   let contextInfo = '';
   
   if (isDemo && demoProfileId) {
     // Demo mode: use in-memory data only, no database access
-    const demoProfile = getDemoProfile(demoProfileId);
+    const demoProfile = demoProfileState || getDemoProfile(demoProfileId);
     if (demoProfile) {
       contextInfo = buildContextForDemo(demoProfile, contextType, contextData);
     }
@@ -262,17 +265,45 @@ async function handleSuggestionDecision(
     contextInfo = buildSimpleContextFromData(contextType, contextData);
   }
 
-  // Add decision-specific context
+  // 2) Apply side-effects (DB changes / demo profile mutations)
+  // Try to get actionType from contextData if available (from structured suggestions)
+  const actionType = contextData?.actionType;
+
+  const effectResult = await applySuggestionEffect({
+    supabase,
+    decision,
+    contextType,
+    contextData,
+    userId,
+    isDemo,
+    demoProfileId,
+    actionType,
+    demoProfileState,
+  });
+
+  logDebug('Suggestion effect applied', {
+    decision: decision.decision,
+    hasUpdatedContext: !!effectResult.updatedContextDescription,
+    hasUpdatedDemo: !!effectResult.updatedDemoProfile,
+  });
+
+  // 3) Build decision + effects context for the LLM
   let decisionContext = `\n\n## User Action\n`;
   if (decision.decision === 'approved') {
-    decisionContext += `The user APPROVED the suggestion: "${decision.suggestionTitle}"`;
+    decisionContext += `The user APPROVED the suggestion: "${decision.suggestionTitle}".`;
   } else if (decision.decision === 'denied') {
-    decisionContext += `The user DENIED the suggestion: "${decision.suggestionTitle}"`;
+    decisionContext += `The user DENIED the suggestion: "${decision.suggestionTitle}".`;
   } else if (decision.decision === 'know_more') {
-    decisionContext += `The user wants to KNOW MORE about the suggestion: "${decision.suggestionTitle}"`;
+    decisionContext += `The user wants to KNOW MORE about the suggestion: "${decision.suggestionTitle}".`;
   }
 
-  const systemPrompt = `${DECISION_HANDLING_PROMPT}${contextInfo}${decisionContext}`;
+  // Build effects context with the updated description
+  let effectsContext = "";
+  if (effectResult.updatedContextDescription) {
+    effectsContext = `\n\n## Context After Applying Decision\n${effectResult.updatedContextDescription}\n\nRemember: The above changes have ALREADY been applied ${isDemo ? "in a demo / sandbox profile" : "to the user's real data"}. Do not tell the user to do these steps; instead, briefly confirm what was done and, only if needed, list any remaining manual tasks.`;
+  }
+
+  const systemPrompt = `${DECISION_HANDLING_PROMPT}${contextInfo}${decisionContext}${effectsContext}`;
 
   logDebug('Invoking Gemini for decision response', {
     decision: decision.decision,
@@ -297,18 +328,19 @@ async function handleSuggestionDecision(
       decision: decision.decision,
       responseLength: response.length,
     });
-    return response;
+
+    return { message: response, updatedDemoProfile: effectResult.updatedDemoProfile };
   } catch (error) {
     logWarn('Gemini error for suggestion response', {
       error: error instanceof Error ? error.message : 'Unknown error',
       decision: decision.decision,
     });
     if (decision.decision === 'approved') {
-      return `Great! I've noted your approval. This will help you reach your goal faster.`;
+      return { message: `Great! I've noted your approval. This will help you reach your goal faster.` };
     } else if (decision.decision === 'denied') {
-      return `Understood. Let me know if you'd like to explore other options.`;
+      return { message: `Understood. Let me know if you'd like to explore other options.` };
     } else {
-      return `Let me provide more details about this suggestion.`;
+      return { message: `Let me provide more details about this suggestion.` };
     }
   }
 }
@@ -452,6 +484,7 @@ serve(async (req) => {
     contextType = reqContextType || 'unknown';
     isDemo = demo?.demoProfileId ? true : false;
     const demoProfileId = demo?.demoProfileId;
+    const demoProfileState: DemoProfile | undefined = demo?.state;
     
     logDebug('Request parsed', {
       requestId,
@@ -537,7 +570,7 @@ serve(async (req) => {
         contextType,
       });
       
-      const confirmationMessage = await handleSuggestionDecision(
+      const confirmationResult = await handleSuggestionDecision(
         supabase,
         decision,
         contextType,
@@ -545,7 +578,8 @@ serve(async (req) => {
         messages,
         authenticatedUserId,
         isDemo,
-        demoProfileId
+        demoProfileId,
+        demoProfileState
       );
 
       const endTime = Date.now();
@@ -560,8 +594,28 @@ serve(async (req) => {
         status: 'success',
       });
 
+      // Build response with optional updatedNetWorth for demo transfers
+      const responseBody: { 
+        message: string; 
+        updatedNetWorth?: number; 
+        updatedDemoProfile?: DemoProfile;
+        type?: string;
+        demo?: boolean;
+      } = {
+        message: confirmationResult.message,
+        type: 'task_completed',
+        demo: isDemo || undefined,
+      };
+      
+      if (confirmationResult.updatedNetWorth !== undefined) {
+        responseBody.updatedNetWorth = confirmationResult.updatedNetWorth;
+      }
+      if (confirmationResult.updatedDemoProfile) {
+        responseBody.updatedDemoProfile = confirmationResult.updatedDemoProfile;
+      }
+
       return new Response(
-        JSON.stringify({ message: confirmationMessage }),
+        JSON.stringify(responseBody),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
@@ -636,7 +690,7 @@ serve(async (req) => {
         demoProfileId,
         contextType,
       });
-      const demoProfile = getDemoProfile(demoProfileId);
+      const demoProfile = demoProfileState || getDemoProfile(demoProfileId);
       if (demoProfile) {
         contextInfo = buildContextForDemo(demoProfile, contextType, contextData);
         logInfo('Using demo profile', {
@@ -672,7 +726,27 @@ serve(async (req) => {
       contextInfo = buildSimpleContextFromData(contextType, contextData);
     }
 
-    const systemPrompt = `${promptContent}${contextInfo}`;
+    // For networth, assets, liabilities, and dashboard contexts, append the shared summary/suggestions spec
+    const shouldAppendSummarySpec = 
+      promptType === 'networth' || 
+      promptType === 'assets' || 
+      promptType === 'liabilities' || 
+      contextType === 'dashboard';
+    
+    let systemPrompt: string;
+    if (shouldAppendSummarySpec) {
+      systemPrompt = `${promptContent}\n\n${SUMMARY_AND_SUGGESTIONS_SPEC}\n\n${contextInfo}`;
+      logDebug('Appended summary spec to prompt', {
+        requestId,
+        promptType,
+        contextType,
+        promptContentLength: promptContent.length,
+        specLength: SUMMARY_AND_SUGGESTIONS_SPEC.length,
+        contextInfoLength: contextInfo.length,
+      });
+    } else {
+      systemPrompt = `${promptContent}${contextInfo}`;
+    }
 
     // Enhanced logging with breakdown of systemPrompt components
     logInfo('Invoking Gemini', {
@@ -692,10 +766,20 @@ serve(async (req) => {
         content: msg.content,
       }));
 
+      // Enable JSON mode for networth, assets, and liabilities prompts to ensure structured output
+      const responseMimeType = 
+        promptType === 'networth' || 
+        promptType === 'assets' || 
+        promptType === 'liabilities' || 
+        contextType === 'dashboard'
+          ? 'application/json' 
+          : undefined;
+
       const response = await callChatModel({
         systemPrompt,
         messages: chatMessages,
         promptType, // Pass promptType for logging
+        responseMimeType, // Force JSON output for networth
       });
       
       const endTime = Date.now();
@@ -718,8 +802,49 @@ serve(async (req) => {
         durationMs,
       });
 
+      // Parse structured response for suggestion contexts
+      const isSuggestionContext = 
+        contextType === "goal" || 
+        contextType === "dashboard" ||
+        contextType === "net_worth" || 
+        contextType === "networth" ||
+        contextType === "assets" || 
+        contextType === "liabilities";
+
+      let parsedResponse: { summary: string; suggestions: AISuggestion[] } | null = null;
+      
+      if (isSuggestionContext) {
+        try {
+          parsedResponse = parseStructuredResponse(response, contextType, promptType);
+          logInfo('Parsed structured response', {
+            requestId,
+            contextType,
+            promptType,
+            summaryLength: parsedResponse.summary.length,
+            suggestionsCount: parsedResponse.suggestions.length,
+          });
+        } catch (parseError) {
+          console.warn(`[financial-chat] [${requestId}] Failed to parse structured response:`, parseError);
+          // Fall through to return raw message
+        }
+      }
+
+      // Return response with structured suggestions if available
+      const responseBody: {
+        message: string;
+        summary?: string;
+        suggestions?: AISuggestion[];
+      } = {
+        message: parsedResponse?.summary || response,
+      };
+
+      if (parsedResponse && parsedResponse.suggestions.length > 0) {
+        responseBody.summary = parsedResponse.summary;
+        responseBody.suggestions = parsedResponse.suggestions;
+      }
+
       return new Response(
-        JSON.stringify({ message: response }),
+        JSON.stringify(responseBody),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (llmError: any) {

@@ -1,5 +1,12 @@
-// Prompt content exported from markdown files
-// Edit the .md files in ./prompts/ directory - this file is for deployment bundling
+// Prompt content exported from TypeScript files
+// Shared summary and suggestions spec for networth, assets, and liabilities contexts
+
+import { PROMPT as summarySpec } from './prompts/summary.ts';
+
+export const SUMMARY_AND_SUGGESTIONS_SPEC = summarySpec;
+
+// Legacy prompt exports (kept for backward compatibility)
+// Edit the .ts files in ./prompts/ directory
 
 export const ONBOARDING_PROMPT = `# GROWWISE — ONBOARDING FLOW SYSTEM PROMPT
 

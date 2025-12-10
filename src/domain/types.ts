@@ -154,6 +154,7 @@ export interface FinancialChatRequest {
   contextData?: Record<string, unknown>;
   demo?: {
     demoProfileId: string;
+    state?: DemoProfile;
   };
 }
 

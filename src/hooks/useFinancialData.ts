@@ -5,7 +5,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/contexts/SessionContext';
-import { getDemoProfile } from '@/demo/demoProfiles';
 import { logger } from '@/lib/logger';
 import type { LinkedAccount, Goal, NetWorthSummary, UserProfile } from '@/domain/types';
 
@@ -23,7 +22,7 @@ interface UseFinancialDataResult {
 }
 
 export const useFinancialData = (): UseFinancialDataResult => {
-  const { mode, demoProfileId, isLoading: sessionLoading } = useSession();
+  const { mode, demoProfileId, demoProfile, isLoading: sessionLoading } = useSession();
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -74,33 +73,34 @@ export const useFinancialData = (): UseFinancialDataResult => {
       return;
     }
 
-    const profile = getDemoProfile(demoProfileId);
-    if (!profile) {
+    if (!demoProfile) {
       logger.error('Demo profile not found', { demoProfileId });
       setError('Demo profile not found');
       setIsLoading(false);
       return;
     }
 
+    const profileCopy = JSON.parse(JSON.stringify(demoProfile)) as typeof demoProfile;
+
     logger.financial('Demo profile loaded', {
       demoProfileId,
-      accountCount: profile.linkedAccounts.length,
-      goalCount: profile.goals.length,
-      hasProfile: !!profile.profile,
+      accountCount: profileCopy.linkedAccounts.length,
+      goalCount: profileCopy.goals.length,
+      hasProfile: !!profileCopy.profile,
     });
 
-    setLinkedAccounts(profile.linkedAccounts);
-    setGoals(profile.goals.map(g => ({
+    setLinkedAccounts(profileCopy.linkedAccounts.map(acc => ({ ...acc })));
+    setGoals(profileCopy.goals.map(g => ({
       ...g,
       target_amount: g.target_amount,
       current_amount: g.current_amount,
     })));
-    setUserProfile(profile.profile);
+    setUserProfile(profileCopy.profile);
     setError(null);
     setIsLoading(false);
     
     logger.financial('Demo data loaded successfully', { demoProfileId });
-  }, [demoProfileId]);
+  }, [demoProfileId, demoProfile]);
 
   const loadAuthData = useCallback(async () => {
     logger.financial('Loading authenticated user data');

@@ -6,18 +6,23 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import { getDemoProfile } from '@/demo/demoProfiles';
+import type { DemoProfile } from '@/domain/types';
 
 export type SessionMode = 'auth' | 'demo' | 'none';
 
 export interface SessionState {
   mode: SessionMode;
   demoProfileId: string | null;
+  demoProfile: DemoProfile | null;
   user: User | null;
   isLoading: boolean;
 }
 
 interface SessionContextType extends SessionState {
   setDemoMode: (profileId: string) => void;
+  setDemoProfile: (profile: DemoProfile) => void;
+  resetDemoProfile: () => void;
   clearSession: () => void;
   exitDemo: () => void;
   isDemo: boolean;
@@ -37,9 +42,16 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [sessionState, setSessionState] = useState<SessionState>({
     mode: 'none',
     demoProfileId: null,
+    demoProfile: null,
     user: null,
     isLoading: true,
   });
+
+  const cloneDemoProfile = (profileId: string | null): DemoProfile | null => {
+    if (!profileId) return null;
+    const base = getDemoProfile(profileId);
+    return base ? JSON.parse(JSON.stringify(base)) as DemoProfile : null;
+  };
 
   // Load session from localStorage on mount
   useEffect(() => {
@@ -53,10 +65,12 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
           logger.session('Found stored session', { mode: parsed.mode, demoProfileId: parsed.demoProfileId });
           
           if (parsed.mode === 'demo' && parsed.demoProfileId) {
+            const profile = cloneDemoProfile(parsed.demoProfileId);
             setSessionState(prev => ({
               ...prev,
               mode: 'demo',
               demoProfileId: parsed.demoProfileId,
+              demoProfile: profile,
               isLoading: false,
             }));
             logger.session('Demo session loaded', { demoProfileId: parsed.demoProfileId });
@@ -92,6 +106,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSessionState({
             mode: 'auth',
             demoProfileId: null,
+            demoProfile: null,
             user: session.user,
             isLoading: false,
           });
@@ -100,6 +115,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSessionState(prev => ({
             ...prev,
             mode: 'none',
+            demoProfile: null,
             isLoading: false,
           }));
         }
@@ -123,6 +139,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSessionState({
           mode: 'auth',
           demoProfileId: null,
+          demoProfile: null,
           user: session.user,
           isLoading: false,
         });
@@ -134,6 +151,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSessionState({
           mode: 'none',
           demoProfileId: null,
+          demoProfile: null,
           user: null,
           isLoading: false,
         });
@@ -149,6 +167,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const setDemoMode = (profileId: string) => {
     logger.session('Setting demo mode', { profileId });
     
+    const profile = cloneDemoProfile(profileId);
+
     const newSession: StoredSession = {
       mode: 'demo',
       demoProfileId: profileId,
@@ -159,11 +179,29 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     setSessionState({
       mode: 'demo',
       demoProfileId: profileId,
+      demoProfile: profile,
       user: null,
       isLoading: false,
     });
     
     logger.session('Demo mode activated', { profileId });
+  };
+
+  const setDemoProfile = (profile: DemoProfile) => {
+    logger.session('Updating demo profile state', { profileId: sessionState.demoProfileId });
+    setSessionState(prev => ({
+      ...prev,
+      demoProfile: profile,
+    }));
+  };
+
+  const resetDemoProfile = () => {
+    logger.session('Resetting demo profile to initial snapshot', { profileId: sessionState.demoProfileId });
+    const profile = cloneDemoProfile(sessionState.demoProfileId);
+    setSessionState(prev => ({
+      ...prev,
+      demoProfile: profile,
+    }));
   };
 
   const clearSession = async () => {
@@ -185,6 +223,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     setSessionState({
       mode: 'none',
       demoProfileId: null,
+      demoProfile: null,
       user: null,
       isLoading: false,
     });
@@ -201,6 +240,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     setSessionState({
       mode: 'none',
       demoProfileId: null,
+      demoProfile: null,
       user: null,
       isLoading: false,
     });
@@ -211,6 +251,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const value: SessionContextType = {
     ...sessionState,
     setDemoMode,
+    setDemoProfile,
+    resetDemoProfile,
     clearSession,
     exitDemo,
     isDemo: sessionState.mode === 'demo',

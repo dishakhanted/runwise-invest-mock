@@ -32,7 +32,7 @@ export const useFinancialChat = ({
   initialSuggestions,
   onClose,
 }: UseFinancialChatProps) => {
-  const { mode, demoProfileId } = useSession();
+  const { mode, demoProfileId, demoProfile, setDemoProfile } = useSession();
   
   const [messages, setMessages] = useState<Message[]>(
     initialMessage
@@ -242,7 +242,7 @@ export const useFinancialChat = ({
 
         // Add demo info if in demo mode
         if (mode === 'demo' && demoProfileId) {
-          requestBody.demo = { demoProfileId };
+          requestBody.demo = { demoProfileId, state: demoProfile };
         }
 
         logger.api('POST', '/functions/v1/financial-chat', {
@@ -306,23 +306,45 @@ export const useFinancialChat = ({
 
           const rawAssistantMessage: string = data.message ?? "";
 
-          let summary = rawAssistantMessage;
-          let suggestions: Suggestion[] | undefined = data.suggestions ?? undefined;
+          if (mode === 'demo' && data.updatedDemoProfile) {
+            setDemoProfile(data.updatedDemoProfile);
+          }
 
-  const isSuggestionContext =
-    contextType === "goal" ||
-    contextType === "dashboard" ||
-    contextType === "net_worth" ||
-    contextType === "assets" ||
-    contextType === "liabilities";
+          // Use structured suggestions from backend if available
+          let summary = data.summary ?? rawAssistantMessage;
+          let suggestions: Suggestion[] | undefined = undefined;
 
-          if (isSuggestionContext && rawAssistantMessage && !isApprovalOrDenial) {
+          // Convert backend AISuggestion format to frontend Suggestion format
+          if (data.suggestions && Array.isArray(data.suggestions) && data.suggestions.length > 0) {
+            suggestions = data.suggestions.map((sug: any) => ({
+              id: sug.id || `${contextType}-${Date.now()}-${Math.random()}`,
+              title: sug.title || '',
+              description: sug.body || sug.description || '',
+              status: 'pending' as const,
+            }));
+            
+            logger.chat('Using structured suggestions from backend', {
+              contextType,
+              suggestionsCount: suggestions.length,
+              conversationId: convId,
+            });
+          }
+
+          // Fallback: parse unstructured message only if no structured suggestions
+          const isSuggestionContext =
+            contextType === "goal" ||
+            contextType === "dashboard" ||
+            contextType === "net_worth" ||
+            contextType === "assets" ||
+            contextType === "liabilities";
+
+          if (isSuggestionContext && (!suggestions || suggestions.length === 0) && rawAssistantMessage && !isApprovalOrDenial) {
             const parsed = parseSummaryAndSuggestionsFromMessage(
               rawAssistantMessage,
               contextType
             );
 
-            logger.chat('Parsed suggestions from JSON response', {
+            logger.chat('Parsed suggestions from unstructured message', {
               contextType,
               summaryLength: parsed.summary.length,
               suggestionsCount: parsed.suggestions.length,
@@ -330,10 +352,7 @@ export const useFinancialChat = ({
             });
 
             summary = parsed.summary;
-
-            if (!suggestions || suggestions.length === 0) {
-              suggestions = parsed.suggestions;
-            }
+            suggestions = parsed.suggestions;
           }
 
             setMessages((prev) => [

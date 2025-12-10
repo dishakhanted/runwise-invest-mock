@@ -15,9 +15,16 @@ interface SuggestionActionsProps {
 }
 
 export const SuggestionActions = ({ suggestion, messageIndex, onAction }: SuggestionActionsProps) => {
-  // Strip out [Approve] [Deny] [Know More] patterns from display text
-  const cleanTitle = suggestion.title.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim();
-  const cleanDescription = suggestion.description.replace(/\[(Approve|Deny|Know\s*More)\]/gi, "").trim();
+  // Clean any legacy "Approve / Deny / Know More" text that might slip through
+  // (shouldn't happen with structured output, but keeping as safety measure)
+  const cleanTitle = suggestion.title
+    .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
+    .replace(/Approve\s*\/\s*Deny\s*\/\s*Know\s*More/gi, "")
+    .trim();
+  const cleanDescription = suggestion.description
+    .replace(/\[(Approve|Deny|Know\s*More)\]/gi, "")
+    .replace(/Approve\s*\/\s*Deny\s*\/\s*Know\s*More/gi, "")
+    .trim();
 
   return (
     <div className="bg-background/50 rounded-lg p-3 border border-border">

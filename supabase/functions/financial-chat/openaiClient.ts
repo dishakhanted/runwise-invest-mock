@@ -31,6 +31,7 @@ export interface CallChatModelOptions {
   temperature?: number;
   useCheapModel?: boolean; // Ignored for now, uses GEMINI_MODEL_MAIN
   promptType?: string; // For logging purposes
+  responseMimeType?: string; // For structured outputs (e.g., "application/json")
 }
 
 /**
@@ -48,6 +49,7 @@ export async function callChatModel({
   temperature = DEFAULT_TEMPERATURE,
   useCheapModel = false, // Currently ignored, uses main model
   promptType,
+  responseMimeType,
 }: CallChatModelOptions): Promise<string> {
   const selectedModel = model || GEMINI_MODEL_MAIN;
 
@@ -65,8 +67,10 @@ export async function callChatModel({
     }));
 
   // Build request body for Gemini API with optimized generation config
-  // maxOutputTokens: 2048 for longer, richer financial explanations
+  // For JSON responses, use higher token limit to ensure complete structured output
   // topP: 0.95 for balanced creativity and consistency
+  const maxTokens = responseMimeType === 'application/json' ? 4096 : 2048;
+  
   const body: {
     contents: Array<{ role: string; parts: Array<{ text: string }> }>;
     systemInstruction?: { role: string; parts: Array<{ text: string }> };
@@ -74,15 +78,21 @@ export async function callChatModel({
       temperature: number;
       maxOutputTokens?: number;
       topP?: number;
+      responseMimeType?: string;
     };
   } = {
     contents,
     generationConfig: {
       temperature,
-      maxOutputTokens: 2048, // Allow longer, more detailed responses
+      maxOutputTokens: maxTokens, // Higher limit for JSON responses
       topP: 0.95, // Balanced sampling for financial advice
     },
   };
+
+  // Add response MIME type for structured outputs (e.g., JSON)
+  if (responseMimeType) {
+    body.generationConfig.responseMimeType = responseMimeType;
+  }
 
   // Add system instruction if systemPrompt is provided
   if (systemPrompt) {
@@ -96,7 +106,7 @@ export async function callChatModel({
 
   // Enhanced logging with promptType and systemPrompt details
   console.log(
-    `[openaiClient] Calling Gemini: model=${selectedModel}, promptType=${promptType || 'unknown'}, temperature=${temperature}, systemPromptLength=${systemPrompt.length}, messageCount=${messages.length}`,
+    `[openaiClient] Calling Gemini: model=${selectedModel}, promptType=${promptType || 'unknown'}, temperature=${temperature}, systemPromptLength=${systemPrompt.length}, messageCount=${messages.length}, responseMimeType=${responseMimeType || 'text/plain'}, maxOutputTokens=${maxTokens}`,
   );
 
   try {
@@ -119,12 +129,83 @@ export async function callChatModel({
 
     // Parse Gemini response
     // Expected structure: { candidates: [{ content: { parts: [{ text: "..." }] } }] }
-    const candidate = json.candidates?.[0];
+    
+    // Check for safety filter blocks or other issues
+    if (json.promptFeedback) {
+      console.warn("[openaiClient] Gemini prompt feedback:", JSON.stringify(json.promptFeedback));
+      if (json.promptFeedback.blockReason) {
+        throw new Error(`Gemini blocked response: ${json.promptFeedback.blockReason} - ${json.promptFeedback.safetyRatings?.map((r: any) => `${r.category}:${r.probability}`).join(', ') || 'unknown'}`);
+      }
+    }
+
+    // Check if candidates array exists and has content
+    if (!json.candidates || json.candidates.length === 0) {
+      console.error("[openaiClient] No candidates in Gemini response");
+      console.error("[openaiClient] Full response:", JSON.stringify(json, null, 2));
+      throw new Error("Gemini returned no candidates - check logs for full response");
+    }
+
+    const candidate = json.candidates[0];
+    
+    // Extract content from response first (even if finishReason is not STOP)
+    // For JSON mode, content is still in parts[0].text
     const content = candidate?.content?.parts?.[0]?.text;
+    
+    // Check if candidate was blocked or incomplete
+    if (candidate?.finishReason && candidate.finishReason !== 'STOP') {
+      console.warn("[openaiClient] Gemini candidate finish reason:", candidate.finishReason);
+      
+      if (candidate.finishReason === 'SAFETY') {
+        throw new Error("Gemini blocked response due to safety filters");
+      }
+      
+      if (candidate.finishReason === 'MAX_TOKENS') {
+        // For MAX_TOKENS, try to use partial content if available
+        if (content && content.trim().length > 0) {
+          console.warn("[openaiClient] Response hit token limit but partial content available, attempting to use it");
+          // Return partial content - the parser will handle incomplete JSON if needed
+          return content;
+        }
+        throw new Error("Gemini response exceeded token limit and no partial content available");
+      }
+      
+      if (candidate.finishReason === 'RECITATION') {
+        throw new Error("Gemini blocked response due to recitation policy");
+      }
+      
+      // For other finish reasons, try to return content if available
+      if (content && content.trim().length > 0) {
+        console.warn(`[openaiClient] Finish reason was ${candidate.finishReason} but content available, returning it`);
+        return content;
+      }
+      
+      throw new Error(`Gemini response incomplete: ${candidate.finishReason}`);
+    }
 
     if (!content) {
-      console.error("[openaiClient] No response content from Gemini", JSON.stringify(json));
-      throw new Error("No response content from Gemini");
+      console.error("[openaiClient] No response content from Gemini");
+      console.error("[openaiClient] Full response structure:", JSON.stringify(json, null, 2));
+      console.error("[openaiClient] Candidates array length:", json.candidates?.length);
+      console.error("[openaiClient] First candidate structure:", JSON.stringify(candidate, null, 2));
+      console.error("[openaiClient] Candidate content:", candidate?.content);
+      console.error("[openaiClient] Candidate parts:", candidate?.content?.parts);
+      
+      // Try to extract error message if available
+      if (json.error) {
+        throw new Error(`Gemini API error: ${JSON.stringify(json.error)}`);
+      }
+      
+      // Check for safety ratings that might have blocked
+      if (candidate?.safetyRatings) {
+        const blockedRatings = candidate.safetyRatings.filter((r: any) => 
+          r.probability === 'HIGH' || r.probability === 'MEDIUM'
+        );
+        if (blockedRatings.length > 0) {
+          throw new Error(`Gemini blocked response due to safety ratings: ${blockedRatings.map((r: any) => `${r.category}:${r.probability}`).join(', ')}`);
+        }
+      }
+      
+      throw new Error("No response content from Gemini - check logs for full response structure");
     }
 
     console.log(
