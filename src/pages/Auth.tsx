@@ -88,7 +88,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
       <div className="mb-8">
-        <Logo className="h-32 w-32" />
+        <Logo className="h-48 w-48" />
       </div>
 
       <Card className="w-full max-w-md">

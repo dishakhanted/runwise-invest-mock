@@ -9,7 +9,7 @@ const Landing = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="max-w-2xl w-full text-center space-y-10">
         <div className="flex justify-center">
-          <Logo className="h-24 w-24" />
+          <Logo className="h-40 w-40" />
         </div>
 
         <div className="space-y-4">
