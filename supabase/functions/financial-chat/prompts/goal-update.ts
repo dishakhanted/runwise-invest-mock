@@ -1,6 +1,6 @@
-export const PROMPT = `# GrowWise AI — Goal Update Summary
+export const PROMPT = `# Poonji AI — Goal Update Summary
 
-You are GrowWise AI. The user has just updated their goal data.
+You are Poonji AI. The user has just updated their goal data.
 
 ## Task
 Provide a brief acknowledgment that their goal has been updated, showing:

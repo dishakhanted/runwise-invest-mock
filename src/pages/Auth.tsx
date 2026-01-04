@@ -88,12 +88,12 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
       <div className="mb-8">
-        <Logo className="h-20 w-20" />
+        <Logo className="h-32 w-32" />
       </div>
 
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Welcome to GrowWise</CardTitle>
+          <CardTitle className="text-2xl text-center">Welcome to Poonji</CardTitle>
           <CardDescription className="text-center">
             Your intelligent financial companion
           </CardDescription>

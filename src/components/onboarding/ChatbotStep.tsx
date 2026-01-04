@@ -150,7 +150,7 @@ export const ChatbotStep = ({ data, onComplete, onBack }: ChatbotStepProps) => {
 
       toast({
         title: "Account created!",
-        description: "Welcome to GrowWise. Redirecting to your dashboard...",
+        description: "Welcome to Poonji. Redirecting to your dashboard...",
       });
 
       setTimeout(() => {

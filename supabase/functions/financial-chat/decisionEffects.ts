@@ -149,7 +149,7 @@ export async function applySuggestionEffects(params: {
         downPaymentGoal.allocation_savings = 60;
         
         result.appliedActions.push(
-          "Updated the target allocation for your down-payment goal to 30% stocks, 10% bonds, and 60% savings in your GrowWise plan.",
+          "Updated the target allocation for your down-payment goal to 30% stocks, 10% bonds, and 60% savings in your Poonji plan.",
         );
       }
     }
@@ -253,7 +253,7 @@ export async function applySuggestionEffects(params: {
 
       if (!error) {
         result.appliedActions.push(
-          "Marked your emergency-fund goal as completed in your GrowWise plan.",
+          "Marked your emergency-fund goal as completed in your Poonji plan.",
         );
       } else {
         result.pendingActions.push(
@@ -297,7 +297,7 @@ export async function applySuggestionEffects(params: {
 
       if (!error) {
         result.appliedActions.push(
-          "Updated the target allocation for your down-payment goal to 30% stocks and 10% bonds inside GrowWise.",
+          "Updated the target allocation for your down-payment goal to 30% stocks and 10% bonds inside Poonji.",
         );
       }
     }

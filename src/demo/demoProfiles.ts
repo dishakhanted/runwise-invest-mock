@@ -1,5 +1,5 @@
 /**
- * Demo Profiles for GrowWise Demo Mode
+ * Demo Profiles for Poonji Demo Mode
  * Contains realistic sample data for each demo persona
  */
 

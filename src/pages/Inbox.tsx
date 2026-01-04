@@ -114,7 +114,7 @@ const Inbox = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-4xl font-bold flex-1">Inbox</h1>
-          <Logo className="h-10 w-10 flex-shrink-0" />
+          <Logo className="h-16 w-16 flex-shrink-0" />
         </div>
 
         {loading ? (

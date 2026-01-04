@@ -19,7 +19,7 @@ class Logger {
     this.isDebugEnabled = 
       this.isDevelopment || 
       import.meta.env.VITE_DEBUG_LOGGING === 'true' ||
-      localStorage.getItem('growwise_debug') === 'true';
+      localStorage.getItem('poonji_debug') === 'true';
   }
 
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {

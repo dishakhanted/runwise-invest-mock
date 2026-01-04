@@ -1,6 +1,6 @@
 /**
  * ProtectedRoute component for route guards
- * Redirects unauthenticated users to login/demo-login
+ * Redirects unauthenticated users to login
  */
 
 import { ReactNode, useEffect } from 'react';
@@ -11,37 +11,26 @@ import { logger } from '@/lib/logger';
 interface ProtectedRouteProps {
   children: ReactNode;
   /**
-   * If true, allows demo mode access
-   * If false, requires authenticated (non-demo) access
-   * @default true
-   */
-  allowDemo?: boolean;
-  /**
    * Redirect path when not authenticated
-   * @default '/auth'
+   * @default '/login'
    */
   redirectTo?: string;
 }
 
 export const ProtectedRoute = ({ 
   children, 
-  allowDemo = true,
-  redirectTo = '/auth'
+  redirectTo = '/login'
 }: ProtectedRouteProps) => {
-  const { mode, isLoading, isAuthenticated, isDemo } = useSession();
+  const { isLoading, isAuthenticated } = useSession();
   const location = useLocation();
 
   useEffect(() => {
     logger.route(location.pathname, {
-      mode,
       isLoading,
       isAuthenticated,
-      isDemo,
-      allowDemo,
     });
-  }, [location.pathname, mode, isLoading, isAuthenticated, isDemo, allowDemo]);
+  }, [location.pathname, isLoading, isAuthenticated]);
 
-  // Show loading state while session is initializing
   if (isLoading) {
     logger.debug('ProtectedRoute: Loading session state', {
       path: location.pathname,
@@ -56,37 +45,19 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Check if user is authenticated (auth mode)
   if (isAuthenticated) {
     logger.route(location.pathname, {
       status: 'authenticated',
-      mode: 'auth',
     });
     return <>{children}</>;
   }
 
-  // Check if demo mode is allowed and user is in demo mode
-  if (allowDemo && isDemo) {
-    logger.route(location.pathname, {
-      status: 'demo_allowed',
-      mode: 'demo',
-    });
-    return <>{children}</>;
-  }
-
-  // Not authenticated and demo not allowed (or not in demo mode)
   logger.warn('ProtectedRoute: Access denied', {
     path: location.pathname,
-    mode,
     isAuthenticated,
-    isDemo,
-    allowDemo,
     redirectTo,
   });
 
-  // Redirect to appropriate login page
-  const loginPath = allowDemo ? '/demo-login' : redirectTo;
-  
-  return <Navigate to={loginPath} state={{ from: location }} replace />;
+  return <Navigate to={redirectTo} state={{ from: location }} replace />;
 };
 
