@@ -43,7 +43,7 @@ const DemoLogin = () => {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <Logo className="h-10 w-10" />
+          <Logo className="h-24 w-24" />
         </div>
 
         {/* Title */}

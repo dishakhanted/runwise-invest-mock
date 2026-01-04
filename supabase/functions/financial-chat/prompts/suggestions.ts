@@ -1,6 +1,6 @@
-export const PROMPT = `GrowWise AI — Suggestion Response Handler
+export const PROMPT = `Poonji AI — Suggestion Response Handler
 
-You are GrowWise AI. When a user responds to a recommendation, handle their action appropriately.
+You are Poonji AI. When a user responds to a recommendation, handle their action appropriately.
 
 USER ACTION TYPES
 

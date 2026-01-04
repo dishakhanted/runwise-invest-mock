@@ -1,9 +1,16 @@
-import logo from "@/assets/growwise-logo-new.png";
+import logo from "@/assets/poonji-logo-new.png";
 
 interface LogoProps {
   className?: string;
 }
 
-export const Logo = ({ className = "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" }: LogoProps) => {
-  return <img src={logo} alt="GrowWise" className={className} />;
+export const Logo = ({ className = "h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48" }: LogoProps) => {
+  return (
+    <img 
+      src={logo} 
+      alt="Poonji" 
+      className={`${className} object-contain object-center`}
+      style={{ background: 'transparent' }}
+    />
+  );
 };

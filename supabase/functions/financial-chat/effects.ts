@@ -175,7 +175,7 @@ async function handleCompleteEmergencyFundGoal(
     // In real mode, we can't actually move money, so we schedule it
     // For now, just update the goal and return a message
     return {
-      updatedContextDescription: `I've updated your emergency fund goal to completed status in your GrowWise plan. To complete the transfer, please move the remaining funds from your checking account to your emergency fund savings account through your bank's portal.`,
+      updatedContextDescription: `I've updated your emergency fund goal to completed status in your Poonji plan. To complete the transfer, please move the remaining funds from your checking account to your emergency fund savings account through your bank's portal.`,
     };
   }
 }
@@ -241,7 +241,7 @@ async function handleReallocateDownPayment(
     }
 
     return {
-      updatedContextDescription: `I've updated your down-payment goal allocation to 30% stocks, 10% bonds, and 60% savings in your GrowWise plan. Please adjust your actual investment accounts to match this target allocation.`,
+      updatedContextDescription: `I've updated your down-payment goal allocation to 30% stocks, 10% bonds, and 60% savings in your Poonji plan. Please adjust your actual investment accounts to match this target allocation.`,
     };
   }
 }

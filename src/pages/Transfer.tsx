@@ -21,17 +21,17 @@ const transferActions = [
   {
     icon: ArrowDown,
     title: "Deposit",
-    subtitle: "Into Runwise",
+    subtitle: "Into Poonji",
   },
   {
     icon: ArrowUp,
     title: "Withdraw",
-    subtitle: "From Runwise",
+    subtitle: "From Poonji",
   },
   {
     icon: ArrowLeftRight,
     title: "Transfer",
-    subtitle: "Between Runwise accounts · Cash, categories, and investment accounts",
+    subtitle: "Between Poonji accounts · Cash, categories, and investment accounts",
   },
 ];
 
@@ -55,7 +55,7 @@ const Transfer = () => {
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <Logo className="h-10 w-10" />
+          <Logo className="h-60 w-60" />
         </div>
 
         <h1 className="text-5xl font-bold mb-8">Transfer money</h1>

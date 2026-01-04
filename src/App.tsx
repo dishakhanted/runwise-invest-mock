@@ -8,7 +8,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { logger } from "@/lib/logger";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
-import DemoLogin from "./pages/DemoLogin";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Explore from "./pages/Explore";
@@ -28,6 +27,7 @@ import Inbox from "./pages/Inbox";
 import ConversationView from "./pages/ConversationView";
 import NotFound from "./pages/NotFound";
 import Waitlist from "./pages/Waitlist";
+import DemoLogin from "./pages/DemoLogin";
 
 const queryClient = new QueryClient();
 
@@ -48,15 +48,15 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/signup" element={<Auth />} />
             <Route path="/login" element={<Auth />} />
             <Route path="/demo-login" element={<DemoLogin />} />
             <Route path="/waitlist" element={<Waitlist />} />
             
-            {/* Protected routes - allow demo mode */}
             <Route 
               path="/onboarding" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Onboarding />
                 </ProtectedRoute>
               } 
@@ -64,7 +64,7 @@ const App = () => (
             <Route 
               path="/dashboard" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               } 
@@ -72,7 +72,7 @@ const App = () => (
             <Route 
               path="/explore" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Explore />
                 </ProtectedRoute>
               } 
@@ -80,7 +80,7 @@ const App = () => (
             <Route 
               path="/chat" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Chat />
                 </ProtectedRoute>
               } 
@@ -88,7 +88,7 @@ const App = () => (
             <Route 
               path="/inbox" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Inbox />
                 </ProtectedRoute>
               } 
@@ -96,7 +96,7 @@ const App = () => (
             <Route 
               path="/inbox/:conversationId" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <ConversationView />
                 </ProtectedRoute>
               } 
@@ -104,7 +104,7 @@ const App = () => (
             <Route 
               path="/transfer" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Transfer />
                 </ProtectedRoute>
               } 
@@ -112,7 +112,7 @@ const App = () => (
             <Route 
               path="/goals" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Goals />
                 </ProtectedRoute>
               } 
@@ -120,7 +120,7 @@ const App = () => (
             <Route 
               path="/profile" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Profile />
                 </ProtectedRoute>
               } 
@@ -128,7 +128,7 @@ const App = () => (
             <Route 
               path="/settings" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Settings />
                 </ProtectedRoute>
               } 
@@ -136,7 +136,7 @@ const App = () => (
             <Route 
               path="/security" 
               element={
-                <ProtectedRoute allowDemo={false}>
+                <ProtectedRoute>
                   <Security />
                 </ProtectedRoute>
               } 
@@ -144,7 +144,7 @@ const App = () => (
             <Route 
               path="/accounts" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Accounts />
                 </ProtectedRoute>
               } 
@@ -152,7 +152,7 @@ const App = () => (
             <Route 
               path="/investing" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Investing />
                 </ProtectedRoute>
               } 
@@ -160,7 +160,7 @@ const App = () => (
             <Route 
               path="/notifications" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Notifications />
                 </ProtectedRoute>
               } 
@@ -168,7 +168,7 @@ const App = () => (
             <Route 
               path="/support" 
               element={
-                <ProtectedRoute allowDemo={true}>
+                <ProtectedRoute>
                   <Support />
                 </ProtectedRoute>
               } 
@@ -176,7 +176,7 @@ const App = () => (
             <Route 
               path="/activity-log" 
               element={
-                <ProtectedRoute allowDemo={false}>
+                <ProtectedRoute>
                   <ActivityLog />
                 </ProtectedRoute>
               } 
@@ -184,7 +184,7 @@ const App = () => (
             <Route 
               path="/documents" 
               element={
-                <ProtectedRoute allowDemo={false}>
+                <ProtectedRoute>
                   <Documents />
                 </ProtectedRoute>
               } 

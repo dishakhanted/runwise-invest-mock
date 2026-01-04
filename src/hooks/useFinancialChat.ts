@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useSession } from "@/contexts/SessionContext";
 import { logger } from "@/lib/logger";
 import {
   Suggestion,
@@ -32,8 +31,6 @@ export const useFinancialChat = ({
   initialSuggestions,
   onClose,
 }: UseFinancialChatProps) => {
-  const { mode, demoProfileId, demoProfile, setDemoProfile } = useSession();
-  
   const [messages, setMessages] = useState<Message[]>(
     initialMessage
       ? [
@@ -123,9 +120,6 @@ export const useFinancialChat = ({
 
   const saveConversation = useCallback(
     async (messages: Message[], title?: string) => {
-      // Skip saving conversations in demo mode
-      if (mode === 'demo') return null;
-      
       try {
         const {
           data: { user },
@@ -163,7 +157,7 @@ export const useFinancialChat = ({
         return null;
       }
     },
-    [conversationId, contextType, contextData, mode],
+    [conversationId, contextType, contextData],
   );
 
   const saveMessage = useCallback(async (convId: string, role: string, content: string) => {
@@ -195,14 +189,12 @@ export const useFinancialChat = ({
       // Detect approval/denial messages to skip auto-generating suggestions
       const isApprovalOrDenial = isApprovalOrDenialMessage(textToSend);
       
-      logger.chat('Sending message', {
-        contextType,
-        isApprovalOrDenial,
-        messageLength: textToSend.length,
-        silentUser: options?.silentUser || false,
-        mode,
-        demoProfileId: demoProfileId || undefined,
-      });
+        logger.chat('Sending message', {
+          contextType,
+          isApprovalOrDenial,
+          messageLength: textToSend.length,
+          silentUser: options?.silentUser || false,
+        });
 
       const userMessage: Message = { role: "user", content: textToSend };
       const newMessages = [...messages, userMessage];
@@ -221,10 +213,7 @@ export const useFinancialChat = ({
 
         if (convId) {
           logger.chat('Conversation saved', { conversationId: convId });
-          // Save user message
           await saveMessage(convId, "user", textToSend);
-        } else {
-          logger.debug('Conversation not saved (demo mode or error)', { mode });
         }
 
         // Get auth token (optional - works without auth for testing)
@@ -232,7 +221,7 @@ export const useFinancialChat = ({
           data: { session },
         } = await supabase.auth.getSession();
 
-        // Build request body - include demo info if in demo mode
+        // Build request body
         const requestBody: any = {
           messages: newMessages,
           conversationId: convId,
@@ -240,14 +229,8 @@ export const useFinancialChat = ({
           contextData,
         };
 
-        // Add demo info if in demo mode
-        if (mode === 'demo' && demoProfileId) {
-          requestBody.demo = { demoProfileId, state: demoProfile };
-        }
-
         logger.api('POST', '/functions/v1/financial-chat', {
           contextType,
-          isDemo: mode === 'demo',
           hasAuth: !!session,
           messageCount: newMessages.length,
           conversationId: convId,
@@ -305,10 +288,6 @@ export const useFinancialChat = ({
           });
 
           const rawAssistantMessage: string = data.message ?? "";
-
-          if (mode === 'demo' && data.updatedDemoProfile) {
-            setDemoProfile(data.updatedDemoProfile);
-          }
 
           // Use structured suggestions from backend if available
           let summary = data.summary ?? rawAssistantMessage;
@@ -526,7 +505,7 @@ if (isSuggestionContext && assistantMessage && !isApprovalOrDenial) {
         logger.chat('Send message completed', { contextType, conversationId });
       }
     },
-    [input, messages, isLoading, contextType, contextData, conversationId, saveConversation, saveMessage, toast, mode, demoProfileId],
+    [input, messages, isLoading, contextType, contextData, conversationId, saveConversation, saveMessage, toast],
   );
 
   const handleSuggestionAction = useCallback(

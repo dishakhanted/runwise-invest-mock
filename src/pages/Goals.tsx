@@ -5,15 +5,13 @@ import { Logo } from "@/components/Logo";
 import { GoalAIChatDialog } from "@/components/GoalAIChatDialog";
 import { NewGoalDialog } from "@/components/NewGoalDialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare, Check, X, LogOut } from "lucide-react";
+import { Plus, Target, Wallet, TrendingUp, Building2, MessageSquare, Check, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/contexts/SessionContext";
 import { useFinancialData } from "@/hooks/useFinancialData";
-import { useNavigate } from "react-router-dom";
 
 interface Goal {
   id: string;
@@ -32,8 +30,7 @@ interface Goal {
 
 const Goals = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const { mode, exitDemo } = useSession();
+  const { isAuthenticated } = useSession();
   const { goals: rawGoals, isLoading, refetch } = useFinancialData();
 
   // Transform raw goals to component format
@@ -70,8 +67,7 @@ const Goals = () => {
   }, [goals, selectedGoalId]);
 
   useEffect(() => {
-    // Only set up real-time subscription for auth mode
-    if (mode !== 'auth') return;
+    if (!isAuthenticated) return;
 
     const channel = supabase
       .channel('goals-changes')
@@ -92,24 +88,9 @@ const Goals = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [mode, refetch]);
-
-  const handleExitDemo = () => {
-    exitDemo();
-    navigate('/');
-  };
+  }, [isAuthenticated, refetch]);
 
   const handleCreateGoal = async (newGoal: Omit<Goal, "id">) => {
-    // In demo mode, don't allow creating goals
-    if (mode === 'demo') {
-      toast({
-        title: "Demo Mode",
-        description: "Creating goals is disabled in demo mode",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -241,22 +222,6 @@ const Goals = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-lg mx-auto px-6 py-8">
-        {/* Demo Mode Banner */}
-        {mode === 'demo' && (
-          <div className="mb-4 flex items-center justify-between bg-primary/10 border border-primary/20 rounded-lg px-4 py-2">
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-primary text-primary-foreground">
-                Demo Mode
-              </Badge>
-              <span className="text-sm text-muted-foreground">Viewing sample data</span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleExitDemo} className="gap-1">
-              <LogOut className="h-4 w-4" />
-              Exit
-            </Button>
-          </div>
-        )}
-
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-5xl font-bold mb-2">
@@ -266,7 +231,7 @@ const Goals = () => {
               {selectedGoal ? `${selectedGoal.name} Progress` : "Select a goal"}
             </p>
           </div>
-          <Logo className="h-10 w-10" />
+          <Logo className="h-60 w-60" />
         </div>
 
         {/* Goal Toggle Buttons */}
