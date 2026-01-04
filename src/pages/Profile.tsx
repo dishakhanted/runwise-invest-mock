@@ -114,7 +114,7 @@ const Profile = () => {
             <ChevronLeft className="h-6 w-6" />
           </Button>
           <h1 className="text-2xl font-semibold absolute left-1/2 -translate-x-1/2">Profile</h1>
-          <Logo className="h-24 w-24" />
+          <Logo className="h-60 w-60" />
         </div>
 
         <div className="mb-6 text-center">

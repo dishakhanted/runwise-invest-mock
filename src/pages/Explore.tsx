@@ -88,7 +88,7 @@ const Explore = () => {
         {/* Header with Logo */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-5xl font-bold">Explore</h1>
-          <Logo className="h-24 w-24" />
+          <Logo className="h-60 w-60" />
         </div>
 
         {/* Top Row - Market Insights & What if */}
