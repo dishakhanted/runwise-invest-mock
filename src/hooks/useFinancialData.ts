@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/contexts/SessionContext';
 import { logger } from '@/lib/logger';
+import { getDemoProfile } from '@/demo/demoProfiles';
 import type { LinkedAccount, Goal, NetWorthSummary, UserProfile } from '@/domain/types';
 
 // Re-export types for consumers
@@ -18,7 +19,7 @@ interface UseFinancialDataResult {
 }
 
 export const useFinancialData = (): UseFinancialDataResult => {
-  const { isAuthenticated, isLoading: sessionLoading } = useSession();
+  const { isAuthenticated, isLoading: sessionLoading, demoMode } = useSession();
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -58,6 +59,88 @@ export const useFinancialData = (): UseFinancialDataResult => {
 
     return summary;
   };
+
+  const loadDemoData = useCallback(async () => {
+    logger.financial('Loading demo profile data', { demoMode });
+    
+    if (!demoMode) {
+      logger.warn('No demo mode profile ID provided');
+      setError('No demo profile selected');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const demoProfile = getDemoProfile(demoMode);
+      
+      if (!demoProfile) {
+        logger.error('Demo profile not found', { demoMode });
+        setError(`Demo profile not found: ${demoMode}`);
+        setIsLoading(false);
+        return;
+      }
+
+      logger.financial('Demo profile loaded', {
+        profileId: demoMode,
+        profileName: demoProfile.name,
+        accountCount: demoProfile.linkedAccounts.length,
+        goalCount: demoProfile.goals.length,
+      });
+
+      // Convert demo profile linked accounts to LinkedAccount format
+      setLinkedAccounts(demoProfile.linkedAccounts.map(acc => ({
+        id: acc.id,
+        account_type: acc.account_type,
+        provider_name: acc.provider_name,
+        last_four_digits: acc.last_four_digits,
+        total_amount: acc.total_amount,
+        interest_rate: acc.interest_rate,
+        allocation_savings: acc.allocation_savings,
+        allocation_stocks: acc.allocation_stocks,
+        allocation_bonds: acc.allocation_bonds,
+      })));
+
+      // Convert demo profile goals to Goal format
+      setGoals(demoProfile.goals.map(g => ({
+        id: g.id,
+        name: g.name,
+        target_amount: g.target_amount,
+        current_amount: g.current_amount,
+        target_age: g.target_age,
+        description: g.description,
+        saving_account: g.saving_account,
+        investment_account: g.investment_account,
+        allocation_savings: g.allocation_savings,
+        allocation_stocks: g.allocation_stocks,
+        allocation_bonds: g.allocation_bonds,
+      })));
+
+      // Convert demo profile to UserProfile format
+      setUserProfile({
+        legal_first_name: demoProfile.profile.legal_first_name,
+        legal_last_name: demoProfile.profile.legal_last_name,
+        preferred_first_name: demoProfile.profile.preferred_first_name,
+        email: demoProfile.profile.email,
+        date_of_birth: demoProfile.profile.date_of_birth,
+        income: demoProfile.profile.income,
+        employment_type: demoProfile.profile.employment_type,
+        goals: demoProfile.profile.goals,
+        risk_inferred: demoProfile.profile.risk_inferred,
+        city: demoProfile.profile.city,
+        state: demoProfile.profile.state,
+      });
+
+      setError(null);
+      logger.financial('Demo data loaded successfully', { profileId: demoMode });
+    } catch (err) {
+      logger.error('Error loading demo data', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+      }, err instanceof Error ? err : undefined);
+      setError('Failed to load demo data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [demoMode]);
 
   const loadAuthData = useCallback(async () => {
     logger.financial('Loading authenticated user data');
@@ -174,15 +257,17 @@ export const useFinancialData = (): UseFinancialDataResult => {
   }, []);
 
   const refetch = useCallback(async () => {
-    logger.financial('Refetching financial data');
+    logger.financial('Refetching financial data', { demoMode, isAuthenticated });
     setIsLoading(true);
-    if (isAuthenticated) {
+    if (demoMode) {
+      await loadDemoData();
+    } else if (isAuthenticated) {
       await loadAuthData();
     } else {
-      logger.debug('No authenticated session, skipping data load');
+      logger.debug('No authenticated session or demo mode, skipping data load');
       setIsLoading(false);
     }
-  }, [isAuthenticated, loadAuthData]);
+  }, [demoMode, isAuthenticated, loadDemoData, loadAuthData]);
 
   useEffect(() => {
     if (sessionLoading) {

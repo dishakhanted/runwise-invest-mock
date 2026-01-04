@@ -50,7 +50,7 @@ const DemoLogin = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Try Demo Mode</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore GrowWise with realistic sample data. Select a persona below to see how 
+            Explore Poonji with realistic sample data. Select a persona below to see how 
             the app works for different financial situations.
           </p>
         </div>
@@ -104,6 +104,10 @@ const DemoLogin = () => {
                 <Button 
                   className="w-full mt-4 group-hover:bg-primary group-hover:text-primary-foreground"
                   variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectProfile(profile);
+                  }}
                 >
                   Explore as {profile.profile.preferred_first_name}
                 </Button>

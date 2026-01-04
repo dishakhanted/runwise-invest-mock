@@ -231,7 +231,7 @@ const Goals = () => {
               {selectedGoal ? `${selectedGoal.name} Progress` : "Select a goal"}
             </p>
           </div>
-          <Logo className="h-60 w-60" />
+          <Logo className="h-20 w-20" />
         </div>
 
         {/* Goal Toggle Buttons */}

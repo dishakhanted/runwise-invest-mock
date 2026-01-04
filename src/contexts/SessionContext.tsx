@@ -10,10 +10,12 @@ import { logger } from '@/lib/logger';
 export interface SessionState {
   user: User | null;
   isLoading: boolean;
+  demoMode: string | null;
 }
 
 interface SessionContextType extends SessionState {
   clearSession: () => Promise<void>;
+  setDemoMode: (profileId: string | null) => void;
   isAuthenticated: boolean;
 }
 
@@ -23,6 +25,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [sessionState, setSessionState] = useState<SessionState>({
     user: null,
     isLoading: true,
+    demoMode: localStorage.getItem('demoMode'),
   });
 
   useEffect(() => {
@@ -37,15 +40,18 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       if (session?.user) {
         logger.session('Supabase auth session found', { userId: session.user.id, email: session.user.email });
-        setSessionState({
+        setSessionState((prev) => ({
           user: session.user,
           isLoading: false,
-        });
+          demoMode: prev.demoMode, // Preserve demo mode
+        }));
       } else {
         logger.session('No Supabase auth session found');
+        const demoMode = localStorage.getItem('demoMode');
         setSessionState({
           user: null,
           isLoading: false,
+          demoMode,
         });
       }
     };
@@ -57,16 +63,18 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       if (session?.user) {
         logger.session('User authenticated via state change', { userId: session.user.id, email: session.user.email });
-        setSessionState({
+        setSessionState((prev) => ({
           user: session.user,
           isLoading: false,
-        });
+          demoMode: prev.demoMode, // Preserve demo mode
+        }));
       } else if (event === 'SIGNED_OUT') {
         logger.session('User signed out');
-        setSessionState({
+        setSessionState((prev) => ({
           user: null,
           isLoading: false,
-        });
+          demoMode: prev.demoMode, // Preserve demo mode on sign out
+        }));
       }
     });
 
@@ -86,18 +94,34 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
       logger.auth('Successfully signed out from Supabase');
     }
 
+    localStorage.removeItem('demoMode');
     setSessionState({
       user: null,
       isLoading: false,
+      demoMode: null,
     });
 
     logger.session('Session cleared');
   };
 
+  const setDemoMode = (profileId: string | null) => {
+    logger.session('Setting demo mode', { profileId });
+    if (profileId) {
+      localStorage.setItem('demoMode', profileId);
+    } else {
+      localStorage.removeItem('demoMode');
+    }
+    setSessionState((prev) => ({
+      ...prev,
+      demoMode: profileId,
+    }));
+  };
+
   const value: SessionContextType = {
     ...sessionState,
     clearSession,
-    isAuthenticated: !!sessionState.user,
+    setDemoMode,
+    isAuthenticated: !!sessionState.user || !!sessionState.demoMode,
   };
 
   return (

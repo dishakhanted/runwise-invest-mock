@@ -55,7 +55,7 @@ const Transfer = () => {
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <Logo className="h-60 w-60" />
+          <Logo className="h-20 w-20" />
         </div>
 
         <h1 className="text-5xl font-bold mb-8">Transfer money</h1>

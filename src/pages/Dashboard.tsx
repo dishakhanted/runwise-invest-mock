@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Link,
   CreditCard,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,11 +28,13 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/contexts/SessionContext";
 import { useFinancialData } from "@/hooks/useFinancialData";
+import { useNavigate } from "react-router-dom";
 
 type ViewMode = "net-worth" | "assets" | "liabilities";
 
 const Dashboard = () => {
-  const { isAuthenticated } = useSession();
+  const navigate = useNavigate();
+  const { isAuthenticated, demoMode } = useSession();
   const { linkedAccounts, goals, netWorthSummary: financialSummary, isLoading, refetch } = useFinancialData();
   
   const [viewMode, setViewMode] = useState<ViewMode>("net-worth");
@@ -189,8 +192,20 @@ const Dashboard = () => {
       <div className="max-w-lg mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
-          <h1 className="text-5xl font-bold">{formatCurrency(getCurrentAmount())}</h1>
-          <Logo className="h-60 w-60" />
+          <div className="flex items-center gap-3">
+            {demoMode && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/demo-login')}
+                className="flex-shrink-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
+            <h1 className="text-5xl font-bold">{formatCurrency(getCurrentAmount())}</h1>
+          </div>
+          <Logo className="h-20 w-20" />
         </div>
 
         {/* Toggle Buttons */}
