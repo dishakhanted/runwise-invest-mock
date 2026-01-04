@@ -8,15 +8,14 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="max-w-2xl w-full text-center space-y-10">
-        <div className="flex justify-center">
-          <Logo className="h-64 w-64" />
-        </div>
-
-        <div className="space-y-4">
-          <h1 className="text-5xl font-bold tracking-tight">Poonji</h1>
-          <p className="text-xl text-muted-foreground">
-            Your AI financial planner
-          </p>
+        <div className="flex flex-col items-center space-y-0.02">
+          <Logo className="h-32 w-32" />
+          <div className="space-y-4">
+            <h1 className="text-5xl font-bold tracking-tight">Poonji</h1>
+            <p className="text-xl text-muted-foreground">
+              Your AI financial planner
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
