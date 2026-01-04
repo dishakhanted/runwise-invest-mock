@@ -21,17 +21,17 @@ const Landing = () => {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button
-            onClick={() => navigate("/signup")}
-            className="w-full sm:w-auto px-8 h-12 text-lg rounded-xl"
-          >
-            Sign up
-          </Button>
-          <Button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/demo-login")}
             variant="outline"
             className="w-full sm:w-auto px-8 h-12 text-lg rounded-xl"
           >
-            Log in
+            Try Demo
+          </Button>
+          <Button
+            onClick={() => navigate("/waitlist")}
+            className="w-full sm:w-auto px-8 h-12 text-lg rounded-xl"
+          >
+            Join waitlist
           </Button>
         </div>
       </div>
