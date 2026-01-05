@@ -21,6 +21,7 @@ import { parseStructuredResponse, type AISuggestion } from './suggestionParser.t
 import { DECISION_HANDLING_PROMPT, SUMMARY_AND_SUGGESTIONS_SPEC } from './prompts.ts';
 import { applySuggestionEffect } from './effects.ts';
 import type { DemoProfile } from './types.ts';
+import { getCachedSummary, getCachedSummaryExpired, getCachedSuggestions, getCachedSuggestionResponse, setCachedSummary, setCachedSuggestionResponse } from './cacheUtils.ts';
 
 // ============= Structured Logging Helpers =============
 
@@ -479,12 +480,24 @@ serve(async (req) => {
     url: req.url,
   });
 
+  // Check if this is a summary request (cached endpoint)
+  // Summary requests use endpoint: "summary" in the request body
+  // Suggestions requests use endpoint: "suggestions" to get cached suggestions
+  let isSummaryRequest = false;
+  let isSuggestionsRequest = false;
+
   try {
-    const { messages, conversationId, contextType: reqContextType, contextData, demo } = await req.json();
+    const requestBody = await req.json();
+    const { messages, conversationId, contextType: reqContextType, contextData, demo, viewMode, endpoint } = requestBody;
     contextType = reqContextType || 'unknown';
     isDemo = demo?.demoProfileId ? true : false;
     const demoProfileId = demo?.demoProfileId;
     const demoProfileState: DemoProfile | undefined = demo?.state;
+    isSummaryRequest = endpoint === 'summary';
+    isSuggestionsRequest = endpoint === 'suggestions';
+    
+    // Extract viewMode from contextData if not in request body (for chat interactions)
+    const effectiveViewMode = viewMode || contextData?.viewMode;
     
     logDebug('Request parsed', {
       requestId,
@@ -541,6 +554,164 @@ serve(async (req) => {
       });
     }
 
+    // Handle suggestions request (cached suggestions for initial chat load)
+    if (isSuggestionsRequest && contextData && viewMode) {
+      logInfo('Processing suggestions request', {
+        requestId,
+        viewMode,
+        isDemo,
+        demoProfileId: demoProfileId || undefined,
+      });
+
+      const financialData = {
+        netWorth: contextData.netWorth || 0,
+        assetsTotal: contextData.assetsTotal || 0,
+        liabilitiesTotal: contextData.liabilitiesTotal || 0,
+        cashTotal: contextData.cashTotal || 0,
+        investmentsTotal: contextData.investmentsTotal || 0,
+      };
+
+      // Try to get cached suggestions
+      const cachedSuggestions = await getCachedSuggestions(
+        supabase,
+        authenticatedUserId,
+        demoProfileId || null,
+        viewMode as 'net-worth' | 'assets' | 'liabilities',
+        financialData
+      );
+
+      if (cachedSuggestions) {
+        logInfo('Returning cached suggestions', {
+          requestId,
+          viewMode,
+          suggestionsCount: cachedSuggestions.suggestions.length,
+        });
+
+        const endTime = Date.now();
+        logRequest({
+          requestId,
+          contextType: 'suggestions',
+          userId,
+          isDemo,
+          startTime,
+          endTime,
+          durationMs: endTime - startTime,
+          status: 'success',
+        });
+
+        return new Response(
+          JSON.stringify({
+            message: cachedSuggestions.summary,
+            summary: cachedSuggestions.summary,
+            suggestions: cachedSuggestions.suggestions,
+            cached: true,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // No cached suggestions found - return empty to trigger generation
+      logInfo('No cached suggestions found', {
+        requestId,
+        viewMode,
+      });
+
+      return new Response(
+        JSON.stringify({
+          message: null,
+          cached: false,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle summary request (cached endpoint)
+    if (isSummaryRequest && contextData && viewMode) {
+      logInfo('Processing summary request', {
+        requestId,
+        viewMode,
+        isDemo,
+        demoProfileId: demoProfileId || undefined,
+      });
+
+      const financialData = {
+        netWorth: contextData.netWorth || 0,
+        assetsTotal: contextData.assetsTotal || 0,
+        liabilitiesTotal: contextData.liabilitiesTotal || 0,
+        cashTotal: contextData.cashTotal || 0,
+        investmentsTotal: contextData.investmentsTotal || 0,
+      };
+
+      // Try to get cached summary first
+      const cachedSummary = await getCachedSummary(
+        supabase,
+        authenticatedUserId,
+        demoProfileId || null,
+        viewMode as 'net-worth' | 'assets' | 'liabilities',
+        financialData
+      );
+
+      if (cachedSummary) {
+        logInfo('Returning cached summary', {
+          requestId,
+          viewMode,
+          cachedAt: cachedSummary.created_at,
+        });
+
+        const endTime = Date.now();
+        logRequest({
+          requestId,
+          contextType: 'summary',
+          userId,
+          isDemo,
+          startTime,
+          endTime,
+          durationMs: endTime - startTime,
+          status: 'success',
+        });
+
+        return new Response(
+          JSON.stringify({
+            message: cachedSummary.summary_text,
+            cached: true,
+            cachedAt: cachedSummary.created_at,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // No cache found - generate summary and cache it
+      logInfo('Cache miss - generating new summary', {
+        requestId,
+        viewMode,
+      });
+
+      // Map viewMode to contextType for prompt loading
+      const summaryContextType = viewMode === 'net-worth' ? 'net_worth' : viewMode;
+      contextType = summaryContextType;
+
+      // If no messages provided, create a default summary request message
+      if (!messages || messages.length === 0) {
+        let promptMessage: string;
+        switch (viewMode) {
+          case "net-worth":
+            promptMessage = "[SUMMARY_MODE] Using the net worth prompt, give me a short 1–2 sentence summary of my current net worth and key observations. Only return the summary paragraph, no suggestions.";
+            break;
+          case "assets":
+            promptMessage = "[SUMMARY_MODE] Using the assets prompt, give me a short 1–2 sentence summary of my assets and key observations. Only return the summary paragraph, no suggestions.";
+            break;
+          case "liabilities":
+            promptMessage = "[SUMMARY_MODE] Using the liabilities prompt, give me a short 1–2 sentence summary of my liabilities and key observations. Only return the summary paragraph, no suggestions.";
+            break;
+          default:
+            promptMessage = "[SUMMARY_MODE] Give me a short 1–2 sentence summary. Only return the summary paragraph, no suggestions.";
+        }
+        messages = [{ role: "user", content: promptMessage }];
+      }
+
+      // Continue to normal flow - summary will be generated and cached
+    }
+
     // Check if this is a suggestion decision
     // Net worth, assets, liabilities, goals, and dashboard contexts support suggestion actions
     const lastMessage = messages[messages.length - 1];
@@ -569,7 +740,76 @@ serve(async (req) => {
         suggestionTitle: decision.suggestionTitle,
         contextType,
       });
-      
+
+      // Try to get cached response first (only for net_worth, assets, liabilities with viewMode)
+      let cachedResponse: string | null = null;
+      const suggestionViewMode = contextData?.viewMode; // Extract viewMode from contextData
+      if (suggestionViewMode && contextData && (contextType === 'net_worth' || contextType === 'assets' || contextType === 'liabilities')) {
+        // Find suggestion ID from previous messages (suggestions are in assistant messages)
+        let suggestionId: string | null = null;
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const msg = messages[i];
+          if (msg.role === 'assistant' && (msg as any).suggestions) {
+            const suggestions = (msg as any).suggestions;
+            const matched = suggestions.find((s: any) => s.title === decision.suggestionTitle);
+            if (matched && matched.id) {
+              suggestionId = matched.id;
+              break;
+            }
+          }
+        }
+
+        if (suggestionId) {
+          const financialData = {
+            netWorth: contextData.netWorth || 0,
+            assetsTotal: contextData.assetsTotal || 0,
+            liabilitiesTotal: contextData.liabilitiesTotal || 0,
+            cashTotal: contextData.cashTotal || 0,
+            investmentsTotal: contextData.investmentsTotal || 0,
+          };
+
+          cachedResponse = await getCachedSuggestionResponse(
+            supabase,
+            authenticatedUserId,
+            demoProfileId || null,
+            suggestionViewMode as 'net-worth' | 'assets' | 'liabilities',
+            financialData,
+            suggestionId,
+            decision.decision
+          );
+
+          if (cachedResponse) {
+            logInfo('Returning cached suggestion response', {
+              requestId,
+              suggestionId,
+              actionType: decision.decision,
+            });
+
+            const endTime = Date.now();
+            logRequest({
+              requestId,
+              contextType: 'suggestion-response',
+              userId,
+              isDemo,
+              startTime,
+              endTime,
+              durationMs: endTime - startTime,
+              status: 'success',
+            });
+
+            return new Response(
+              JSON.stringify({
+                message: cachedResponse,
+                cached: true,
+                type: 'task_completed',
+              }),
+              { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+            );
+          }
+        }
+      }
+
+      // No cache found - generate response and cache it
       const confirmationResult = await handleSuggestionDecision(
         supabase,
         decision,
@@ -581,6 +821,58 @@ serve(async (req) => {
         demoProfileId,
         demoProfileState
       );
+
+      // Cache the response if we have viewMode and suggestion ID
+      if (suggestionViewMode && contextData && confirmationResult.message) {
+        // Find suggestion ID again (in case it wasn't found earlier)
+        let suggestionId: string | null = null;
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const msg = messages[i];
+          if (msg.role === 'assistant' && (msg as any).suggestions) {
+            const suggestions = (msg as any).suggestions;
+            const matched = suggestions.find((s: any) => s.title === decision.suggestionTitle);
+            if (matched && matched.id) {
+              suggestionId = matched.id;
+              break;
+            }
+          }
+        }
+
+        if (suggestionId) {
+          const financialData = {
+            netWorth: contextData.netWorth || 0,
+            assetsTotal: contextData.assetsTotal || 0,
+            liabilitiesTotal: contextData.liabilitiesTotal || 0,
+            cashTotal: contextData.cashTotal || 0,
+            investmentsTotal: contextData.investmentsTotal || 0,
+          };
+
+          // Cache asynchronously (don't block response)
+          setCachedSuggestionResponse(
+            supabase,
+            authenticatedUserId,
+            demoProfileId || null,
+            suggestionViewMode as 'net-worth' | 'assets' | 'liabilities',
+            financialData,
+            suggestionId,
+            decision.decision,
+            confirmationResult.message
+          ).then((success) => {
+            if (success) {
+              logInfo('Suggestion response cached successfully', {
+                requestId,
+                suggestionId,
+                actionType: decision.decision,
+              });
+            }
+          }).catch((err) => {
+            logWarn('Error caching suggestion response', {
+              requestId,
+              error: err instanceof Error ? err.message : 'Unknown error',
+            });
+          });
+        }
+      }
 
       const endTime = Date.now();
       logRequest({
@@ -834,6 +1126,7 @@ serve(async (req) => {
         message: string;
         summary?: string;
         suggestions?: AISuggestion[];
+        cached?: boolean;
       } = {
         message: parsedResponse?.summary || response,
       };
@@ -843,12 +1136,157 @@ serve(async (req) => {
         responseBody.suggestions = parsedResponse.suggestions;
       }
 
+      // Cache summary and suggestions
+      // IMPORTANT: Only cache successful AI responses, never error messages or defaults
+      // Use effectiveViewMode (from request body or contextData) for caching
+      const cacheViewMode = effectiveViewMode || viewMode;
+      if (contextData && cacheViewMode && (isSummaryRequest || (isSuggestionContext && parsedResponse))) {
+        const summaryText = parsedResponse?.summary || response;
+        const suggestions = parsedResponse?.suggestions || [];
+        
+        // Only cache if we have a valid summary (not empty, not error message, not default)
+        const isValidSummary = summaryText && 
+          summaryText.trim().length > 0 &&
+          !summaryText.toLowerCase().includes('click to chat') &&
+          !summaryText.toLowerCase().includes('something went wrong') &&
+          !summaryText.toLowerCase().includes('try again');
+        
+        if (isValidSummary) {
+          const financialData = {
+            netWorth: contextData.netWorth || 0,
+            assetsTotal: contextData.assetsTotal || 0,
+            liabilitiesTotal: contextData.liabilitiesTotal || 0,
+            cashTotal: contextData.cashTotal || 0,
+            investmentsTotal: contextData.investmentsTotal || 0,
+          };
+
+          // Cache asynchronously (don't block response)
+          // For summary requests: cache summary only (no suggestions)
+          // For suggestion contexts: cache summary + suggestions
+          const shouldCacheSuggestions = isSuggestionContext && suggestions.length > 0 && !isSummaryRequest;
+          
+          setCachedSummary(
+            supabase,
+            authenticatedUserId,
+            demoProfileId || null,
+            cacheViewMode as 'net-worth' | 'assets' | 'liabilities',
+            financialData,
+            summaryText,
+            24, // 24 hour TTL
+            shouldCacheSuggestions ? suggestions : undefined
+          ).then((success) => {
+            if (success) {
+              logInfo(shouldCacheSuggestions ? 'Summary and suggestions cached successfully' : 'Summary cached successfully', {
+                requestId,
+                viewMode: cacheViewMode,
+                isDemo,
+                demoProfileId: demoProfileId || undefined,
+                hasSuggestions: shouldCacheSuggestions,
+                suggestionsCount: shouldCacheSuggestions ? suggestions.length : 0,
+              });
+            } else {
+              logWarn('Failed to cache', {
+                requestId,
+                viewMode: cacheViewMode,
+                isDemo,
+                hasSuggestions: shouldCacheSuggestions,
+              });
+            }
+          }).catch((err) => {
+            logWarn('Error caching', {
+              requestId,
+              viewMode: cacheViewMode,
+              error: err instanceof Error ? err.message : 'Unknown error',
+            });
+            console.error('[financial-chat] Error caching:', err);
+          });
+
+          responseBody.cached = false; // Just generated, not from cache
+        } else {
+          logWarn('Not caching - invalid or error response', {
+            requestId,
+            viewMode,
+            summaryLength: summaryText?.length || 0,
+          });
+        }
+      }
+
       return new Response(
         JSON.stringify(responseBody),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (llmError: any) {
       console.error(`[financial-chat] [${requestId}] Gemini API error:`, llmError);
+      
+      // For summary requests, try to return expired cache as fallback before erroring
+      if (isSummaryRequest && contextData && viewMode) {
+        logInfo('AI failed for summary request, checking for expired cache', {
+          requestId,
+          viewMode,
+          error: llmError instanceof Error ? llmError.message : 'Unknown error',
+        });
+        
+        const financialData = {
+          netWorth: contextData.netWorth || 0,
+          assetsTotal: contextData.assetsTotal || 0,
+          liabilitiesTotal: contextData.liabilitiesTotal || 0,
+          cashTotal: contextData.cashTotal || 0,
+          investmentsTotal: contextData.investmentsTotal || 0,
+        };
+        
+        try {
+          const expiredCache = await getCachedSummaryExpired(
+            supabase,
+            authenticatedUserId,
+            demoProfileId || null,
+            viewMode as 'net-worth' | 'assets' | 'liabilities',
+            financialData
+          );
+          
+          if (expiredCache) {
+            logInfo('Returning expired cache as fallback', {
+              requestId,
+              viewMode,
+              cached_at: expiredCache.created_at,
+              expires_at: expiredCache.expires_at,
+            });
+            
+            const endTime = Date.now();
+            logRequest({
+              requestId,
+              contextType: 'summary',
+              userId,
+              isDemo,
+              startTime,
+              endTime,
+              durationMs: endTime - startTime,
+              status: 'success',
+            });
+            
+            return new Response(
+              JSON.stringify({
+                message: expiredCache.summary_text,
+                cached: true,
+                cachedAt: expiredCache.created_at,
+                expired: true, // Mark as expired but returned as fallback
+              }),
+              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          } else {
+            logInfo('No expired cache available as fallback', {
+              requestId,
+              viewMode,
+            });
+          }
+        } catch (cacheError) {
+          logWarn('Error fetching expired cache', {
+            requestId,
+            viewMode,
+            error: cacheError instanceof Error ? cacheError.message : 'Unknown error',
+          });
+          // Continue to normal error handling
+        }
+      }
       
       if (llmError.message?.includes('429') || llmError.status === 429) {
         const endTime = Date.now();

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
+import { useSession } from "@/contexts/SessionContext";
 import {
   Suggestion,
   buildSuggestionsFromMessage,
@@ -46,26 +47,35 @@ export const useFinancialChat = ({
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { demoMode } = useSession();
 
   // Reset messages and conversation whenever contextType changes
   useEffect(() => {
     logger.chat('Context type changed, resetting messages', {
       contextType,
       hasInitialMessage: !!initialMessage,
+      initialMessageValue: initialMessage?.substring(0, 50) || 'none',
       initialSuggestionsCount: initialSuggestions?.length || 0,
     });
     
-    setMessages(
-      initialMessage
-        ? [
-            {
-              role: "assistant",
-              content: initialMessage,
-              suggestions: initialSuggestions,
-            },
-          ]
-        : [],
-    );
+    const newMessages = initialMessage
+      ? [
+          {
+            role: "assistant",
+            content: initialMessage,
+            suggestions: initialSuggestions,
+          },
+        ]
+      : [];
+    
+    logger.chat('Setting messages in useFinancialChat', {
+      contextType,
+      messagesCount: newMessages.length,
+      hasContent: !!newMessages[0]?.content,
+      hasSuggestions: !!newMessages[0]?.suggestions,
+    });
+    
+    setMessages(newMessages);
     // Force a new conversation for each context
     setConversationId(null);
     logger.chat('Conversation reset', { contextType });
@@ -222,12 +232,19 @@ export const useFinancialChat = ({
         } = await supabase.auth.getSession();
 
         // Build request body
+        // NOTE: Never use endpoint: "summary" for interactions - only for initial dashboard summaries
         const requestBody: any = {
           messages: newMessages,
           conversationId: convId,
           contextType,
           contextData,
+          // Explicitly exclude endpoint: "summary" to ensure real AI responses
         };
+        
+        // Add demo profile information if in demo mode (needed for caching)
+        if (demoMode) {
+          requestBody.demo = { demoProfileId: demoMode };
+        }
 
         logger.api('POST', '/functions/v1/financial-chat', {
           contextType,

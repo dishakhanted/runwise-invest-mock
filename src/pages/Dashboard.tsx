@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { DisclosureFooter } from "@/components/DisclosureFooter";
 import { AccountCard } from "@/components/AccountCard";
@@ -43,6 +43,18 @@ const Dashboard = () => {
   const [showFinancialSummary, setShowFinancialSummary] = useState(false);
   const [netWorthSummaryText, setNetWorthSummaryText] = useState<string>("");
   const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
+  
+  // Cache invalidation: clear summary when financial data changes significantly
+  const previousDataRef = useRef<{
+    netWorth: number;
+    assetsTotal: number;
+    liabilitiesTotal: number;
+    cashTotal: number;
+    investmentsTotal: number;
+  } | null>(null);
+  
+  // Track previous view mode to detect changes
+  const previousViewModeRef = useRef<ViewMode | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -101,7 +113,30 @@ const Dashboard = () => {
   ) => {
     setLoadingSummary(true);
     try {
-      // Determine context type and prompt message based on view mode
+      // Try to get cached summary first (fast path)
+      const requestBody: any = {
+        endpoint: "summary",
+        viewMode: currentViewMode,
+        contextData: snapshot,
+      };
+      
+      // Add demo mode info if in demo mode
+      if (demoMode) {
+        requestBody.demo = { demoProfileId: demoMode };
+      }
+      
+      const { data: cachedData, error: cacheError } = await supabase.functions.invoke("financial-chat", {
+        body: requestBody,
+      });
+
+      if (!cacheError && cachedData?.message) {
+        // Cached summary found - instant load
+        setNetWorthSummaryText(cachedData.message.trim());
+        setLoadingSummary(false);
+        return;
+      }
+
+      // Cache miss - generate new summary (will be cached automatically)
       let contextType: string;
       let promptMessage: string;
 
@@ -120,26 +155,54 @@ const Dashboard = () => {
           break;
       }
 
+      const requestBodyWithMessages: any = {
+        endpoint: "summary",
+        viewMode: currentViewMode,
+        messages: [
+          {
+            role: "user",
+            content: promptMessage,
+          },
+        ],
+        contextType,
+        contextData: snapshot,
+      };
+      
+      // Add demo mode info if in demo mode
+      if (demoMode) {
+        requestBodyWithMessages.demo = { demoProfileId: demoMode };
+      }
+      
       const { data, error } = await supabase.functions.invoke("financial-chat", {
-        body: {
-          messages: [
-            {
-              role: "user",
-              content: promptMessage,
-            },
-          ],
-          contextType,
-          contextData: snapshot,
-        },
+        body: requestBodyWithMessages,
       });
 
-      if (error) throw error;
+      // Handle errors - don't overwrite cache with error messages
+      if (error) {
+        console.error("Error generating financial summary:", error);
+        // Don't set error message - keep existing summary if available
+        // Or show a user-friendly message that doesn't overwrite cache
+        if (!netWorthSummaryText) {
+          setNetWorthSummaryText(
+            "Click to chat with GrowW AI for a personalized financial summary."
+          );
+        }
+        setLoadingSummary(false);
+        return;
+      }
 
-      const summaryText =
-        data?.message ||
-        "Click to chat with GrowW AI for a personalized financial summary.";
-
-      setNetWorthSummaryText(summaryText.trim());
+      // Only update if we got a valid response (not an error message)
+      const summaryText = data?.message;
+      if (summaryText && 
+          !summaryText.toLowerCase().includes('something went wrong') &&
+          !summaryText.toLowerCase().includes('try again')) {
+        setNetWorthSummaryText(summaryText.trim());
+      } else if (!netWorthSummaryText) {
+        // Only set default if we don't have a cached summary
+        setNetWorthSummaryText(
+          "Click to chat with GrowW AI for a personalized financial summary."
+        );
+      }
     } catch (e) {
       console.error("Error generating financial summary:", e);
       setNetWorthSummaryText(
@@ -175,7 +238,34 @@ const Dashboard = () => {
         cashTotal,
         investmentsTotal,
       };
-      generateFinancialSummaryText(snapshot, viewMode);
+      
+      // Check if view mode changed
+      const viewModeChanged = previousViewModeRef.current !== null && previousViewModeRef.current !== viewMode;
+      
+      // Check if data changed significantly (cache invalidation trigger)
+      const previous = previousDataRef.current;
+      const dataChanged = !previous || 
+        Math.abs(previous.netWorth - snapshot.netWorth) > 1 ||
+        Math.abs(previous.assetsTotal - snapshot.assetsTotal) > 1 ||
+        Math.abs(previous.liabilitiesTotal - snapshot.liabilitiesTotal) > 1 ||
+        Math.abs(previous.cashTotal - snapshot.cashTotal) > 1 ||
+        Math.abs(previous.investmentsTotal - snapshot.investmentsTotal) > 1;
+      
+      // Regenerate summary if view mode changed or data changed
+      if (viewModeChanged || dataChanged) {
+        previousDataRef.current = snapshot;
+        previousViewModeRef.current = viewMode;
+        // Clear cached summary text to force refresh when view mode changes
+        if (viewModeChanged) {
+          setNetWorthSummaryText("");
+        }
+        generateFinancialSummaryText(snapshot, viewMode);
+      } else if (previousDataRef.current?.netWorth === 0) {
+        // Initial load
+        previousDataRef.current = snapshot;
+        previousViewModeRef.current = viewMode;
+        generateFinancialSummaryText(snapshot, viewMode);
+      }
     }
   }, [netWorth, assetsTotal, liabilitiesTotal, cashTotal, investmentsTotal, viewMode, isLoading]);
 
