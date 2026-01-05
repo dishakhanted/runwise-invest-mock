@@ -188,7 +188,7 @@ const Settings = () => {
             <Button
               variant="ghost"
               className="w-full flex items-center justify-start gap-4 h-auto py-4 px-0 hover:opacity-80"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/')}
             >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <LogOut className="h-5 w-5 text-primary" />

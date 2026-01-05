@@ -12,14 +12,14 @@ interface ProtectedRouteProps {
   children: ReactNode;
   /**
    * Redirect path when not authenticated
-   * @default '/login'
+   * @default '/demo-login'
    */
   redirectTo?: string;
 }
 
 export const ProtectedRoute = ({ 
   children, 
-  redirectTo = '/login'
+  redirectTo = '/demo-login'
 }: ProtectedRouteProps) => {
   const { isLoading, isAuthenticated } = useSession();
   const location = useLocation();

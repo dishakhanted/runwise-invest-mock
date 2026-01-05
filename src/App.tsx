@@ -7,7 +7,6 @@ import { SessionProvider } from "@/contexts/SessionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { logger } from "@/lib/logger";
 import Landing from "./pages/Landing";
-import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Explore from "./pages/Explore";
@@ -28,6 +27,7 @@ import ConversationView from "./pages/ConversationView";
 import NotFound from "./pages/NotFound";
 import Waitlist from "./pages/Waitlist";
 import DemoLogin from "./pages/DemoLogin";
+import DemoOnlyRedirect from "./components/DemoOnlyRedirect";
 
 const queryClient = new QueryClient();
 
@@ -47,9 +47,10 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/signup" element={<Auth />} />
-            <Route path="/login" element={<Auth />} />
+            {/* Demo-only: Block non-demo authentication routes */}
+            <Route path="/auth" element={<DemoOnlyRedirect />} />
+            <Route path="/signup" element={<DemoOnlyRedirect />} />
+            <Route path="/login" element={<DemoOnlyRedirect />} />
             <Route path="/demo-login" element={<DemoLogin />} />
             <Route path="/waitlist" element={<Waitlist />} />
             
