@@ -28,6 +28,7 @@ import NotFound from "./pages/NotFound";
 import Waitlist from "./pages/Waitlist";
 import DemoLogin from "./pages/DemoLogin";
 import DemoOnlyRedirect from "./components/DemoOnlyRedirect";
+import { WaitlistShortcut } from "./components/WaitlistShortcut";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <WaitlistShortcut />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
